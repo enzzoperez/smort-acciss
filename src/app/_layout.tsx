@@ -31,7 +31,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
-            header: (props) => <CustomHeader {...props} />,
+            headerShown: false,
           }}
         />
         <Stack.Screen

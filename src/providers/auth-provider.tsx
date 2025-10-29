@@ -5,9 +5,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (false) {
-    } else {
+    if (true) {
       router.replace('/');
+    } else {
     }
   }, []);
 
