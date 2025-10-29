@@ -1,42 +1,32 @@
+import React from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { useAppTranslation } from '@/libs/i18n';
 import { appVersion } from '@/utils/device-utils';
-import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
 import { ImageBackground, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCameraPermissions } from 'expo-camera';
+import { useLogoutMutation } from '@/api/auth-api';
+import { useAppDispatch, useAppSelector } from '@/libs/redux';
+import { resetUserData, setLogout } from '@/store/slices';
 
 const SelectEventsScreen = () => {
   const { t } = useAppTranslation(['home']);
-  const router = useRouter();
-  const [permission, requestPermission] = useCameraPermissions();
-
+  const { userData } = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch();
   const insets = useSafeAreaInsets();
+  const [logout] = useLogoutMutation();
 
-  const isPermissionGranted = Boolean(permission?.granted);
-
-  const handleFastPass = () => {
-    router.push('/camera');
+  const closeSession = () => {
+    logout({ accountId: userData?.accountId });
+    dispatch(setLogout());
+    dispatch(resetUserData());
   };
 
   const Buttons = () => (
     <View>
-      <UiButton
-        disabled={!isPermissionGranted}
-        variant="secondary"
-        text={t('home:buttonFastPass')}
-        onPress={handleFastPass}
-      />
+      <UiButton variant="secondary" text={t('home:buttonFastPass')} onPress={closeSession} />
     </View>
   );
-
-  useEffect(() => {
-    if (!isPermissionGranted) {
-      requestPermission();
-    }
-  }, [isPermissionGranted]);
 
   return (
     <ImageBackground

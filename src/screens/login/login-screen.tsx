@@ -1,40 +1,59 @@
+import React, { useEffect, useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { useAppTranslation } from '@/libs/i18n';
 import { appVersion, isIos } from '@/utils/device-utils';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
 import { ImageBackground, KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCameraPermissions } from 'expo-camera';
 import { TextInput } from 'react-native-gesture-handler';
 import PhoneNumberInput from '@/components/phone-number-input';
+import { useLoginMutation } from '@/api/auth-api';
+import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
+import { useAppDispatch } from '@/libs/redux';
+import { useApiErrorHandler } from '@/components/useErrorHandler';
 
 const a =
   'https://images.unsplash.com/photo-1590721791974-d6c8ca43f6bc?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=987';
 
 const LoginScreen = () => {
   const { t } = useAppTranslation(['commons']);
-  const router = useRouter();
+  const dispatch = useAppDispatch();
   const [permission, requestPermission] = useCameraPermissions();
+  const insets = useSafeAreaInsets();
+  const [login, { isLoading }] = useLoginMutation();
+  const { apiErrorHandler } = useApiErrorHandler();
 
   const [phoneNumber, setPhoneNumber] = useState('');
-
-  const insets = useSafeAreaInsets();
+  const [password, setPassword] = useState('');
 
   const isPermissionGranted = Boolean(permission?.granted);
 
-  const handleFastPass = () => {
-    router.push('/camera');
+  const handleLoginRequest = async () => {
+    try {
+      const data = await login({
+        accountCredentialType: 'PHONE_NUMBER',
+        accountCredentialValue: phoneNumber,
+        password: password,
+      }).unwrap();
+
+      const { tokens, ...userWithoutTokens } = data;
+
+      dispatch(setAccessToken(tokens.accessToken));
+      dispatch(setRefreshToken(tokens.refreshToken));
+      dispatch(setUserData(userWithoutTokens));
+    } catch (error) {
+      apiErrorHandler(error);
+    }
   };
 
   const Buttons = () => (
     <View>
       <UiButton
-        disabled={!isPermissionGranted}
+        disabled={isLoading}
         variant="secondary"
         text={t('commons:buttons.login')}
-        onPress={handleFastPass}
+        onPress={handleLoginRequest}
       />
     </View>
   );
@@ -66,7 +85,7 @@ const LoginScreen = () => {
             <View style={styles.formContainer}>
               <PhoneNumberInput
                 onChangeText={(text) => setPhoneNumber(text)}
-                value={phoneNumber}
+                // value={phoneNumber}
                 placeholder="Número de teléfono"
               />
 
@@ -75,6 +94,9 @@ const LoginScreen = () => {
                 secureTextEntry
                 style={styles.input}
                 placeholderTextColor="#7A7A7A"
+                onChangeText={(text) => {
+                  setPassword(text);
+                }}
               />
             </View>
 
@@ -164,6 +186,7 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   input: {
+    fontFamily: 'UenoLogical-Book',
     height: 56,
     backgroundColor: '#FFFFFF',
     padding: 14,
