@@ -12,6 +12,7 @@ import { useLoginMutation } from '@/api/auth-api';
 import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
 import { useAppDispatch } from '@/libs/redux';
 import { useApiErrorHandler } from '@/components/useErrorHandler';
+import LogoTuti from '@/assets/svg/LogoTuti.svg';
 
 const a =
   'https://images.unsplash.com/photo-1590721791974-d6c8ca43f6bc?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=987';
@@ -51,8 +52,8 @@ const LoginScreen = () => {
     <View>
       <UiButton
         disabled={isLoading}
-        variant="secondary"
-        text={t('commons:buttons.login')}
+        variant="primary"
+        text="Ingresar"
         onPress={handleLoginRequest}
       />
     </View>
@@ -82,6 +83,15 @@ const LoginScreen = () => {
           behavior={isIos() ? 'padding' : 'height'}
         >
           <View style={styles.container}>
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                flex: 1,
+              }}
+            >
+              <LogoTuti />
+            </View>
             <View style={styles.formContainer}>
               <PhoneNumberInput
                 onChangeText={(text) => setPhoneNumber(text)}

@@ -1,5 +1,5 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { authSlice, userSlice } from './slices';
+import { authSlice, configSlice, userSlice } from './slices';
 import {
   FLUSH,
   PAUSE,
@@ -93,6 +93,7 @@ const rootReducer = combineReducers({
   [rootApi.reducerPath]: rootApi.reducer,
   auth: persistedAuthReducer,
   user: persistedUserReducer,
+  config: configSlice.reducer,
 });
 
 const middlewares = [rootApi.middleware];

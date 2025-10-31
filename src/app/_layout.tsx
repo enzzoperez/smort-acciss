@@ -47,6 +47,12 @@ export default function RootLayout() {
             header: () => <BackHeader />,
           }}
         />
+        <Stack.Screen
+          name="scan-result"
+          options={{
+            headerShown: false,
+          }}
+        />
       </Stack>
     </CustomProviders>
   );

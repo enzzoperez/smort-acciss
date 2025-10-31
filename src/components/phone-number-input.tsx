@@ -74,6 +74,7 @@ const PhoneNumberInput: React.FC<Props> = ({
             onSelect={setCountryCode}
             theme={{
               fontSize: 14,
+              fontFamily: 'UenoLogical-Book',
             }}
           />
         </View>

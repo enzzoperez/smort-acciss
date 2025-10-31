@@ -6,9 +6,16 @@ interface ButtonsProps extends PressableProps {
   onPress: () => void;
   text?: string;
   variant?: 'primary' | 'secondary' | 'tertiary';
+  disabled?: boolean;
 }
 
-export const UiButton = ({ onPress, text, variant = 'primary', ...props }: ButtonsProps) => {
+export const UiButton = ({
+  onPress,
+  text,
+  variant = 'primary',
+  disabled,
+  ...props
+}: ButtonsProps) => {
   const getVariant = () => {
     if (variant === 'tertiary') return 'tertiary';
     if (variant === 'secondary') return 'secondary';
@@ -30,7 +37,11 @@ export const UiButton = ({ onPress, text, variant = 'primary', ...props }: Butto
   };
 
   return (
-    <PressableOpacity style={getStyle()} onPress={onPress} {...props}>
+    <PressableOpacity
+      style={[getStyle(), disabled && { backgroundColor: 'gray' }]}
+      onPress={disabled ? null : onPress}
+      {...props}
+    >
       <ThemedText style={getTextStyle()}>{text}</ThemedText>
     </PressableOpacity>
   );
@@ -51,14 +62,14 @@ const styles = StyleSheet.create({
   },
   buttonSecondary: {
     height: 56,
-    borderColor: 'white',
+    borderColor: 'black',
     borderWidth: 2,
     paddingVertical: 14,
     borderRadius: 30,
     alignItems: 'center',
   },
   buttonSecondaryText: {
-    color: 'white',
+    color: 'black',
     fontSize: 20,
   },
   buttonTertiary: {

@@ -1,20 +1,29 @@
 import React from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
-import { useAppTranslation } from '@/libs/i18n';
 import { appVersion } from '@/utils/device-utils';
-import { ImageBackground, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
-import { resetUserData, setLogout } from '@/store/slices';
+import { resetUserData, setLogout, setSelectedEvent, setVerifyOnly } from '@/store/slices';
+import { useRouter } from 'expo-router';
+import Layer from '@/components/layer';
+import { Dropdown } from 'react-native-element-dropdown';
+import { useGetEventsQuery } from '@/api/events-api';
+
+const modesVerify = [
+  { label: 'Solo Verificar', value: true },
+  { label: 'Verificar y Registrar', value: false },
+];
 
 const SelectEventsScreen = () => {
-  const { t } = useAppTranslation(['home']);
+  const router = useRouter();
   const { userData } = useAppSelector((state) => state.user);
+  const { selectedEvent } = useAppSelector((state) => state.config);
+
   const dispatch = useAppDispatch();
-  const insets = useSafeAreaInsets();
   const [logout] = useLogoutMutation();
+  const { data: dataEvents, isLoading, isFetching, isError } = useGetEventsQuery();
 
   const closeSession = () => {
     logout({ accountId: userData?.accountId });
@@ -23,37 +32,98 @@ const SelectEventsScreen = () => {
   };
 
   const Buttons = () => (
-    <View>
-      <UiButton variant="secondary" text={t('home:buttonFastPass')} onPress={closeSession} />
+    <View style={{ gap: 16 }}>
+      <UiButton
+        disabled={!selectedEvent}
+        variant="tertiary"
+        text={'Escanear'}
+        onPress={() => router.push('/camera')}
+      />
+
+      <UiButton variant="secondary" text={'Cerrar sesión'} onPress={closeSession} />
     </View>
   );
 
-  return (
-    <ImageBackground
-      source={{
-        uri: 'https://images.unsplash.com/photo-1509824227185-9c5a01ceba0d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1015',
-      }}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={[styles.overlay, { paddingBottom: insets.bottom }]}>
+  if (isLoading || isFetching) {
+    return (
+      <Layer>
         <View style={styles.container}>
-          <View style={{ marginBottom: 32 }}>
-            <ThemedText type="title" style={styles.title}>
-              {t('home:title')}
-            </ThemedText>
-            <ThemedText style={styles.subtitle}>{t('home:subtitle')}</ThemedText>
-          </View>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <ThemedText>Cargando eventos...</ThemedText>
+        </View>
+      </Layer>
+    );
+  }
 
-          <Buttons />
-        </View>
-        <View style={{ alignItems: 'center' }}>
-          <ThemedText type="subtitle" style={{ color: 'white', fontSize: 12 }}>
-            {appVersion}
+  if (isError) {
+    return (
+      <Layer>
+        <View style={styles.container}>
+          <ThemedText style={{ color: 'red' }}>
+            Error al cargar los eventos. Por favor, inténtalo de nuevo más tarde.
           </ThemedText>
+          <UiButton variant="secondary" text={'Cerrar sesión'} onPress={closeSession} />
         </View>
+      </Layer>
+    );
+  }
+
+  return (
+    <Layer>
+      <View style={styles.container}>
+        <View style={{ marginBottom: 32 }}>
+          <ThemedText type="title" style={styles.title}>
+            Selecciona el evento
+          </ThemedText>
+
+          {dataEvents && (
+            <View style={{ gap: 32 }}>
+              <Dropdown
+                style={styles.dropdown}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                inputSearchStyle={styles.inputSearchStyle}
+                iconStyle={styles.iconStyle}
+                data={dataEvents}
+                search
+                maxHeight={300}
+                labelField="label"
+                valueField="value"
+                placeholder="Elegir evento"
+                searchPlaceholder="Buscar..."
+                value={selectedEvent}
+                onChange={(item) => {
+                  dispatch(setSelectedEvent(item.value));
+                }}
+              />
+
+              <Dropdown
+                style={styles.dropdown}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                iconStyle={styles.iconStyle}
+                data={modesVerify}
+                maxHeight={300}
+                labelField="label"
+                valueField="value"
+                placeholder="Modo de lectura"
+                value={selectedEvent}
+                onChange={(item) => {
+                  dispatch(setVerifyOnly(item.value));
+                }}
+              />
+            </View>
+          )}
+        </View>
+
+        <Buttons />
       </View>
-    </ImageBackground>
+      <View style={{ alignItems: 'center' }}>
+        <ThemedText type="subtitle" style={{ color: 'black', fontSize: 12 }}>
+          {appVersion}
+        </ThemedText>
+      </View>
+    </Layer>
   );
 };
 
@@ -71,7 +141,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
     paddingVertical: 40,
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     flex: 1,
   },
   overlay: {
@@ -79,14 +149,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
   title: {
-    fontSize: 48,
-    lineHeight: 48,
-    color: 'white',
+    fontSize: 32,
+    color: 'black',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: 'white',
+    color: 'black',
     marginBottom: 16,
   },
   bold: {
@@ -116,6 +185,32 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+
+  //dropdown
+  dropdown: {
+    height: 50,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
   },
 });
 
