@@ -47,7 +47,7 @@ const SelectEventsScreen = () => {
   if (isLoading || isFetching) {
     return (
       <Layer>
-        <View style={styles.container}>
+        <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#0000ff" />
           <ThemedText>Cargando eventos...</ThemedText>
         </View>
