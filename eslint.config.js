@@ -22,6 +22,7 @@ module.exports = defineConfig([
       'react-hooks/exhaustive-deps': 'off',
       'no-console': ['error', { allow: ['error'] }],
       'no-duplicate-imports': 'error',
+      'no-unused-vars': ['error', { vars: 'all' }],
     },
   },
 ]);

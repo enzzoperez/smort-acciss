@@ -1,17 +1,19 @@
-import { useRef, useState, useEffect } from 'react';
-import { StyleSheet, StatusBar, AppState, TouchableOpacity, View } from 'react-native';
-import { CameraView } from 'expo-camera';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, StatusBar, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { CameraView } from 'expo-camera';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Overlay } from './overlay';
-import { isAndroid } from '@/utils/device-utils';
+import Flashlight from '@/assets/svg/flashlight.svg';
+import FlashlightOff from '@/assets/svg/flashlight-off.svg';
+import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
 
 export default function CameraScreen() {
   const router = useRouter();
   const qrLock = useRef(false);
   const appState = useRef(AppState.currentState);
-  const [torchOn, setTorchOn] = useState(false);
+  const [torchEnabled, setTorchEnabled] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -21,17 +23,19 @@ export default function CameraScreen() {
       appState.current = nextAppState;
     });
 
-    return () => subscription.remove();
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   return (
-    <SafeAreaView style={StyleSheet.absoluteFillObject}>
-      {isAndroid() ? <StatusBar hidden /> : null}
+    <View style={StyleSheet.absoluteFillObject}>
+      <StatusBar hidden translucent backgroundColor="transparent" />
 
       <CameraView
         style={StyleSheet.absoluteFillObject}
         facing="back"
-        enableTorch={torchOn}
+        enableTorch={torchEnabled}
         onBarcodeScanned={({ data }) => {
           if (data && !qrLock.current) {
             qrLock.current = true;
@@ -47,31 +51,36 @@ export default function CameraScreen() {
 
       <Overlay />
 
-      <View style={styles.flashButtonContainer}>
+      <View style={[styles.bottomButtons, { bottom: insets.bottom + 24 }]}>
+        <TouchableOpacity style={styles.roundButton} onPress={() => router.back()}>
+          <BackButtonCamera />
+        </TouchableOpacity>
+
         <TouchableOpacity
-          style={[styles.flashButton, { backgroundColor: torchOn ? '#007AFF' : 'rgba(0,0,0,0.5)' }]}
-          onPress={() => setTorchOn((prev) => !prev)}
-          activeOpacity={0.8}
+          style={styles.roundButton}
+          onPress={() => setTorchEnabled((prev) => !prev)}
         >
-          <Ionicons
-            name={torchOn ? 'flash' : 'flash-off'}
-            size={28}
-            color={torchOn ? '#FFF' : '#E0E0E0'}
-          />
+          {torchEnabled ? <Flashlight /> : <FlashlightOff />}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flashButtonContainer: {
+  bottomButtons: {
     position: 'absolute',
-    bottom: 100,
-    alignSelf: 'center',
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 40,
   },
-  flashButton: {
-    padding: 16,
-    borderRadius: 40,
+  roundButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

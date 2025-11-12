@@ -1,4 +1,3 @@
-import BackHeader from '@/components/back-header';
 import '@/i18n/i18n-config';
 import { CustomProviders } from '@/providers';
 import { useFonts } from 'expo-font';
@@ -43,7 +42,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="camera"
           options={{
-            header: () => <BackHeader />,
+            headerShown: false,
           }}
         />
         <Stack.Screen

@@ -92,7 +92,7 @@ const LoginScreen = () => {
                 label="Número de teléfono"
               />
 
-              <View style={{ position: 'relative' }}>
+              <View style={{ position: 'relative', marginBottom: 16 }}>
                 <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
                   Contraseña
                 </ThemedText>
