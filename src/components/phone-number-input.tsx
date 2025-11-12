@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, TextInputProps, StyleSheet } from 'react-native';
-import CountryPicker, { Country } from 'react-native-country-picker-modal-v2';
+import { View, TextInput, TextInputProps, StyleSheet, TouchableOpacity } from 'react-native';
+
+import { CountryPicker } from 'react-native-country-codes-picker';
+
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { ThemedText } from './themed-text';
+import { countries } from '@/constants/countries';
 
 type Props = {
   label?: string;
@@ -22,21 +25,16 @@ const PhoneNumberInput: React.FC<Props> = ({
   errorMsg,
   ...otherProps
 }) => {
-  const [code, setCountryCode] = useState<Country>({
-    cca2: 'PY',
-    callingCode: ['595'],
-    currency: ['PYG'],
-    flag: '🇵🇾',
-    name: 'Paraguay',
-    region: 'Americas',
-    subregion: 'South America',
-  });
+  const [modalCountryVisible, setModalCountryVisible] = useState(false);
+  const [code, setCountryCode] = useState(countries[1].callingCode);
   const [phoneNumber, setPhoneNumber] = useState('');
+
+  const flag = countries.find((c) => c.callingCode === code)?.flag || '';
 
   const handlePhoneChange = (text: string) => {
     let sanitized = text;
 
-    if (code?.callingCode?.[0] === PY_CALLING_CODE) {
+    if (code === PY_CALLING_CODE) {
       sanitized = sanitized.replace(/^0+/, '');
     }
 
@@ -44,8 +42,8 @@ const PhoneNumberInput: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    if (code?.callingCode && phoneNumber) {
-      onChangeText(`+${code.callingCode[0]}${phoneNumber}`);
+    if (code && phoneNumber) {
+      onChangeText(`${code}${phoneNumber}`);
     }
   }, [code, phoneNumber]);
 
@@ -62,23 +60,15 @@ const PhoneNumberInput: React.FC<Props> = ({
             : null,
         ]}
       >
-        <View style={styles.pickerContainer}>
-          <CountryPicker
-            preferredCountries={['PY', 'AR', 'UY', 'BR']}
-            countryCode={code?.cca2 ?? 'US'}
-            i18nIsDynamicList
-            withAlphaFilter={false}
-            withFilter
-            withCallingCode
-            withCallingCodeButton
-            onSelect={setCountryCode}
-            theme={{
-              fontSize: 14,
-              fontFamily: 'UenoLogical-Book',
-            }}
-          />
-        </View>
-        <EvilIcons name="chevron-down" size={24} />
+        <TouchableOpacity
+          onPress={() => setModalCountryVisible(true)}
+          style={styles.pickerContainer}
+        >
+          <ThemedText>
+            {flag} {code}
+          </ThemedText>
+          <EvilIcons name="chevron-down" size={24} />
+        </TouchableOpacity>
         <View
           style={[
             styles.line,
@@ -100,6 +90,21 @@ const PhoneNumberInput: React.FC<Props> = ({
         />
       </View>
       {!!errorMsg && <ThemedText style={styles.errorText}>{errorMsg}</ThemedText>}
+
+      <CountryPicker
+        show={modalCountryVisible}
+        lang="es"
+        onBackdropPress={() => setModalCountryVisible(false)}
+        onRequestClose={() => setModalCountryVisible(false)}
+        showOnly={['AR', 'PY', 'BR', 'CL', 'UY', 'BO', 'PE', 'CO', 'VE']}
+        style={{
+          modal: { height: '80%' },
+        }}
+        pickerButtonOnPress={(item) => {
+          setCountryCode(item.dial_code);
+          setModalCountryVisible(false);
+        }}
+      />
     </View>
   );
 };
@@ -114,14 +119,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerContainer: {
-    marginRight: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 8,
+    gap: 2,
   },
   input: {
     flex: 1,
     fontSize: 14,
     fontFamily: 'UenoLogical-Book',
   },
-  line: { width: 1, height: 45, backgroundColor: 'black', marginHorizontal: 12 },
+  line: {
+    width: 1,
+    height: 45,
+    backgroundColor: 'black',
+    marginHorizontal: 8,
+  },
   errorText: {
     color: 'red',
   },

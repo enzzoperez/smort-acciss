@@ -2,7 +2,7 @@ import React from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion } from '@/utils/device-utils';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import { resetUserData, setLogout, setSelectedEvent, setVerifyOnly } from '@/store/slices';
@@ -11,11 +11,6 @@ import Layer from '@/components/layer';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useGetEventsQuery } from '@/api/events-api';
 
-const modesVerify = [
-  { label: 'Solo Verificar', value: true },
-  { label: 'Verificar y Registrar', value: false },
-];
-
 const SelectEventsScreen = () => {
   const router = useRouter();
   const { userData } = useAppSelector((state) => state.user);
@@ -23,12 +18,16 @@ const SelectEventsScreen = () => {
 
   const dispatch = useAppDispatch();
   const [logout] = useLogoutMutation();
-  const { data: dataEvents, isLoading, isFetching, isError } = useGetEventsQuery();
+  const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
 
   const closeSession = () => {
     logout({ accountId: userData?.accountId });
     dispatch(setLogout());
     dispatch(resetUserData());
+  };
+
+  const onRefresh = () => {
+    refetch();
   };
 
   const Buttons = () => (
@@ -58,71 +57,70 @@ const SelectEventsScreen = () => {
   if (isError) {
     return (
       <Layer>
-        <View style={styles.container}>
-          <ThemedText style={{ color: 'red' }}>
-            Error al cargar los eventos. Por favor, inténtalo de nuevo más tarde.
-          </ThemedText>
-          <UiButton variant="secondary" text={'Cerrar sesión'} onPress={closeSession} />
-        </View>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={isFetching || isLoading} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.container}>
+            <ThemedText style={{ color: 'red' }}>
+              Error al cargar los eventos. Por favor, inténtalo de nuevo más tarde.
+            </ThemedText>
+            <UiButton variant="secondary" text={'Cerrar sesión'} onPress={closeSession} />
+          </View>
+        </ScrollView>
       </Layer>
     );
   }
 
   return (
     <Layer>
-      <View style={styles.container}>
-        <View style={{ marginBottom: 32 }}>
-          <ThemedText type="title" style={styles.title}>
-            Selecciona el evento
-          </ThemedText>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching || isLoading} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.container}>
+          <View style={{ marginBottom: 32 }}>
+            <ThemedText type="title" style={styles.title}>
+              Selecciona el evento
+            </ThemedText>
 
-          {dataEvents && (
-            <View style={{ gap: 32 }}>
-              <Dropdown
-                style={styles.dropdown}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-                inputSearchStyle={styles.inputSearchStyle}
-                iconStyle={styles.iconStyle}
-                data={dataEvents}
-                search
-                maxHeight={300}
-                labelField="label"
-                valueField="value"
-                placeholder="Elegir evento"
-                searchPlaceholder="Buscar..."
-                value={selectedEvent}
-                onChange={(item) => {
-                  dispatch(setSelectedEvent(item.value));
-                }}
-              />
+            {dataEvents && (
+              <View style={{ gap: 32 }}>
+                <Dropdown
+                  style={styles.dropdown}
+                  placeholderStyle={styles.placeholderStyle}
+                  selectedTextStyle={styles.selectedTextStyle}
+                  inputSearchStyle={styles.inputSearchStyle}
+                  iconStyle={styles.iconStyle}
+                  data={dataEvents}
+                  search
+                  maxHeight={300}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Elegir evento"
+                  searchPlaceholder="Buscar..."
+                  value={selectedEvent}
+                  onChange={(item) => {
+                    dispatch(setSelectedEvent(item.value));
+                  }}
+                />
+              </View>
+            )}
+          </View>
 
-              <Dropdown
-                style={styles.dropdown}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-                iconStyle={styles.iconStyle}
-                data={modesVerify}
-                maxHeight={300}
-                labelField="label"
-                valueField="value"
-                placeholder="Modo de lectura"
-                value={selectedEvent}
-                onChange={(item) => {
-                  dispatch(setVerifyOnly(item.value));
-                }}
-              />
-            </View>
-          )}
+          <Buttons />
         </View>
 
-        <Buttons />
-      </View>
-      <View style={{ alignItems: 'center' }}>
-        <ThemedText type="subtitle" style={{ color: 'black', fontSize: 12 }}>
-          {appVersion}
-        </ThemedText>
-      </View>
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          <ThemedText type="subtitle" style={{ color: 'black', fontSize: 12 }}>
+            {appVersion}
+          </ThemedText>
+        </View>
+      </ScrollView>
     </Layer>
   );
 };
