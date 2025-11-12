@@ -1,5 +1,3 @@
-import ArrowRight from '@/assets/svg/ArrowRight.svg';
-import CloseIcon from '@/assets/svg/CloseModalIcon.svg';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SheetInstructions } from './sheet-instructions';
 import { ThemedText } from './themed-text';
@@ -32,15 +30,12 @@ export const InstructionsStepsSheet = ({
               marginBottom: 16,
             }}
             onPress={onClose}
-          >
-            <CloseIcon />
-          </TouchableOpacity>
+          ></TouchableOpacity>
           <ThemedText style={styles.titleSheet}>Cómo accedo al fast pass</ThemedText>
         </View>
 
         {steps.map((item) => (
           <View key={item.title} style={styles.item}>
-            <ArrowRight />
             <View style={styles.textContainer}>
               {item.title === '' ? null : (
                 <ThemedText type="title" style={styles.titleItem}>

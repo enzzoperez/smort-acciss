@@ -50,14 +50,14 @@ export const UiButton = ({
 const styles = StyleSheet.create({
   buttonPrimary: {
     height: 56,
-    backgroundColor: 'white',
+    backgroundColor: 'black',
     paddingVertical: 14,
     borderRadius: 30,
     alignItems: 'center',
     marginBottom: 12,
   },
   buttonPrimaryText: {
-    color: 'black',
+    color: 'white',
     fontSize: 20,
   },
   buttonSecondary: {

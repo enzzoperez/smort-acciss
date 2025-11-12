@@ -49,7 +49,11 @@ const PhoneNumberInput: React.FC<Props> = ({
 
   return (
     <View style={{ gap: 4 }}>
-      {!!label && <ThemedText type="defaultSemiBold">{label}</ThemedText>}
+      {!!label && (
+        <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
+          {label}
+        </ThemedText>
+      )}
       <View
         style={[
           styles.container,
@@ -112,8 +116,10 @@ const PhoneNumberInput: React.FC<Props> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#DCE1E8',
     borderRadius: 8,
-    height: 60,
+    height: 45,
     paddingHorizontal: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,8 +137,8 @@ const styles = StyleSheet.create({
   },
   line: {
     width: 1,
-    height: 45,
-    backgroundColor: 'black',
+    height: '100%',
+    backgroundColor: '#DCE1E8',
     marginHorizontal: 8,
   },
   errorText: {
