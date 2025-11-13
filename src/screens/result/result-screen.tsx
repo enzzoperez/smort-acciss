@@ -3,24 +3,33 @@ import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
-import OcticonsIcons from '@expo/vector-icons/Octicons';
 import Layer from '@/components/layer';
 import { useValidateAndRegisterMutation, useValidateOnlyMutation } from '@/api/scanner-api';
 import { useAppSelector } from '@/libs/redux';
+import { ActionLabel } from './action-label';
+
+import ErrorIcon from '@/assets/svg/error-icon.svg';
+import SuccessIcon from '@/assets/svg/success-icon.svg';
 
 const ResultScreen = () => {
   const router = useRouter();
   const { scannedCode } = useLocalSearchParams();
   const { selectedEvent, verifyOnly } = useAppSelector((state) => state.config);
-  const [validateOnly, { isLoading, isError, error }] = useValidateOnlyMutation();
+  const [validateOnly, { isLoading, isError, error, isSuccess }] = useValidateOnlyMutation();
   const [
     validateAndRegister,
-    { isLoading: loadingRegister, isError: isErrorRegister, error: errorRegister },
+    {
+      isLoading: loadingRegister,
+      isError: isErrorRegister,
+      error: errorRegister,
+      isSuccess: successRegister,
+    },
   ] = useValidateAndRegisterMutation();
 
   const isLoadingRequest = isLoading || loadingRegister;
   const isErrorRequest = isError || isErrorRegister;
   const errorRequest = error || errorRegister;
+  const isSuccessRequest = isSuccess || successRegister;
 
   useEffect(() => {
     const validateQr = async () => {
@@ -72,36 +81,45 @@ const ResultScreen = () => {
     <Layer>
       <View style={styles.container}>
         <View style={{ gap: 32, alignItems: 'center' }}>
-          {isErrorRequest ? (
-            <OcticonsIcons name="x-circle-fill" size={140} color={'red'} />
-          ) : (
-            <OcticonsIcons name="check-circle-fill" size={140} color={'green'} />
-          )}
+          {isErrorRequest ? <ErrorIcon /> : <SuccessIcon />}
 
           {isErrorRequest && (
             <ThemedText type="title" style={styles.resultText}>
               {errorRequest && errorRequest?.data?.errors[0]?.message}
             </ThemedText>
           )}
+
+          {isSuccessRequest && (
+            <ThemedText type="title" style={styles.resultText}>
+              Acceso confirmado y quemado
+            </ThemedText>
+          )}
         </View>
 
-        <View style={{ width: '100%', gap: 16 }}>
-          <UiButton
-            variant="tertiary"
-            text="Escanear otro"
-            onPress={() => {
-              router.replace('/camera');
-            }}
-          />
+        <ActionLabel type={isErrorRequest ? 'error' : 'success'} />
+      </View>
+      <View
+        style={{
+          width: '100%',
+          gap: 10,
+          paddingVertical: 24,
+        }}
+      >
+        <UiButton
+          variant="tertiary"
+          text="Escanear otro código QR"
+          onPress={() => {
+            router.replace('/camera');
+          }}
+        />
 
-          <UiButton
-            variant="secondary"
-            text="Ir al Home"
-            onPress={() => {
-              router.replace('/select-events');
-            }}
-          />
-        </View>
+        <UiButton
+          variant="secondary"
+          text="Ir al inicio"
+          onPress={() => {
+            router.replace('/select-events');
+          }}
+        />
       </View>
     </Layer>
   );
@@ -110,11 +128,8 @@ const ResultScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 24,
   },
   loadingContainer: {
     flex: 1,
@@ -127,12 +142,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   resultText: {
-    fontSize: 20,
-    textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
+    fontSize: 40,
     textAlign: 'center',
   },
 });
