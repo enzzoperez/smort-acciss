@@ -1,30 +1,21 @@
 import { rootApi } from './root-api';
 
 interface ResGetEvents {
-  options: {
-    code: string;
-    value: string;
+  config: {
+    eventCode: string;
+    eventName: string;
+    mode: string;
+    sections: string[];
   }[];
-}
-
-interface EventOption {
-  label: string;
-  value: string;
 }
 
 export const eventApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
-    getEvents: builder.query<EventOption[], void>({
+    getEvents: builder.query<ResGetEvents, void>({
       query: () => ({
-        url: '/access-control/event-config/options',
+        url: '/access-control/event-config/scan',
         method: 'get',
       }),
-      transformResponse: (response: ResGetEvents) => {
-        return response.options.map((item) => ({
-          label: item.value,
-          value: item.code,
-        }));
-      },
     }),
   }),
 });

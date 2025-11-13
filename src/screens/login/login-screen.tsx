@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion, isIos } from '@/utils/device-utils';
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { useCameraPermissions } from 'expo-camera';
 import { TextInput } from 'react-native-gesture-handler';
 import PhoneNumberInput from '@/components/phone-number-input';
@@ -64,6 +64,7 @@ const LoginScreen = () => {
 
   return (
     <Layer>
+      <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
       <ScrollView
         style={[{ flex: 1 }]}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -140,6 +141,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontFamily: 'UenoLogicalBook',
+    color: 'black',
     height: 45,
     backgroundColor: '#FFFFFF',
     padding: 14,
@@ -152,7 +154,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     position: 'absolute',
     right: 12,
-    top: 36,
+    top: 32,
   },
 });
 

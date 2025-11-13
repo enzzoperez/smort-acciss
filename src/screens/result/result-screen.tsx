@@ -1,21 +1,22 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import Layer from '@/components/layer';
-import { useValidateAndRegisterMutation, useValidateOnlyMutation } from '@/api/scanner-api';
+import { useValidateAndRegisterMutation } from '@/api/scanner-api';
 import { useAppSelector } from '@/libs/redux';
 import { ActionLabel } from './action-label';
 
-import ErrorIcon from '@/assets/svg/error-icon.svg';
-import SuccessIcon from '@/assets/svg/success-icon.svg';
+import CheckAccess from '@/assets/svg/check-access.svg';
+import ScanAccess from '@/assets/svg/scan-access.svg';
+
+import { getReadErrorByCode } from '@/utils/get-error-result';
 
 const ResultScreen = () => {
   const router = useRouter();
   const { scannedCode } = useLocalSearchParams();
   const { selectedEvent, verifyOnly } = useAppSelector((state) => state.config);
-  const [validateOnly, { isLoading, isError, error, isSuccess }] = useValidateOnlyMutation();
   const [
     validateAndRegister,
     {
@@ -26,16 +27,14 @@ const ResultScreen = () => {
     },
   ] = useValidateAndRegisterMutation();
 
-  const isLoadingRequest = isLoading || loadingRegister;
-  const isErrorRequest = isError || isErrorRegister;
-  const errorRequest = error || errorRegister;
-  const isSuccessRequest = isSuccess || successRegister;
+  const isLoadingRequest = loadingRegister;
+  const isErrorRequest = isErrorRegister;
+  const errorRequest = errorRegister;
+  const isSuccessRequest = successRegister;
+
+  const errorItem = getReadErrorByCode(errorRequest?.data?.errors[0]?.code);
 
   useEffect(() => {
-    const validateQr = async () => {
-      await validateOnly({ eventCode: selectedEvent as string, qrCode: scannedCode as string });
-    };
-
     const validateAndRegisterQr = async () => {
       await validateAndRegister({
         eventCode: selectedEvent as string,
@@ -44,11 +43,7 @@ const ResultScreen = () => {
     };
 
     if (scannedCode) {
-      if (verifyOnly) {
-        validateQr();
-      } else {
-        validateAndRegisterQr();
-      }
+      validateAndRegisterQr();
     }
   }, [scannedCode]);
 
@@ -79,19 +74,29 @@ const ResultScreen = () => {
 
   return (
     <Layer>
+      <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+
       <View style={styles.container}>
         <View style={{ gap: 32, alignItems: 'center' }}>
-          {isErrorRequest ? <ErrorIcon /> : <SuccessIcon />}
+          {isErrorRequest && errorItem?.icon}
+          {isSuccessRequest && verifyOnly && <CheckAccess />}
+          {isSuccessRequest && !verifyOnly && <ScanAccess />}
 
           {isErrorRequest && (
-            <ThemedText type="title" style={styles.resultText}>
-              {errorRequest && errorRequest?.data?.errors[0]?.message}
-            </ThemedText>
+            <>
+              <ThemedText type="title" style={styles.resultText}>
+                {errorItem?.title}
+              </ThemedText>
+
+              <ThemedText type="default" style={styles.descriptionError}>
+                {errorItem?.message}
+              </ThemedText>
+            </>
           )}
 
           {isSuccessRequest && (
             <ThemedText type="title" style={styles.resultText}>
-              Acceso confirmado y quemado
+              {verifyOnly ? 'Acceso confirmado' : 'Acceso confirmado y quemado'}
             </ThemedText>
           )}
         </View>
@@ -143,6 +148,10 @@ const styles = StyleSheet.create({
   },
   resultText: {
     fontSize: 40,
+    textAlign: 'center',
+  },
+  descriptionError: {
+    fontSize: 16,
     textAlign: 'center',
   },
 });

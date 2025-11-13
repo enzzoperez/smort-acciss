@@ -1,8 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion } from '@/utils/device-utils';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import { resetUserData, setLogout, setSelectedEvent, setVerifyOnly } from '@/store/slices';
@@ -42,6 +49,13 @@ const SelectEventsScreen = () => {
   const [logout] = useLogoutMutation();
   const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
 
+  const [itemSelected, setItemSelected] = useState<{
+    eventCode: string;
+    eventName: string;
+    mode: string;
+    sections: string[];
+  } | null>(null);
+
   const closeSession = () => {
     logout({ accountId: userData?.accountId });
     dispatch(setLogout());
@@ -64,17 +78,23 @@ const SelectEventsScreen = () => {
   );
 
   useEffect(() => {
-    if (selectedEvent) {
-      const selected = a.find((event) => event.eventCode === selectedEvent);
+    if (itemSelected) {
+      const selected = dataEvents?.config.find(
+        (event) => event.eventCode === itemSelected.eventCode,
+      );
+
       if (selected) {
+        dispatch(setSelectedEvent(selected.eventCode));
         dispatch(setVerifyOnly(selected.mode === 'CHECK'));
       }
     }
-  }, [selectedEvent]);
+  }, [itemSelected]);
 
   useEffect(() => {
-    if (dataEvents && dataEvents.length === 1) {
-      dispatch(setSelectedEvent(dataEvents[0].value));
+    if (dataEvents && dataEvents?.config.length === 1) {
+      setItemSelected(dataEvents?.config[0]);
+      dispatch(setSelectedEvent(dataEvents?.config[0].eventCode));
+      dispatch(setVerifyOnly(dataEvents?.config[0].mode === 'CHECK'));
     }
   }, [dataEvents]);
 
@@ -111,6 +131,8 @@ const SelectEventsScreen = () => {
 
   return (
     <Layer>
+      <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+
       <Header onRightPress={closeSession} />
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
@@ -124,7 +146,7 @@ const SelectEventsScreen = () => {
               Control de accesos en:
             </ThemedText>
 
-            {dataEvents && (
+            {dataEvents?.config && (
               <View style={{ gap: 24 }}>
                 {/* Select event */}
                 <View style={{ gap: 8 }}>
@@ -136,15 +158,15 @@ const SelectEventsScreen = () => {
                     placeholderStyle={styles.placeholderStyle}
                     selectedTextStyle={styles.selectedTextStyle}
                     iconStyle={styles.iconStyle}
-                    data={dataEvents}
+                    data={dataEvents?.config}
                     maxHeight={300}
-                    labelField="label"
-                    valueField="value"
+                    labelField="eventName"
+                    valueField="eventCode"
                     placeholder="Elegir evento"
                     searchPlaceholder="Buscar..."
                     value={selectedEvent}
                     onChange={(item) => {
-                      dispatch(setSelectedEvent(item.value));
+                      setItemSelected(item);
                     }}
                   />
                 </View>
@@ -164,15 +186,16 @@ const SelectEventsScreen = () => {
                           maxHeight: 300,
                         }}
                       >
-                        {a[2].sections.map((section) => (
-                          <ThemedText
-                            key={section}
-                            type="default"
-                            style={styles.itemAsociatedSection}
-                          >
-                            → {section}
-                          </ThemedText>
-                        ))}
+                        {itemSelected &&
+                          itemSelected.sections.map((section) => (
+                            <ThemedText
+                              key={section}
+                              type="default"
+                              style={styles.itemAsociatedSection}
+                            >
+                              → {section}
+                            </ThemedText>
+                          ))}
                       </ScrollView>
                     </View>
 
@@ -190,7 +213,7 @@ const SelectEventsScreen = () => {
                         }}
                       >
                         <ThemedText>
-                          {a[2].mode === 'CHECK'
+                          {itemSelected && itemSelected.mode === 'CHECK'
                             ? '→  Verificación de QR'
                             : '→  Verificación y quemado de Qr'}
                         </ThemedText>
