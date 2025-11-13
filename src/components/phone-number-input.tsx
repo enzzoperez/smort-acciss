@@ -5,7 +5,12 @@ import { CountryPicker } from 'react-native-country-codes-picker';
 
 import EvilIcons from '@expo/vector-icons/EvilIcons';
 import { ThemedText } from './themed-text';
-import { countries } from '@/constants/countries';
+
+const defaultCountry = {
+  callingCode: '+595',
+  flag: '🇵🇾',
+  country: 'PY',
+};
 
 type Props = {
   label?: string;
@@ -26,10 +31,9 @@ const PhoneNumberInput: React.FC<Props> = ({
   ...otherProps
 }) => {
   const [modalCountryVisible, setModalCountryVisible] = useState(false);
-  const [code, setCountryCode] = useState(countries[1].callingCode);
+  const [code, setCountryCode] = useState(defaultCountry.callingCode);
   const [phoneNumber, setPhoneNumber] = useState('');
-
-  const flag = countries.find((c) => c.callingCode === code)?.flag || '';
+  const [flag, setflag] = useState(defaultCountry.flag);
 
   const handlePhoneChange = (text: string) => {
     let sanitized = text;
@@ -106,6 +110,7 @@ const PhoneNumberInput: React.FC<Props> = ({
         }}
         pickerButtonOnPress={(item) => {
           setCountryCode(item.dial_code);
+          setflag(item.flag);
           setModalCountryVisible(false);
         }}
       />

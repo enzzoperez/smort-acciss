@@ -9,7 +9,7 @@ import PhoneNumberInput from '@/components/phone-number-input';
 import { useLoginMutation } from '@/api/auth-api';
 import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
 import { useAppDispatch } from '@/libs/redux';
-import { useApiErrorHandler } from '@/components/useErrorHandler';
+import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import MainLogo from '@/assets/svg/main-logo.svg';
 import Layer from '@/components/layer';
 import { Feather } from '@expo/vector-icons';
