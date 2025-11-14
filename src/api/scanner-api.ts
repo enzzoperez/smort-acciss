@@ -7,14 +7,6 @@ interface ReqValidateOnly {
 
 export const scannerApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
-    validateOnly: builder.mutation<unknown, ReqValidateOnly>({
-      query: ({ eventCode, qrCode }) => ({
-        url: `/access-control/${eventCode}/scan?verifyOnly=true`,
-        method: 'post',
-        data: { qrCode },
-      }),
-    }),
-
     validateAndRegister: builder.mutation<unknown, ReqValidateOnly>({
       query: ({ eventCode, qrCode }) => ({
         url: `/access-control/${eventCode}/scan`,
@@ -25,4 +17,4 @@ export const scannerApi = rootApi.injectEndpoints({
   }),
 });
 
-export const { useValidateOnlyMutation, useValidateAndRegisterMutation } = scannerApi;
+export const { useValidateAndRegisterMutation } = scannerApi;
