@@ -14,6 +14,7 @@ import MainLogo from '@/assets/svg/main-logo.svg';
 import Layer from '@/components/layer';
 import { Feather } from '@expo/vector-icons';
 import PressableOpacity from '@/components/pressable-opacity';
+import PoweredByItti from '@/assets/svg/powered-by-itti.svg';
 
 const LoginScreen = () => {
   const dispatch = useAppDispatch();
@@ -117,6 +118,7 @@ const LoginScreen = () => {
         </KeyboardAvoidingView>
 
         <View style={{ alignItems: 'center' }}>
+          <PoweredByItti />
           <ThemedText type="default" style={{ color: 'black', fontSize: 12 }}>
             {appVersion}
           </ThemedText>
