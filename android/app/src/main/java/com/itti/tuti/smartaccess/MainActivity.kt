@@ -1,4 +1,4 @@
-package com.enzoperezitti.tutiqrreader
+package com.itti.tuti.smartaccess
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

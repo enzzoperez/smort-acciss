@@ -28,13 +28,13 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>tutiqrreader</string>
-          <string>com.enzo-perez-itti.tuti-qr-reader</string>
+          <string>com.itti.tuti.smartaccess</string>
         </array>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>exp+tuti-qr-reader</string>
+          <string>exp+tuti-smart-access</string>
         </array>
       </dict>
     </array>

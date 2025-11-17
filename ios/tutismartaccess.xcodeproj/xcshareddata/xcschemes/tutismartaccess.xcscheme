@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "tutiqrreader.app"
-               BlueprintName = "tutiqrreader"
-               ReferencedContainer = "container:tutiqrreader.xcodeproj">
+               BuildableName = "tutismartaccess.app"
+               BlueprintName = "tutismartaccess"
+               ReferencedContainer = "container:tutismartaccess.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "tutiqrreaderTests.xctest"
-               BlueprintName = "tutiqrreaderTests"
-               ReferencedContainer = "container:tutiqrreader.xcodeproj">
+               BuildableName = "tutismartaccessTests.xctest"
+               BlueprintName = "tutismartaccessTests"
+               ReferencedContainer = "container:tutismartaccess.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "tutiqrreader.app"
-            BlueprintName = "tutiqrreader"
-            ReferencedContainer = "container:tutiqrreader.xcodeproj">
+            BuildableName = "tutismartaccess.app"
+            BlueprintName = "tutismartaccess"
+            ReferencedContainer = "container:tutismartaccess.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "tutiqrreader.app"
-            BlueprintName = "tutiqrreader"
-            ReferencedContainer = "container:tutiqrreader.xcodeproj">
+            BuildableName = "tutismartaccess.app"
+            BlueprintName = "tutismartaccess"
+            ReferencedContainer = "container:tutismartaccess.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

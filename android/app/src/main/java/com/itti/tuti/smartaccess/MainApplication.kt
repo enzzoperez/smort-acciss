@@ -1,4 +1,4 @@
-package com.enzoperezitti.tutiqrreader
+package com.itti.tuti.smartaccess
 
 import android.app.Application
 import android.content.res.Configuration

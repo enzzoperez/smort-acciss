@@ -27,7 +27,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="tutiqrreader"/>
-        <data android:scheme="exp+tuti-qr-reader"/>
+        <data android:scheme="exp+tuti-smart-access"/>
       </intent-filter>
     </activity>
   </application>
