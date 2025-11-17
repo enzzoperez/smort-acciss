@@ -51,6 +51,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "280698c6-1aef-4499-9d65-7bcae8874e56"
+      }
+    },
+    "owner": "itti-platform"
   }
 }
