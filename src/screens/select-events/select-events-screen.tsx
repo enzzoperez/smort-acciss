@@ -18,34 +18,16 @@ import Layer from '@/components/layer';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useGetEventsQuery } from '@/api/events-api';
 import { Header } from '@/components/header-logo';
-
-const a = [
-  {
-    eventCode: 'EVENT_1',
-    eventName: 'Nombre del evento 1',
-    mode: 'CHECK',
-    sections: ['GENERAL', 'VIP'],
-  },
-  {
-    eventCode: 'EVENT_2',
-    eventName: 'Nombre del evento 2',
-    mode: 'SCAN',
-    sections: ['GENERAL'],
-  },
-  {
-    eventCode: 'EVENT_3',
-    eventName: 'Festival Primavera Sound',
-    mode: 'CHECK',
-    sections: ['ESCENARIO PRINCIPAL', 'CAMPO', 'BACKSTAGE'],
-  },
-];
+import { useNetwork } from '@/providers/network-provider';
+import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
+  const { sync } = useSyncOfflineData();
   const { userData } = useAppSelector((state) => state.user);
   const { selectedEvent } = useAppSelector((state) => state.config);
-
   const dispatch = useAppDispatch();
+  const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
   const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
 
@@ -98,6 +80,12 @@ const SelectEventsScreen = () => {
     }
   }, [dataEvents]);
 
+  useEffect(() => {
+    if (isOnline && selectedEvent) {
+      sync();
+    }
+  }, [isOnline, selectedEvent]);
+
   if (isLoading || isFetching) {
     return (
       <Layer>
@@ -135,6 +123,7 @@ const SelectEventsScreen = () => {
 
       <Header onRightPress={closeSession} />
       <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}
         refreshControl={
           <RefreshControl refreshing={isFetching || isLoading} onRefresh={onRefresh} />
@@ -179,6 +168,7 @@ const SelectEventsScreen = () => {
                         Asignaciones
                       </ThemedText>
                       <ScrollView
+                        indicatorStyle="black"
                         style={{
                           backgroundColor: '#00000008',
                           borderRadius: 16,

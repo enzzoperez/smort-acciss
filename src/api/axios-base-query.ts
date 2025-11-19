@@ -34,6 +34,8 @@ export const axiosBaseQuery =
         headers: authHeaders,
       });
 
+      console.log('API Request:', result.data);
+
       return { data: result.data };
     } catch (axiosError) {
       const err = axiosError as AxiosError;

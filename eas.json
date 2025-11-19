@@ -10,7 +10,7 @@
       "distribution": "internal"
     },
     "preview": {
-      "environment": "production",
+      "environment": "development",
       "distribution": "internal"
     },
     "production": {

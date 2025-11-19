@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, StatusBar } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
@@ -12,39 +12,55 @@ import CheckAccess from '@/assets/svg/check-access.svg';
 import ScanAccess from '@/assets/svg/scan-access.svg';
 
 import { getReadErrorByCode } from '@/utils/get-error-result';
+import { useNetwork } from '@/providers/network-provider';
+import { saveQrOffline } from '@/storage/qr-storage';
+import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 
 const ResultScreen = () => {
   const router = useRouter();
   const { scannedCode } = useLocalSearchParams();
   const { selectedEvent, verifyOnly } = useAppSelector((state) => state.config);
+
+  const { isOnline } = useNetwork();
+  const onlineSnapshotRef = useRef(isOnline);
+
+  const { sync } = useSyncOfflineData();
+
   const [
     validateAndRegister,
-    {
-      isLoading: loadingRegister,
-      isError: isErrorRegister,
-      error: errorRegister,
-      isSuccess: successRegister,
-    },
+    { isLoading: isLoadingRequest, error: errorRequest, isSuccess: isSuccessRequest },
   ] = useValidateAndRegisterMutation();
 
-  const isLoadingRequest = loadingRegister;
-  const isErrorRequest = isErrorRegister;
-  const errorRequest = errorRegister;
-  const isSuccessRequest = successRegister;
+  const [errorNetwork, setErrorNetwork] = useState<boolean>(false);
 
-  const errorItem = getReadErrorByCode(errorRequest?.data?.errors[0]?.code);
+  const errorItem = getReadErrorByCode({
+    code: errorRequest?.data?.errors[0]?.code,
+    isConnected: onlineSnapshotRef.current,
+  });
 
   useEffect(() => {
-    const validateAndRegisterQr = async () => {
-      await validateAndRegister({
-        eventCode: selectedEvent as string,
-        qrCode: scannedCode as string,
-      });
+    const processQr = async () => {
+      if (!scannedCode) return;
+
+      const online = onlineSnapshotRef.current;
+      if (!online) {
+        await saveQrOffline(scannedCode as string);
+        setErrorNetwork(true);
+        return;
+      }
+
+      try {
+        await sync();
+        await validateAndRegister({
+          eventCode: selectedEvent!,
+          qrCode: scannedCode as string,
+        });
+      } catch (error) {
+        console.error('Error validando QR:', error);
+      }
     };
 
-    if (scannedCode) {
-      validateAndRegisterQr();
-    }
+    processQr();
   }, [scannedCode]);
 
   if (!scannedCode) {
@@ -78,11 +94,11 @@ const ResultScreen = () => {
 
       <View style={styles.container}>
         <View style={{ gap: 32, alignItems: 'center' }}>
-          {isErrorRequest && errorItem?.icon}
+          {errorItem && errorItem?.icon}
           {isSuccessRequest && verifyOnly && <CheckAccess />}
           {isSuccessRequest && !verifyOnly && <ScanAccess />}
 
-          {isErrorRequest && (
+          {errorItem && (
             <>
               <ThemedText type="title" style={styles.resultText}>
                 {errorItem?.title}
@@ -101,8 +117,9 @@ const ResultScreen = () => {
           )}
         </View>
 
-        <ActionLabel type={isErrorRequest ? 'error' : 'success'} />
+        <ActionLabel type={errorItem && !errorNetwork ? 'error' : 'success'} />
       </View>
+
       <View
         style={{
           width: '100%',

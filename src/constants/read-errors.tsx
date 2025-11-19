@@ -2,6 +2,7 @@ import EventMismatchError from '@/assets/svg/event-mismatch-error.svg';
 import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
 import UsedTicketError from '@/assets/svg/used-ticket-error.svg';
 import ZoneMismatchError from '@/assets/svg/zone-mismatch-error.svg';
+import TicketNetwork from '@/assets/svg/ticket-network.svg';
 
 export const readErrors = [
   {
@@ -45,5 +46,14 @@ export const readErrors = [
     message: 'Este código ya fue escaneado antes. No es válido nuevamente.',
     action: 'No permitir ingreso',
     icon: <UsedTicketError />,
+  },
+  {
+    code: 'ACCTRL-005',
+    key: 'NETWORK_ERROR',
+    title: 'Error de conexión',
+    message:
+      'No pudimos validar el código QR por problemas de conexión. Guardamos el código para validarlo más tarde. Revisar la red y comunicarlo a tu supervisor.',
+    action: 'Permitir ingreso',
+    icon: <TicketNetwork />,
   },
 ];

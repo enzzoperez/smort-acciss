@@ -5,6 +5,14 @@ interface ReqValidateOnly {
   qrCode?: string;
 }
 
+interface ReqSyncOfflineData {
+  eventCode: string;
+  qrCodes: {
+    qrCode: string;
+    timeScan: string;
+  }[];
+}
+
 export const scannerApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
     validateAndRegister: builder.mutation<unknown, ReqValidateOnly>({
@@ -14,7 +22,15 @@ export const scannerApi = rootApi.injectEndpoints({
         data: { qrCode },
       }),
     }),
+
+    syncOfflineData: builder.mutation<unknown, ReqSyncOfflineData>({
+      query: ({ eventCode, qrCodes }) => ({
+        url: `/access-control/${eventCode}/scan/off-line`,
+        method: 'post',
+        data: { qrCodes },
+      }),
+    }),
   }),
 });
 
-export const { useValidateAndRegisterMutation } = scannerApi;
+export const { useValidateAndRegisterMutation, useSyncOfflineDataMutation } = scannerApi;
