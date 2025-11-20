@@ -22,7 +22,7 @@ desc 'iOS: Increment build number and set the version to package.json version.'
 private_lane :inc_ver_ios do
   package = load_json(json_path: "./package.json")
 
-  xcodeproj_path = "./ios/#{package['name']}.xcodeproj"
+  xcodeproj_path = "./ios/tutismartaccess.xcodeproj"
   
   increment_build_number(
     xcodeproj: xcodeproj_path
@@ -50,7 +50,7 @@ lane :bump do
 
   # Update the Expo runtime version in the plist and strings.xml files with updated package version
   version = package['version']
-  sh "plutil -replace EXUpdatesRuntimeVersion -string #{version} ../ios/g5pro/Supporting/Expo.plist"
+  sh "plutil -replace EXUpdatesRuntimeVersion -string #{version} ../ios/tutismartaccess/Supporting/Expo.plist"
   sh "sed -i '' 's|<string name=\\\"expo_runtime_version\\\">.*</string>|<string name=\\\"expo_runtime_version\\\">#{version}</string>|' ../android/app/src/main/res/values/strings.xml"
 end
 
