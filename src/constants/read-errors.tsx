@@ -48,6 +48,14 @@ export const readErrors = [
     icon: <UsedTicketError />,
   },
   {
+    code: 'ACCTRL-018',
+    key: 'QR_EXPIRED',
+    title: 'Ticket expirado',
+    message: 'Este código ya no es válido, intenta con otro por favor.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
     code: 'ACCTRL-005',
     key: 'NETWORK_ERROR',
     title: 'Error de conexión',

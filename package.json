@@ -10,6 +10,7 @@
     "build:android-dev": "cd android && NODE_ENV=development ./gradlew assembleRelease && ..",
     "ios": "NODE_ENV=development APP_VARIANT=development expo run:ios",
     "ios-device": "NODE_ENV=development APP_VARIANT=development expo run:ios --device",
+    "ios-prod": "NODE_ENV=prouction APP_VARIANT=production expo run:ios",
     "web": "expo start --web",
     "prepare": "husky",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",

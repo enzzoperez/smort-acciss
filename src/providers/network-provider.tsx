@@ -33,7 +33,7 @@ export const NetworkProvider = ({ children }: { children: React.ReactNode }) => 
   useEffect(() => {
     if (!isOnline) {
       Alert.alert(
-        'Sin conexión Provider',
+        'Sin conexión',
         'Estás en modo offline. Los datos se guardarán localmente y se enviarán al recuperar la conexión.',
       );
     }

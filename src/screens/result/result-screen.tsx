@@ -1,67 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, ActivityIndicator, StatusBar } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import Layer from '@/components/layer';
-import { useValidateAndRegisterMutation } from '@/api/scanner-api';
-import { useAppSelector } from '@/libs/redux';
-import { ActionLabel } from './action-label';
-
-import CheckAccess from '@/assets/svg/check-access.svg';
-import ScanAccess from '@/assets/svg/scan-access.svg';
-
-import { getReadErrorByCode } from '@/utils/get-error-result';
-import { useNetwork } from '@/providers/network-provider';
-import { saveQrOffline } from '@/storage/qr-storage';
-import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
+import { useResultScreen } from './use-result-screen';
 
 const ResultScreen = () => {
-  const router = useRouter();
-  const { scannedCode } = useLocalSearchParams();
-  const { selectedEvent, verifyOnly } = useAppSelector((state) => state.config);
-
-  const { isOnline } = useNetwork();
-  const onlineSnapshotRef = useRef(isOnline);
-
-  const { sync } = useSyncOfflineData();
-
-  const [
-    validateAndRegister,
-    { isLoading: isLoadingRequest, error: errorRequest, isSuccess: isSuccessRequest },
-  ] = useValidateAndRegisterMutation();
-
-  const [errorNetwork, setErrorNetwork] = useState<boolean>(false);
-
-  const errorItem = getReadErrorByCode({
-    code: errorRequest?.data?.errors[0]?.code,
-    isConnected: onlineSnapshotRef.current,
-  });
-
-  useEffect(() => {
-    const processQr = async () => {
-      if (!scannedCode) return;
-
-      const online = onlineSnapshotRef.current;
-      if (!online) {
-        await saveQrOffline(scannedCode as string);
-        setErrorNetwork(true);
-        return;
-      }
-
-      try {
-        await sync();
-        await validateAndRegister({
-          eventCode: selectedEvent!,
-          qrCode: scannedCode as string,
-        });
-      } catch (error) {
-        console.error('Error validando QR:', error);
-      }
-    };
-
-    processQr();
-  }, [scannedCode]);
+  const { getScreenElements, handleGoHome, handleScanQr, scannedCode, isLoadingRequest } =
+    useResultScreen();
 
   if (!scannedCode) {
     return (
@@ -94,30 +40,18 @@ const ResultScreen = () => {
 
       <View style={styles.container}>
         <View style={{ gap: 32, alignItems: 'center' }}>
-          {errorItem && errorItem?.icon}
-          {isSuccessRequest && verifyOnly && <CheckAccess />}
-          {isSuccessRequest && !verifyOnly && <ScanAccess />}
+          {getScreenElements().mainIcon}
 
-          {errorItem && (
-            <>
-              <ThemedText type="title" style={styles.resultText}>
-                {errorItem?.title}
-              </ThemedText>
+          <ThemedText type="title" style={styles.resultText}>
+            {getScreenElements().title}
+          </ThemedText>
 
-              <ThemedText type="default" style={styles.descriptionError}>
-                {errorItem?.message}
-              </ThemedText>
-            </>
-          )}
-
-          {isSuccessRequest && (
-            <ThemedText type="title" style={styles.resultText}>
-              {verifyOnly ? 'Acceso confirmado' : 'Acceso confirmado y quemado'}
-            </ThemedText>
-          )}
+          <ThemedText type="default" style={styles.descriptionError}>
+            {getScreenElements().message}
+          </ThemedText>
         </View>
 
-        <ActionLabel type={errorItem && !errorNetwork ? 'error' : 'success'} />
+        {getScreenElements().actionLabel}
       </View>
 
       <View
@@ -127,21 +61,9 @@ const ResultScreen = () => {
           paddingVertical: 24,
         }}
       >
-        <UiButton
-          variant="tertiary"
-          text="Escanear otro código QR"
-          onPress={() => {
-            router.replace('/camera');
-          }}
-        />
+        <UiButton variant="tertiary" text="Escanear otro código QR" onPress={handleScanQr} />
 
-        <UiButton
-          variant="secondary"
-          text="Ir al inicio"
-          onPress={() => {
-            router.replace('/select-events');
-          }}
-        />
+        <UiButton variant="secondary" text="Ir al inicio" onPress={handleGoHome} />
       </View>
     </Layer>
   );

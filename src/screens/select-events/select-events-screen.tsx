@@ -60,6 +60,13 @@ const SelectEventsScreen = () => {
   );
 
   useEffect(() => {
+    if (selectedEvent && dataEvents) {
+      const selected = dataEvents?.config.find((event) => event.eventCode === selectedEvent);
+      setItemSelected(selected || null);
+    }
+  }, []);
+
+  useEffect(() => {
     if (itemSelected) {
       const selected = dataEvents?.config.find(
         (event) => event.eventCode === itemSelected.eventCode,

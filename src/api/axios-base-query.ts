@@ -1,3 +1,4 @@
+import { setLogout } from '@/store/slices';
 import { RootState } from '@/store/store';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
@@ -16,11 +17,12 @@ export const axiosBaseQuery =
     unknown,
     unknown
   > =>
-  async ({ url, method = 'GET', data, params, headers }, { getState }) => {
-    try {
-      const state = getState() as RootState;
-      const accessToken = state.auth?.accessToken;
+  async ({ url, method = 'GET', data, params, headers }, { getState, dispatch }) => {
+    const state = getState() as RootState;
+    const accessToken = state.auth?.accessToken;
+    // const refreshToken = state.auth?.refreshToken;
 
+    try {
       const authHeaders = {
         ...headers,
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -34,17 +36,39 @@ export const axiosBaseQuery =
         headers: authHeaders,
       });
 
-      console.log('API Request:', result.data);
-
       return { data: result.data };
     } catch (axiosError) {
       const err = axiosError as AxiosError;
+      const status = err.response?.status;
 
-      return {
-        error: {
-          status: err.response?.status,
-          data: err.response?.data || err.message,
-        },
-      };
+      if (status === 401) {
+        try {
+          dispatch(setLogout());
+
+          // const refreshResponse = await axios.put(
+          //   `${baseUrl}/accounts/refresh-token`,
+          //   { refreshToken },
+          //   { headers: { Authorization: `Bearer ${accessToken}` } },
+          // );
+
+          // const newAccessToken = refreshResponse.data.tokens.accessToken;
+
+          // // Save the new accesToken in redux
+          // dispatch(setAccessToken(newAccessToken));
+
+          // // Retry the original request with the new token
+          // const retryResult = await axios({
+          //   url: `${baseUrl}${url}`,
+          //   method,
+          //   data,
+          // });
+
+          // return { data: retryResult.data };
+        } catch {
+          // dispatch(setLogout());
+        }
+      }
+
+      return { error: { status, data: err.response?.data } };
     }
   };
