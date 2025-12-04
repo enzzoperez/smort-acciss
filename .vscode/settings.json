@@ -4,6 +4,6 @@
     "source.sortMembers": "explicit",
 
     "editor.defaultFormatter": "always",
-    "editor.formatOnSave": "always"
+    "editor.formatOnSave": "never"
   }
 }

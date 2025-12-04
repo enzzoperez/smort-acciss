@@ -1,100 +1,163 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { ThemedText } from '@/components/themed-text';
+import { UiButton } from '@/components/ui-button';
+import { appVersion, isIos } from '@/utils/device-utils';
+import { KeyboardAvoidingView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import { useCameraPermissions } from 'expo-camera';
+import { TextInput } from 'react-native-gesture-handler';
+import PhoneNumberInput from '@/components/phone-number-input';
+import { useLoginMutation } from '@/api/auth-api';
+import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
+import { useAppDispatch } from '@/libs/redux';
+import { useApiErrorHandler } from '@/hooks/useErrorHandler';
+import MainLogo from '@/assets/svg/main-logo.svg';
+import Layer from '@/components/layer';
+import { Feather } from '@expo/vector-icons';
+import PressableOpacity from '@/components/pressable-opacity';
+import PoweredByItti from '@/assets/svg/powered-by-itti.svg';
 
-export default function LoginScreen() {
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <View style={styles.logoPlaceholder} />
-        </View>
+const LoginScreen = () => {
+  const dispatch = useAppDispatch();
+  const [permission, requestPermission] = useCameraPermissions();
+  const [login, { isLoading }] = useLoginMutation();
+  const { apiErrorHandler } = useApiErrorHandler();
 
-        {/* Inputs */}
-        <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Número de teléfono"
-            keyboardType="phone-pad"
-            style={styles.input}
-            placeholderTextColor="#7A7A7A"
-          />
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
-          <TextInput
-            placeholder="Contraseña"
-            secureTextEntry
-            style={styles.input}
-            placeholderTextColor="#7A7A7A"
-          />
+  const isPermissionGranted = Boolean(permission?.granted);
 
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Ingresar</Text>
-          </TouchableOpacity>
-        </View>
+  const handleLoginRequest = async () => {
+    try {
+      const data = await login({
+        accountCredentialType: 'PHONE_NUMBER',
+        accountCredentialValue: phoneNumber,
+        password: password,
+      }).unwrap();
 
-        {/* Versión */}
-        <Text style={styles.versionText}>v1.0.0</Text>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      const { tokens, ...userWithoutTokens } = data;
+
+      dispatch(setAccessToken(tokens.accessToken));
+      dispatch(setRefreshToken(tokens.refreshToken));
+      dispatch(setUserData(userWithoutTokens));
+    } catch (error) {
+      apiErrorHandler(error);
+    }
+  };
+
+  const Buttons = () => (
+    <View>
+      <UiButton
+        disabled={isLoading}
+        variant="primary"
+        text="Ingresar"
+        onPress={handleLoginRequest}
+      />
+    </View>
   );
-}
+
+  useEffect(() => {
+    if (!isPermissionGranted) {
+      requestPermission();
+    }
+  }, [isPermissionGranted]);
+
+  return (
+    <Layer>
+      <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+      <ScrollView
+        style={[{ flex: 1 }]}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <KeyboardAvoidingView
+          style={styles.avoidingStyle}
+          behavior={isIos() ? 'padding' : 'height'}
+        >
+          <View style={styles.container}>
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <MainLogo />
+            </View>
+            <View style={styles.formContainer}>
+              <ThemedText type="subtitle" style={{ fontSize: 22 }}>
+                Iniciar sesión
+              </ThemedText>
+              <PhoneNumberInput
+                onChangeText={(text) => setPhoneNumber(text)}
+                placeholder="Número de teléfono"
+                label="Número de teléfono"
+              />
+
+              <View style={{ position: 'relative', marginBottom: 16 }}>
+                <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
+                  Contraseña
+                </ThemedText>
+                <TextInput
+                  placeholder="Contraseña"
+                  secureTextEntry={!passwordVisible}
+                  style={styles.input}
+                  placeholderTextColor="#7A7A7A"
+                  onChangeText={(text) => setPassword(text)}
+                />
+                <PressableOpacity
+                  onPress={() => setPasswordVisible((prev) => !prev)}
+                  style={styles.iconContainer}
+                >
+                  <Feather name={passwordVisible ? 'eye-off' : 'eye'} size={20} color="#7A7A7A" />
+                </PressableOpacity>
+              </View>
+              <Buttons />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+
+        <View style={{ alignItems: 'center' }}>
+          <PoweredByItti />
+          <ThemedText type="default" style={{ color: 'black', fontSize: 12 }}>
+            {appVersion}
+          </ThemedText>
+        </View>
+      </ScrollView>
+    </Layer>
+  );
+};
 
 const styles = StyleSheet.create({
+  avoidingStyle: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F4F8FB', // Fondo claro fresco
-    justifyContent: 'space-between',
-    paddingHorizontal: 30,
-    paddingVertical: 40,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  logoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 20,
-    backgroundColor: '#E1ECF4', // Lugar para el logo (luego reemplazás)
+    justifyContent: 'space-evenly',
   },
   formContainer: {
     width: '100%',
     gap: 16,
+    marginBottom: 48,
   },
   input: {
+    fontFamily: 'UenoLogicalBook',
+    color: 'black',
+    height: 45,
     backgroundColor: '#FFFFFF',
     padding: 14,
     borderRadius: 10,
-    borderColor: '#D5E3F0',
+    borderColor: '#DCE1E8',
     borderWidth: 1,
     fontSize: 16,
+    paddingRight: 40,
   },
-  button: {
-    backgroundColor: '#007AFF', // Azul iOS vibes
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  versionText: {
-    textAlign: 'center',
-    color: '#8FA3B7',
-    fontSize: 14,
+  iconContainer: {
+    position: 'absolute',
+    right: 12,
+    top: 32,
   },
 });
+
+export default LoginScreen;

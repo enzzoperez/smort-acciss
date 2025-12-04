@@ -1,20 +1,20 @@
-import { Canvas, DiffRect, rect, rrect } from '@shopify/react-native-skia';
+import React from 'react';
 import { Dimensions, Platform, StyleSheet } from 'react-native';
+import { Canvas, DiffRect, rect, rrect } from '@shopify/react-native-skia';
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('screen');
+const innerDimension = 310;
 
-const innerDimension = 300;
-
-const outer = rrect(rect(0, 0, width, height), 0, 0);
+const outer = rrect(rect(0, 0, width, height), 4, 0);
 const inner = rrect(
   rect(
     width / 2 - innerDimension / 2,
-    height / 2 - innerDimension / 2,
+    height / 2.4 - innerDimension / 2,
     innerDimension,
     innerDimension,
   ),
-  50,
-  50,
+  24,
+  24,
 );
 
 export const Overlay = () => {

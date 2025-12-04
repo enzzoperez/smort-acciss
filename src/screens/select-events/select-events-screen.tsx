@@ -1,67 +1,237 @@
+import React, { useEffect, useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
-import { useAppTranslation } from '@/libs/i18n';
 import { appVersion } from '@/utils/device-utils';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { useLogoutMutation } from '@/api/auth-api';
+import { useAppDispatch, useAppSelector } from '@/libs/redux';
+import { resetUserData, setLogout, setSelectedEvent, setVerifyOnly } from '@/store/slices';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCameraPermissions } from 'expo-camera';
+import Layer from '@/components/layer';
+import { Dropdown } from 'react-native-element-dropdown';
+import { useGetEventsQuery } from '@/api/events-api';
+import { Header } from '@/components/header-logo';
+import { useNetwork } from '@/providers/network-provider';
+import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 
 const SelectEventsScreen = () => {
-  const { t } = useAppTranslation(['home']);
   const router = useRouter();
-  const [permission, requestPermission] = useCameraPermissions();
+  const { sync } = useSyncOfflineData();
+  const { userData } = useAppSelector((state) => state.user);
+  const { selectedEvent } = useAppSelector((state) => state.config);
+  const dispatch = useAppDispatch();
+  const { isOnline } = useNetwork();
+  const [logout] = useLogoutMutation();
+  const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
 
-  const insets = useSafeAreaInsets();
+  const [itemSelected, setItemSelected] = useState<{
+    eventCode: string;
+    eventName: string;
+    mode: string;
+    sections: string[];
+  } | null>(null);
 
-  const isPermissionGranted = Boolean(permission?.granted);
+  const closeSession = () => {
+    logout({ accountId: userData?.accountId });
+    dispatch(setLogout());
+    dispatch(resetUserData());
+  };
 
-  const handleFastPass = () => {
-    router.push('/camera');
+  const onRefresh = () => {
+    refetch();
   };
 
   const Buttons = () => (
-    <View>
+    <View style={{ gap: 16 }}>
       <UiButton
-        disabled={!isPermissionGranted}
-        variant="secondary"
-        text={t('home:buttonFastPass')}
-        onPress={handleFastPass}
+        disabled={!selectedEvent}
+        variant="tertiary"
+        text={'Escanear'}
+        onPress={() => router.push('/camera')}
       />
     </View>
   );
 
   useEffect(() => {
-    if (!isPermissionGranted) {
-      requestPermission();
+    if (selectedEvent && dataEvents) {
+      const selected = dataEvents?.config.find((event) => event.eventCode === selectedEvent);
+      setItemSelected(selected || null);
     }
-  }, [isPermissionGranted]);
+  }, []);
+
+  useEffect(() => {
+    if (itemSelected) {
+      const selected = dataEvents?.config.find(
+        (event) => event.eventCode === itemSelected.eventCode,
+      );
+
+      if (selected) {
+        dispatch(setSelectedEvent(selected.eventCode));
+        dispatch(setVerifyOnly(selected.mode === 'CHECK'));
+      }
+    }
+  }, [itemSelected]);
+
+  useEffect(() => {
+    if (dataEvents && dataEvents?.config.length === 1) {
+      setItemSelected(dataEvents?.config[0]);
+      dispatch(setSelectedEvent(dataEvents?.config[0].eventCode));
+      dispatch(setVerifyOnly(dataEvents?.config[0].mode === 'CHECK'));
+    }
+  }, [dataEvents]);
+
+  useEffect(() => {
+    if (isOnline && selectedEvent) {
+      sync();
+    }
+  }, [isOnline, selectedEvent]);
+
+  if (isLoading || isFetching) {
+    return (
+      <Layer>
+        <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <ThemedText>Cargando eventos...</ThemedText>
+        </View>
+      </Layer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Layer>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={isFetching || isLoading} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.container}>
+            <ThemedText style={{ color: 'red', textAlign: 'center' }}>
+              Error al cargar los eventos. Por favor reinicia sesión o inténtalo de nuevo más tarde.
+            </ThemedText>
+            <UiButton variant="secondary" text={'Cerrar sesión'} onPress={closeSession} />
+          </View>
+        </ScrollView>
+      </Layer>
+    );
+  }
 
   return (
-    <ImageBackground
-      source={require('@/assets/images/shakira-hero.jpg')}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={[styles.overlay, { paddingBottom: insets.bottom }]}>
+    <Layer>
+      <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+
+      <Header onRightPress={closeSession} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching || isLoading} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.container}>
           <View style={{ marginBottom: 32 }}>
             <ThemedText type="title" style={styles.title}>
-              {t('home:title')}
+              Control de accesos en:
             </ThemedText>
-            <ThemedText style={styles.subtitle}>{t('home:subtitle')}</ThemedText>
+
+            {dataEvents?.config && (
+              <View style={{ gap: 24 }}>
+                {/* Select event */}
+                <View style={{ gap: 8 }}>
+                  <ThemedText type="subtitle" style={{ fontSize: 16 }}>
+                    Eventos
+                  </ThemedText>
+                  <Dropdown
+                    style={styles.dropdown}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                    iconStyle={styles.iconStyle}
+                    data={dataEvents?.config}
+                    maxHeight={300}
+                    labelField="eventName"
+                    valueField="eventCode"
+                    placeholder="Elegir evento"
+                    searchPlaceholder="Buscar..."
+                    value={selectedEvent}
+                    onChange={(item) => {
+                      setItemSelected(item);
+                    }}
+                  />
+                </View>
+
+                {selectedEvent && (
+                  <>
+                    {/* Asociated Sections */}
+                    <View style={{ gap: 8 }}>
+                      <ThemedText type="title" style={styles.title}>
+                        Asignaciones
+                      </ThemedText>
+                      <ScrollView
+                        indicatorStyle="black"
+                        style={{
+                          backgroundColor: '#00000008',
+                          borderRadius: 16,
+                          padding: 20,
+                          maxHeight: 300,
+                        }}
+                      >
+                        {itemSelected &&
+                          itemSelected.sections.map((section) => (
+                            <ThemedText
+                              key={section}
+                              type="default"
+                              style={styles.itemAsociatedSection}
+                            >
+                              → {section}
+                            </ThemedText>
+                          ))}
+                      </ScrollView>
+                    </View>
+
+                    {/* Reader mode */}
+                    <View style={{ gap: 8 }}>
+                      <ThemedText type="title" style={styles.title}>
+                        Método de lectura:
+                      </ThemedText>
+                      <View
+                        style={{
+                          backgroundColor: '#00000008',
+                          borderRadius: 16,
+                          gap: 8,
+                          padding: 20,
+                        }}
+                      >
+                        <ThemedText>
+                          {itemSelected && itemSelected.mode === 'CHECK'
+                            ? '→  Verificación de QR'
+                            : '→  Verificación y quemado de Qr'}
+                        </ThemedText>
+                      </View>
+                    </View>
+                  </>
+                )}
+              </View>
+            )}
           </View>
 
           <Buttons />
         </View>
-        <View style={{ alignItems: 'center' }}>
-          <ThemedText type="subtitle" style={{ color: 'white', fontSize: 12 }}>
+
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          <ThemedText type="subtitle" style={{ color: 'black', fontSize: 12 }}>
             {appVersion}
           </ThemedText>
         </View>
-      </View>
-    </ImageBackground>
+      </ScrollView>
+    </Layer>
   );
 };
 
@@ -77,9 +247,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   container: {
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     flex: 1,
   },
   overlay: {
@@ -87,14 +255,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
   title: {
-    fontSize: 48,
-    lineHeight: 48,
-    color: 'white',
-    marginBottom: 8,
+    fontSize: 28,
+    color: 'black',
+    marginTop: 24,
+    marginBottom: 16,
   },
   subtitle: {
     fontSize: 18,
-    color: 'white',
+    color: 'black',
     marginBottom: 16,
   },
   bold: {
@@ -124,6 +292,36 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+
+  //dropdown
+  dropdown: {
+    height: 50,
+    borderColor: '#1D252D',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    fontFamily: 'UenoLogicalBook',
+    opacity: 0.4,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+    fontFamily: 'UenoLogicalBook',
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+
+  itemAsociatedSection: {
+    fontSize: 20,
+    marginBottom: 8,
   },
 });
 

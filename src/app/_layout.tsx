@@ -1,5 +1,3 @@
-import BackHeader from '@/components/back-header';
-import CustomHeader from '@/components/custom-header';
 import '@/i18n/i18n-config';
 import { CustomProviders } from '@/providers';
 import { useFonts } from 'expo-font';
@@ -31,20 +29,26 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
-            header: (props) => <CustomHeader {...props} />,
+            headerShown: false,
           }}
         />
         <Stack.Screen
           name="select-events"
           options={{
             gestureEnabled: false,
-            header: (props) => <CustomHeader {...props} />,
+            headerShown: false,
           }}
         />
         <Stack.Screen
           name="camera"
           options={{
-            header: () => <BackHeader />,
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="scan-result"
+          options={{
+            headerShown: false,
           }}
         />
       </Stack>
