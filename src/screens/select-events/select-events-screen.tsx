@@ -20,6 +20,7 @@ import { useGetEventsQuery } from '@/api/events-api';
 import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
+import { logError } from '@/libs/crashlytics';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
@@ -80,10 +81,14 @@ const SelectEventsScreen = () => {
   }, [itemSelected]);
 
   useEffect(() => {
-    if (dataEvents && dataEvents?.config.length === 1) {
-      setItemSelected(dataEvents?.config[0]);
-      dispatch(setSelectedEvent(dataEvents?.config[0].eventCode));
-      dispatch(setVerifyOnly(dataEvents?.config[0].mode === 'CHECK'));
+    try {
+      if (dataEvents && dataEvents?.config.length === 1) {
+        setItemSelected(dataEvents?.config[0]);
+        dispatch(setSelectedEvent(dataEvents?.config[0].eventCode));
+        dispatch(setVerifyOnly(dataEvents?.config[0].mode === 'CHECK'));
+      }
+    } catch (error) {
+      logError(error as Error);
     }
   }, [dataEvents]);
 

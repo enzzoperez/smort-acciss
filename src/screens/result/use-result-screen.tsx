@@ -12,6 +12,7 @@ import { getReadErrorByCode } from '@/utils/get-error-result';
 import { useNetwork } from '@/providers/network-provider';
 import { saveQrOffline } from '@/storage/qr-storage';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
+import { logError } from '@/libs/crashlytics';
 
 export const useResultScreen = () => {
   const router = useRouter();
@@ -53,7 +54,7 @@ export const useResultScreen = () => {
           qrCode: scannedCode as string,
         });
       } catch (error) {
-        console.error('Error validando QR:', error);
+        logError(error);
       }
     };
     processQr();

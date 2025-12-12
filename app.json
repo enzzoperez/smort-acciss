@@ -9,11 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "googleServicesFile": "./ios/GoogleService-Info.plist",
+      "supportsTablet": false,
       "bundleIdentifier": "com.itti.tuti.smartaccess",
       "appleTeamId": "83W9P2X5SX"
     },
     "android": {
+      "googleServicesFile": "./android/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/android-icon-foreground.png",
         "backgroundColor": "#ffffff"
@@ -29,6 +31,8 @@
       "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics",
       "expo-router",
       [
         "expo-camera",
@@ -49,6 +53,9 @@
         }
       ]
     ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "experiments": {
       "typedRoutes": true
     },
