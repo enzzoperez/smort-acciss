@@ -15,7 +15,8 @@ export default ({ config }) => ({
     bundleIdentifier: 'com.itti.tuti.smartaccess',
     appleTeamId: '83W9P2X5SX',
 
-    googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? 'ios/GoogleService-Info.plist',
+    googleServicesFile:
+      process.env.GOOGLE_SERVICE_INFO_PLIST ?? './ios/Production/GoogleService-Info.plist',
   },
 
   android: {
@@ -29,7 +30,8 @@ export default ({ config }) => ({
       backgroundColor: '#ffffff',
     },
 
-    googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? 'android/app/google-services.json',
+    googleServicesFile:
+      process.env.GOOGLE_SERVICES_JSON ?? './android/app/src/main/google-services.json',
   },
 
   plugins: [
