@@ -7,7 +7,7 @@ import { useCameraPermissions } from 'expo-camera';
 import { TextInput } from 'react-native-gesture-handler';
 import PhoneNumberInput from '@/components/phone-number-input';
 import { useLoginMutation } from '@/api/auth-api';
-import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
+// import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
 import { useAppDispatch } from '@/libs/redux';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import MainLogo from '@/assets/svg/main-logo.svg';
@@ -15,6 +15,7 @@ import Layer from '@/components/layer';
 import { Feather } from '@expo/vector-icons';
 import PressableOpacity from '@/components/pressable-opacity';
 import PoweredByItti from '@/assets/svg/powered-by-itti.svg';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 const LoginScreen = () => {
   const dispatch = useAppDispatch();
@@ -29,21 +30,22 @@ const LoginScreen = () => {
   const isPermissionGranted = Boolean(permission?.granted);
 
   const handleLoginRequest = async () => {
-    try {
-      const data = await login({
-        accountCredentialType: 'PHONE_NUMBER',
-        accountCredentialValue: phoneNumber,
-        password: password,
-      }).unwrap();
+    crashlytics().crash(); // Test crashlytics integration
+    // try {
+    //   const data = await login({
+    //     accountCredentialType: 'PHONE_NUMBER',
+    //     accountCredentialValue: phoneNumber,
+    //     password: password,
+    //   }).unwrap();
 
-      const { tokens, ...userWithoutTokens } = data;
+    //   const { tokens, ...userWithoutTokens } = data;
 
-      dispatch(setAccessToken(tokens.accessToken));
-      dispatch(setRefreshToken(tokens.refreshToken));
-      dispatch(setUserData(userWithoutTokens));
-    } catch (error) {
-      apiErrorHandler(error);
-    }
+    //   dispatch(setAccessToken(tokens.accessToken));
+    //   dispatch(setRefreshToken(tokens.refreshToken));
+    //   dispatch(setUserData(userWithoutTokens));
+    // } catch (error) {
+    //   apiErrorHandler(error);
+    // }
   };
 
   const Buttons = () => (
