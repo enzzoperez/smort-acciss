@@ -7,6 +7,7 @@ import { Overlay } from './overlay';
 import Flashlight from '@/assets/svg/flashlight.svg';
 import FlashlightOff from '@/assets/svg/flashlight-off.svg';
 import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
+import { logError } from '@/libs/crashlytics';
 
 export default function CameraScreen() {
   const router = useRouter();
@@ -14,6 +15,22 @@ export default function CameraScreen() {
   const appState = useRef(AppState.currentState);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const handleScannedCode = ({ data }: { data: string }) => {
+    try {
+      if (data && !qrLock.current) {
+        qrLock.current = true;
+        setTimeout(() => {
+          router.replace({
+            pathname: '/scan-result',
+            params: { scannedCode: data },
+          });
+        }, 500);
+      }
+    } catch (error) {
+      logError(error);
+    }
+  };
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -36,17 +53,7 @@ export default function CameraScreen() {
         style={StyleSheet.absoluteFillObject}
         facing="back"
         enableTorch={torchEnabled}
-        onBarcodeScanned={({ data }) => {
-          if (data && !qrLock.current) {
-            qrLock.current = true;
-            setTimeout(() => {
-              router.replace({
-                pathname: '/scan-result',
-                params: { scannedCode: data },
-              });
-            }, 500);
-          }
-        }}
+        onBarcodeScanned={handleScannedCode}
       />
 
       <Overlay />

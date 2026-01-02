@@ -1,3 +1,4 @@
+import { logError } from '@/libs/crashlytics';
 import { setLogout } from '@/store/slices';
 import { RootState } from '@/store/store';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
@@ -38,6 +39,7 @@ export const axiosBaseQuery =
 
       return { data: result.data };
     } catch (axiosError) {
+      logError(axiosError);
       const err = axiosError as AxiosError;
       const status = err.response?.status;
 
