@@ -8,6 +8,7 @@
       "environment": "development",
       "developmentClient": true,
       "distribution": "internal",
+      "autoIncrement": true,
       "env": {
         "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
         "GOOGLE_SERVICE_INFO_PLIST": "@GOOGLE_SERVICE_INFO_PLIST"
