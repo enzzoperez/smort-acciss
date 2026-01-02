@@ -14,8 +14,7 @@ export default ({ config }) => ({
     supportsTablet: false,
     bundleIdentifier: 'com.itti.tuti.smartaccess',
     appleTeamId: '83W9P2X5SX',
-
-    googleServicesFile: './ios/tutismartaccess/GoogleService-Info.plist',
+    googleServicesFile: 'ios/GoogleService-Info.plist',
   },
 
   android: {
@@ -23,13 +22,11 @@ export default ({ config }) => ({
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     permissions: ['android.permission.CAMERA', 'android.permission.RECORD_AUDIO'],
-
     adaptiveIcon: {
       foregroundImage: './src/assets/images/android-icon-foreground.png',
       backgroundColor: '#ffffff',
     },
-
-    googleServicesFile: './android/app//google-services.json',
+    googleServicesFile: 'android/app/google-services.json',
   },
 
   plugins: [
