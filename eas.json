@@ -10,16 +10,17 @@
       "distribution": "internal",
       "autoIncrement": true,
       "env": {
-        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
-        "GOOGLE_SERVICE_INFO_PLIST": "@GOOGLE_SERVICE_INFO_PLIST"
+        "GOOGLE_SERVICES_JSON": "@itti-platform/GOOGLE_SERVICES_JSON",
+        "GOOGLE_SERVICE_INFO_PLIST": "@itti-platform/GOOGLE_SERVICE_INFO_PLIST"
       }
     },
     "preview": {
       "environment": "production",
       "distribution": "internal",
+      "autoIncrement": true,
       "env": {
-        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
-        "GOOGLE_SERVICE_INFO_PLIST": "@GOOGLE_SERVICE_INFO_PLIST"
+        "GOOGLE_SERVICES_JSON": "@itti-platform/GOOGLE_SERVICES_JSON",
+        "GOOGLE_SERVICE_INFO_PLIST": "@itti-platform/GOOGLE_SERVICE_INFO_PLIST"
       }
     },
     "production": {
