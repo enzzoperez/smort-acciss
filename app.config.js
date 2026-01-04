@@ -4,18 +4,20 @@ import path from 'path';
 export default ({ config }) => {
   // ---------- ANDROID ----------
   if (process.env.GOOGLE_SERVICES_JSON) {
-    const androidPath = path.resolve('android/app/google-services.json');
+    const source = process.env.GOOGLE_SERVICES_JSON; // ← path real
+    const target = path.resolve('android/app/google-services.json');
 
-    fs.mkdirSync(path.dirname(androidPath), { recursive: true });
-    fs.writeFileSync(androidPath, process.env.GOOGLE_SERVICES_JSON);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(source, target);
   }
 
   // ---------- IOS ----------
   if (process.env.GOOGLE_SERVICE_INFO_PLIST) {
-    const iosPath = path.resolve('ios/GoogleService-Info.plist');
+    const source = process.env.GOOGLE_SERVICE_INFO_PLIST;
+    const target = path.resolve('ios/GoogleService-Info.plist');
 
-    fs.mkdirSync(path.dirname(iosPath), { recursive: true });
-    fs.writeFileSync(iosPath, process.env.GOOGLE_SERVICE_INFO_PLIST);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(source, target);
   }
 
   return {
@@ -34,7 +36,7 @@ export default ({ config }) => {
       supportsTablet: false,
       bundleIdentifier: 'com.itti.tuti.smartaccess',
       appleTeamId: '83W9P2X5SX',
-      googleServicesFile: './ios/GoogleService-Info.plist',
+      googleServicesFile: 'ios/GoogleService-Info.plist',
     },
 
     android: {
@@ -46,7 +48,7 @@ export default ({ config }) => {
         foregroundImage: './src/assets/images/android-icon-foreground.png',
         backgroundColor: '#ffffff',
       },
-      googleServicesFile: './android/app/google-services.json',
+      googleServicesFile: 'android/app/google-services.json',
     },
 
     plugins: [
