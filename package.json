@@ -6,6 +6,7 @@
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "NODE_ENV=development APP_VARIANT=development expo run:android",
+    "android-prod": "NODE_ENV=production APP_VARIANT=production expo run:android",
     "build:android": "cd android && ./gradlew assembleRelease && ..",
     "build:android-dev": "cd android && NODE_ENV=development ./gradlew assembleRelease && ..",
     "ios": "NODE_ENV=development APP_VARIANT=development expo run:ios",

@@ -3,21 +3,22 @@ import path from 'path';
 
 export default ({ config }) => {
   // ---------- ANDROID ----------
-  if (process.env.GOOGLE_SERVICES_JSON) {
-    const source = process.env.GOOGLE_SERVICES_JSON; // ← path real
+  if (process.env.GOOGLE_SERVICES_JSON && fs.existsSync(process.env.GOOGLE_SERVICES_JSON)) {
     const target = path.resolve('android/app/google-services.json');
 
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.copyFileSync(source, target);
+    fs.copyFileSync(process.env.GOOGLE_SERVICES_JSON, target);
   }
 
   // ---------- IOS ----------
-  if (process.env.GOOGLE_SERVICE_INFO_PLIST) {
-    const source = process.env.GOOGLE_SERVICE_INFO_PLIST;
+  if (
+    process.env.GOOGLE_SERVICE_INFO_PLIST &&
+    fs.existsSync(process.env.GOOGLE_SERVICE_INFO_PLIST)
+  ) {
     const target = path.resolve('ios/GoogleService-Info.plist');
 
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.copyFileSync(source, target);
+    fs.copyFileSync(process.env.GOOGLE_SERVICE_INFO_PLIST, target);
   }
 
   return {
@@ -40,7 +41,6 @@ export default ({ config }) => {
     },
 
     android: {
-      package: 'com.itti.tuti.smartaccess',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       permissions: ['android.permission.CAMERA', 'android.permission.RECORD_AUDIO'],
