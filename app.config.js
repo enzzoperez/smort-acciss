@@ -1,26 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
 export default ({ config }) => {
-  // ---------- ANDROID ----------
-  if (process.env.GOOGLE_SERVICES_JSON && fs.existsSync(process.env.GOOGLE_SERVICES_JSON)) {
-    const target = path.resolve('android/app/google-services.json');
-
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.copyFileSync(process.env.GOOGLE_SERVICES_JSON, target);
-  }
-
-  // ---------- IOS ----------
-  if (
-    process.env.GOOGLE_SERVICE_INFO_PLIST &&
-    fs.existsSync(process.env.GOOGLE_SERVICE_INFO_PLIST)
-  ) {
-    const target = path.resolve('ios/GoogleService-Info.plist');
-
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.copyFileSync(process.env.GOOGLE_SERVICE_INFO_PLIST, target);
-  }
-
   return {
     ...config,
 
@@ -37,10 +15,11 @@ export default ({ config }) => {
       supportsTablet: false,
       bundleIdentifier: 'com.itti.tuti.smartaccess',
       appleTeamId: '83W9P2X5SX',
-      googleServicesFile: 'ios/GoogleService-Info.plist',
+      googleServicesFile: './ios/tutismartaccess/GoogleService-Info.plist',
     },
 
     android: {
+      package: 'com.itti.tuti.smartaccess',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       permissions: ['android.permission.CAMERA', 'android.permission.RECORD_AUDIO'],
@@ -48,7 +27,7 @@ export default ({ config }) => {
         foregroundImage: './src/assets/images/android-icon-foreground.png',
         backgroundColor: '#ffffff',
       },
-      googleServicesFile: 'android/app/google-services.json',
+      googleServicesFile: './android/app/google-services.json',
     },
 
     plugins: [
