@@ -21,6 +21,8 @@ import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
+import { hasTickets, initialSyncTickets } from '@/db/utils';
+import { clearTickets } from '@/db/repositories/ticketsRepository';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
@@ -49,6 +51,15 @@ const SelectEventsScreen = () => {
     refetch();
   };
 
+  const onChangeSelectedEvent = async (item: {
+    eventCode: string;
+    eventName: string;
+    mode: string;
+    sections: string[];
+  }) => {
+    setItemSelected(item);
+  };
+
   const Buttons = () => (
     <View style={{ gap: 16 }}>
       <UiButton
@@ -68,16 +79,22 @@ const SelectEventsScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (itemSelected) {
-      const selected = dataEvents?.config.find(
-        (event) => event.eventCode === itemSelected.eventCode,
-      );
+    const handleSelectedEventChange = async () => {
+      if (itemSelected) {
+        const selected = dataEvents?.config.find(
+          (event) => event.eventCode === itemSelected.eventCode,
+        );
 
-      if (selected) {
-        dispatch(setSelectedEvent(selected.eventCode));
-        dispatch(setVerifyOnly(selected.mode === 'CHECK'));
+        if (selected) {
+          await initialSyncTickets(itemSelected.eventCode);
+
+          dispatch(setSelectedEvent(selected.eventCode));
+          dispatch(setVerifyOnly(selected.mode === 'CHECK'));
+        }
       }
-    }
+    };
+
+    handleSelectedEventChange();
   }, [itemSelected]);
 
   useEffect(() => {
@@ -166,9 +183,7 @@ const SelectEventsScreen = () => {
                     placeholder="Elegir evento"
                     searchPlaceholder="Buscar..."
                     value={selectedEvent}
-                    onChange={(item) => {
-                      setItemSelected(item);
-                    }}
+                    onChange={onChangeSelectedEvent}
                   />
                 </View>
 

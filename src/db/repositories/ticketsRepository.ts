@@ -31,3 +31,7 @@ export async function getUsedTickets(db: Db) {
 export async function getAllTickets(db: Db) {
   return await db.select().from(tickets);
 }
+
+export async function clearTickets(db: Db) {
+  await db.delete(tickets);
+}

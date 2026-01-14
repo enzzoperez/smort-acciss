@@ -3,7 +3,6 @@ import * as SQLite from 'expo-sqlite';
 import { runMigrations } from '@/db/utils';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { Db } from '@/db/types';
-import { seedTickets } from '@/db/seed';
 
 export type DbContextType = {
   db: Db | null;
@@ -26,7 +25,6 @@ export function DbProvider({ children }: Props) {
       const database = drizzle(sqlite) as Db;
 
       await runMigrations(database);
-      await seedTickets();
 
       setDb(database);
       setReady(true);

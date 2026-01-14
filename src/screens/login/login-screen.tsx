@@ -15,8 +15,6 @@ import Layer from '@/components/layer';
 import { Feather } from '@expo/vector-icons';
 import PressableOpacity from '@/components/pressable-opacity';
 import PoweredByItti from '@/assets/svg/powered-by-itti.svg';
-import { useDb } from '@/hooks/use-db';
-import { getAllTickets } from '@/db/repositories/ticketsRepository';
 
 const LoginScreen = () => {
   const dispatch = useAppDispatch();
@@ -64,19 +62,6 @@ const LoginScreen = () => {
       requestPermission();
     }
   }, [isPermissionGranted]);
-
-  const { db, ready } = useDb();
-
-  useEffect(() => {
-    if (!ready || !db) return;
-
-    const load = async () => {
-      const data = await getAllTickets(db);
-      console.log('TICKETS DB 👉', data);
-    };
-
-    load();
-  }, [ready, db]);
 
   return (
     <Layer>
