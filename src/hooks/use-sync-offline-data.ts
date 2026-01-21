@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useSyncOfflineDataMutation } from '@/api/scanner-api';
-import { clearOfflineQueue, getOfflineQrList } from '@/storage/qr-storage';
 import { useAppSelector } from '@/libs/redux';
+import { clearOfflineQueue, getOfflineQrList } from '@/db/utils';
 
 export const useSyncOfflineData = () => {
   const [triggerSync, { isLoading, isError, error }] = useSyncOfflineDataMutation();

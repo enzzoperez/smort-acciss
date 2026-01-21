@@ -21,8 +21,7 @@ import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
-import { hasTickets, initialSyncTickets } from '@/db/utils';
-import { clearTickets } from '@/db/repositories/ticketsRepository';
+import { initialSyncTickets } from '@/db/utils';
 
 const SelectEventsScreen = () => {
   const router = useRouter();

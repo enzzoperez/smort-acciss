@@ -1,11 +1,16 @@
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { tickets } from './schema';
-import { drizzle } from 'drizzle-orm/expo-sqlite';
+import { db } from '.';
+import { noValidTickets, tickets, ticketScan } from './schema';
 
-export type Ticket = InferSelectModel<typeof tickets>;
-export type NewTicket = InferInsertModel<typeof tickets>;
+export type TicketDb = typeof tickets.$inferSelect;
+export type NewTicketDb = typeof tickets.$inferInsert;
 
-export type Db = ReturnType<typeof drizzle>;
+export type TicketScanDb = typeof ticketScan.$inferSelect;
+export type NewTicketScanDb = typeof ticketScan.$inferInsert;
+
+export type NoValidTicketDb = typeof noValidTickets.$inferSelect;
+export type NewNoValidTicketDb = typeof noValidTickets.$inferInsert;
+
+export type Db = typeof db;
 
 export type TicketApi = {
   event: string;

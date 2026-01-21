@@ -1,10 +1,18 @@
 import axios from 'axios';
 import { migrations } from './migrations';
-import { ApiResponse, Db, Ticket, TicketApi } from './types';
+import { ApiResponse, Db, TicketApi, TicketDb } from './types';
 import { db } from '.';
 import { tickets } from './schema';
 import { store } from '@/store/store';
-import { clearTickets } from './repositories/ticketsRepository';
+import { clearTickets } from './repositories/tickets.repository';
+import {
+  clearTicketScans,
+  getAllPendingScannedTickets,
+} from './repositories/valid-tickets.repository';
+import {
+  clearNoValidTickets,
+  getAllPendingNoValidTickets,
+} from './repositories/no-valid-tickets.repository';
 
 export async function runMigrations(db: Db) {
   for (const sql of migrations) {
@@ -12,16 +20,15 @@ export async function runMigrations(db: Db) {
   }
 }
 
-export function mapTicketApiToDb(ticket: TicketApi): Ticket {
+export function mapTicketApiToDb(ticket: TicketApi): TicketDb {
   return {
     id: ticket.qr,
     qr: ticket.qr,
-    eventId: ticket.event,
     status: ticket.status,
   };
 }
 
-export function mapTicketsApiToDb(tickets: TicketApi[]): Ticket[] {
+export function mapTicketsApiToDb(tickets: TicketApi[]): TicketDb[] {
   return tickets.map(mapTicketApiToDb);
 }
 
@@ -53,7 +60,7 @@ export async function initialSyncTickets(eventId: string) {
         },
       );
 
-      totalPages = data.pageable.totalPages;
+      totalPages = data?.pageable?.totalPages;
 
       const mapped = mapTicketsApiToDb(data.content);
 
@@ -65,11 +72,42 @@ export async function initialSyncTickets(eventId: string) {
     }
   } catch (error) {
     console.log(' Initial sync failed', {
-      eventId,
       page,
       error,
     });
 
     throw error;
+  }
+}
+
+export async function getOfflineQrList() {
+  try {
+    const validTickets = await getAllPendingScannedTickets();
+    const noValidTickets = await getAllPendingNoValidTickets();
+
+    const qrListToSend = [
+      ...validTickets.map((ticket) => ({
+        qrCode: ticket.qr,
+        timeScan: ticket.scannedAt,
+      })),
+      ...noValidTickets.map((ticket) => ({
+        qrCode: ticket.qr,
+        timeScan: ticket.scannedAt,
+      })),
+    ];
+
+    return qrListToSend;
+  } catch (error) {
+    console.error('Error leyendo QRs offline', error);
+    return [];
+  }
+}
+
+export async function clearOfflineQueue() {
+  try {
+    await clearTicketScans(db);
+    await clearNoValidTickets(db);
+  } catch (error) {
+    console.error('Error limpiando cola offline', error);
   }
 }
