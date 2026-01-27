@@ -74,11 +74,12 @@ const SelectEventsScreen = () => {
       );
 
       if (selected) {
+        setItemSelected(selected);
         dispatch(setSelectedEvent(selected.eventCode));
         dispatch(setVerifyOnly(selected.mode === 'CHECK'));
       }
     }
-  }, [itemSelected]);
+  }, [itemSelected, dataEvents]);
 
   useEffect(() => {
     try {
