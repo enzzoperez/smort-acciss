@@ -31,7 +31,7 @@
     "@react-native-picker/picker": "^2.11.1",
     "@react-navigation/native": "^7.1.17",
     "@reduxjs/toolkit": "^2.9.2",
-    "@shopify/react-native-skia": "^2.3.7",
+    "@shopify/react-native-skia": "^2.4.14",
     "axios": "^1.13.1",
     "date-fns": "^4.1.0",
     "expo": "~54.0.9",
