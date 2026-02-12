@@ -31,4 +31,4 @@ project.xcworkspace
 
 
 #firebase
-GoogleService-Info.plist
+./tutismartaccess/GoogleService-Info.plist
