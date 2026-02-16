@@ -12,7 +12,7 @@ import { getReadErrorByCode } from '@/utils/get-error-result';
 import { useNetwork } from '@/providers/network-provider';
 import { saveQrOffline } from '@/storage/qr-storage';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { logError } from '@/libs/crashlytics';
+import { logError, logMessage } from '@/libs/crashlytics';
 
 export const useResultScreen = () => {
   const router = useRouter();
@@ -109,6 +109,8 @@ export const useResultScreen = () => {
     if (errorNetwork) {
       return screenElements.offlineError;
     }
+
+    logMessage(`Error desconocido en validación de QR: ${JSON.stringify(errorRequest)}`);
 
     return screenElements.defaultError;
   };

@@ -7,3 +7,7 @@ export const logError = (error: unknown) => {
 export const setAttributes = (attributes: { [key: string]: string }) => {
   crashlytics().setAttributes(attributes);
 };
+
+export const logMessage = (message: string) => {
+  crashlytics().log(message);
+};
