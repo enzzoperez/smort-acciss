@@ -56,7 +56,7 @@ export const readErrors = [
     icon: <NotValidTicket />,
   },
   {
-    code: 'ACCTRL-005',
+    code: 'ACCTRL-0025',
     key: 'NETWORK_ERROR',
     title: 'Error de conexión',
     message:

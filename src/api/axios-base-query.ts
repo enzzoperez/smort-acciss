@@ -1,4 +1,4 @@
-import { logError } from '@/libs/crashlytics';
+import { logError, logMessage } from '@/libs/crashlytics';
 import { setLogout } from '@/store/slices';
 import { RootState } from '@/store/store';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
@@ -44,6 +44,7 @@ export const axiosBaseQuery =
       const status = err.response?.status;
 
       if (status === 401) {
+        logMessage('Unauthorized error, logging out user');
         try {
           dispatch(setLogout());
 
