@@ -1,8 +1,9 @@
 import { logError, logMessage } from '@/libs/crashlytics';
-import { setLogout } from '@/store/slices';
+import { resetUserData, setLogout, setResetConfig } from '@/store/slices';
 import { RootState } from '@/store/store';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
+import { Alert } from 'react-native';
 
 export const axiosBaseQuery =
   (
@@ -44,9 +45,15 @@ export const axiosBaseQuery =
       const status = err.response?.status;
 
       if (status === 401) {
+        Alert.alert(
+          'Sesión expirada',
+          'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+        );
         logMessage('Unauthorized error, logging out user');
         try {
           dispatch(setLogout());
+          dispatch(resetUserData());
+          dispatch(setResetConfig());
 
           // const refreshResponse = await axios.put(
           //   `${baseUrl}/accounts/refresh-token`,

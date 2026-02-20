@@ -12,7 +12,13 @@ import {
 } from 'react-native';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
-import { resetUserData, setLogout, setSelectedEvent, setVerifyOnly } from '@/store/slices';
+import {
+  resetUserData,
+  setLogout,
+  setResetConfig,
+  setSelectedEvent,
+  setVerifyOnly,
+} from '@/store/slices';
 import { useRouter } from 'expo-router';
 import Layer from '@/components/layer';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -30,7 +36,13 @@ const SelectEventsScreen = () => {
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
-  const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
+  const {
+    data: dataEvents,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetEventsQuery(undefined, { skip: !isOnline, refetchOnMountOrArgChange: isOnline });
 
   const [itemSelected, setItemSelected] = useState<{
     eventCode: string;
@@ -43,10 +55,13 @@ const SelectEventsScreen = () => {
     logout({ accountId: userData?.accountId });
     dispatch(setLogout());
     dispatch(resetUserData());
+    dispatch(setResetConfig());
   };
 
   const onRefresh = () => {
-    refetch();
+    if (isOnline) {
+      refetch();
+    }
   };
 
   const Buttons = () => (
