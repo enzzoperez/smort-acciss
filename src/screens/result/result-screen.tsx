@@ -52,6 +52,12 @@ const ResultScreen = () => {
         </View>
 
         {getScreenElements().actionLabel}
+
+        {getScreenElements().key && (
+          <ThemedText type="default" style={styles.codeError}>
+            Code: {getScreenElements().key}
+          </ThemedText>
+        )}
       </View>
 
       <View
@@ -92,6 +98,12 @@ const styles = StyleSheet.create({
   descriptionError: {
     fontSize: 16,
     textAlign: 'center',
+  },
+
+  codeError: {
+    fontSize: 12,
+    textAlign: 'center',
+    fontWeight: 'light',
   },
 });
 
