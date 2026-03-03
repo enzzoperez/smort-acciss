@@ -64,4 +64,41 @@ export const readErrors = [
     action: 'Permitir ingreso',
     icon: <TicketNetwork />,
   },
+
+  {
+    code: 'ACCTRL-014',
+    key: 'QR_PROVIDER_ERROR',
+    title: 'Error del proveedor',
+    message:
+      'Hubo un error con el proveedor del código QR. Por favor, intenta nuevamente o contacta a tu supervisor.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
+    code: 'ACCTRL-015',
+    key: 'QR_DYNAMIC_FORMAT_ERROR',
+    title: 'Formato de QR dinámico inválido',
+    message:
+      'El código QR dinámico tiene un formato inválido. Verifica el ticket o escanea nuevamente.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
+    code: 'ACCTRL-016',
+    key: 'QR_TYPE_ERROR',
+    title: 'Tipo de QR inválido',
+    message:
+      'El tipo de código QR no es reconocido. Por favor, verifica el ticket o escanea nuevamente.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
+    code: 'ACCTRL-017',
+    key: 'QR_ALIAS_ERROR',
+    title: 'Alias del evento inválido',
+    message:
+      'El alias del evento en el código QR no es válido. Por favor, verifica el ticket o escanea nuevamente.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
 ];

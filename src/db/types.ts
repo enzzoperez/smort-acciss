@@ -1,5 +1,6 @@
-import { db } from '.';
+import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { noValidTickets, tickets, ticketScan } from './schema';
+import type * as schema from './schema';
 
 export type TicketDb = typeof tickets.$inferSelect;
 export type NewTicketDb = typeof tickets.$inferInsert;
@@ -10,7 +11,7 @@ export type NewTicketScanDb = typeof ticketScan.$inferInsert;
 export type NoValidTicketDb = typeof noValidTickets.$inferSelect;
 export type NewNoValidTicketDb = typeof noValidTickets.$inferInsert;
 
-export type Db = typeof db;
+export type Db = ExpoSQLiteDatabase<typeof schema>;
 
 export type TicketApi = {
   event: string;

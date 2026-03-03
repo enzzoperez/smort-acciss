@@ -8,27 +8,33 @@ import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
 import CheckAccess from '@/assets/svg/check-access.svg';
 import ScanAccess from '@/assets/svg/scan-access.svg';
 
-import { getReadErrorByCode } from '@/utils/get-error-result';
+import { getReadErrorByCode, ReasonErrorResult } from '@/utils/get-error-result';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
-import { getTicketByQr } from '@/db/repositories/tickets.repository';
 import { insertNoValidTicket } from '@/db/repositories/no-valid-tickets.repository';
-import { getScanTicketByQr, insertTicketScan } from '@/db/repositories/valid-tickets.repository';
+import { insertTicketScan } from '@/db/repositories/valid-tickets.repository';
 import { useDb } from '@/hooks/use-db';
 import * as crypto from 'expo-crypto';
+import { validateQrOfflineFlow } from './utils/offline-validator';
 
 export const useResultScreen = () => {
   const router = useRouter();
   const { scannedCode } = useLocalSearchParams();
-  const { selectedEvent, verifyOnly } = useAppSelector((state) => state.config);
+  const { selectedEvent, verifyOnly, configEventQr, serverOffset, selectedEventConfig } =
+    useAppSelector((state) => state.config);
   const { db } = useDb();
 
   const { isOnline } = useNetwork();
   const onlineSnapshotRef = useRef(isOnline);
 
   const [localResult, setLocalResult] = useState<
-    { type: 'success' } | { type: 'error'; reason: 'QR_HAS_USED' | 'QR_NOT_FOUND' } | null
+    | { type: 'success' }
+    | {
+        type: 'error';
+        reason: ReasonErrorResult;
+      }
+    | null
   >(null);
 
   const { sync } = useSyncOfflineData();
@@ -47,7 +53,10 @@ export const useResultScreen = () => {
 
   useEffect(() => {
     const processQr = async () => {
-      if (!scannedCode || !db) return;
+      if (!scannedCode || !db) {
+        logError('No se recibió un código QR para procesar o la base de datos no está lista');
+        return;
+      }
 
       const qr = scannedCode as string;
       const eventId = selectedEvent!;
@@ -58,47 +67,19 @@ export const useResultScreen = () => {
       // ====================
       // OFFLINE
       // ====================
+
       if (!online) {
-        const alreadyScanned = await getScanTicketByQr(db, qr);
-
-        if (alreadyScanned) {
-          setLocalResult({ type: 'error', reason: 'QR_HAS_USED' });
-
-          await insertNoValidTicket(db, {
-            id: crypto.randomUUID(),
-            qr,
-            scannedAt: new Date().toISOString(),
-            reason: 'QR_HAS_USED',
-            syncStatus: 'pending',
-          });
-
-          return;
-        }
-
-        const ticket = await getTicketByQr(db, qr);
-
-        if (!ticket) {
-          setLocalResult({ type: 'error', reason: 'QR_NOT_FOUND' });
-
-          await insertNoValidTicket(db, {
-            id: crypto.randomUUID(),
-            qr,
-            scannedAt: new Date().toISOString(),
-            reason: 'QR_NOT_FOUND',
-            syncStatus: 'pending',
-          });
-
-          return;
-        }
-
-        await insertTicketScan(db, {
-          id: crypto.randomUUID(),
+        const result = await validateQrOfflineFlow({
+          db,
           qr,
-          scannedAt: new Date().toISOString(),
-          syncStatus: 'pending',
+          currentEventId: eventId,
+          serverOffset,
+          configEventQr,
+          allowedSections: selectedEventConfig?.sections || null,
+          verifyOnly,
         });
 
-        setLocalResult({ type: 'success' });
+        setLocalResult(result);
         return;
       }
 
@@ -111,12 +92,6 @@ export const useResultScreen = () => {
           eventCode: selectedEvent!,
           qrCode: qr,
         });
-        await insertTicketScan(db, {
-          id: crypto.randomUUID(),
-          qr,
-          scannedAt: new Date().toISOString(),
-          syncStatus: 'synced',
-        });
       } catch (error) {
         logError(error);
       }
@@ -124,6 +99,30 @@ export const useResultScreen = () => {
 
     processQr();
   }, [scannedCode, db]);
+
+  useEffect(() => {
+    if (isSuccessRequest && db) {
+      insertTicketScan(db, {
+        id: crypto.randomUUID(),
+        qr: scannedCode as string,
+        scannedAt: new Date().toISOString(),
+        syncStatus: 'synced',
+      });
+    }
+  }, [isSuccessRequest]);
+
+  useEffect(() => {
+    if (errorRequest && db) {
+      logError('Error en resultado de validación');
+      insertNoValidTicket(db, {
+        id: crypto.randomUUID(),
+        qr: scannedCode as string,
+        scannedAt: new Date().toISOString(),
+        reason: errorParsed?.code || 'UNKNOWN_ERROR',
+        syncStatus: 'pending',
+      });
+    }
+  }, [errorRequest]);
 
   const handleScanQr = () => {
     router.replace('/camera');
@@ -148,7 +147,7 @@ export const useResultScreen = () => {
     if (localResult?.type === 'error') {
       const offlineError = getReadErrorByCode({
         code: localResult.reason,
-        reason: localResult.reason,
+        reason: localResult.reason as ReasonErrorResult,
         isConnected: false,
       });
 

@@ -16,18 +16,10 @@ export const userSlice = createSlice({
     setUserData: (state, action: PayloadAction<UserState>) => {
       state.userData = action.payload;
     },
-    updateUserData: (state, action: PayloadAction<Partial<UserState>>) => {
-      if (state.userData) {
-        state.userData = {
-          ...state.userData,
-          ...action.payload,
-        };
-      }
-    },
     resetUserData: (state) => {
       state.userData = null;
     },
   },
 });
 
-export const { setUserData, updateUserData, resetUserData } = userSlice.actions;
+export const { setUserData, resetUserData } = userSlice.actions;

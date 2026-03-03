@@ -3,6 +3,7 @@ import { setLogout } from '@/store/slices';
 import { RootState } from '@/store/store';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
+import { Alert } from 'react-native';
 
 export const axiosBaseQuery =
   (
@@ -39,6 +40,7 @@ export const axiosBaseQuery =
 
       return { data: result.data };
     } catch (axiosError) {
+      Alert.alert('Error', `Ocurrió un error al realizar la solicitud (axios): ${axiosError}`);
       logError(axiosError);
       const err = axiosError as AxiosError;
       const status = err.response?.status;

@@ -12,16 +12,25 @@ import {
 } from 'react-native';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
-import { resetUserData, setLogout, setSelectedEvent, setVerifyOnly } from '@/store/slices';
+import {
+  resetUserData,
+  setConfigEventQr,
+  setLogout,
+  setSelectedEvent,
+  setSelectedEventConfig,
+  setServerOffset,
+  setVerifyOnly,
+} from '@/store/slices';
 import { useRouter } from 'expo-router';
 import Layer from '@/components/layer';
 import { Dropdown } from 'react-native-element-dropdown';
-import { useGetEventsQuery } from '@/api/events-api';
+import { useGetEventQrConfigMutation, useGetEventsQuery } from '@/api/events-api';
 import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
-import { initialSyncTickets } from '@/db/utils';
+import { clearAllData, initialSyncTickets } from '@/db/utils';
+import { useDb } from '@/hooks/use-db';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
@@ -32,6 +41,8 @@ const SelectEventsScreen = () => {
   const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
   const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
+  const [getQrConfig] = useGetEventQrConfigMutation();
+  const { db } = useDb();
 
   const [itemSelected, setItemSelected] = useState<{
     eventCode: string;
@@ -40,10 +51,47 @@ const SelectEventsScreen = () => {
     sections: string[];
   } | null>(null);
 
+  const calculateServerOffset = (serverTime: string | undefined) => {
+    if (serverTime) {
+      const serverNow = new Date(serverTime).getTime();
+      const deviceNow = Date.now();
+      const offset = serverNow - deviceNow;
+
+      dispatch(setServerOffset(offset));
+    }
+  };
+
+  const saveQrConfig = async (eventCode: string) => {
+    try {
+      const data = await getQrConfig({ eventCode }).unwrap();
+      if (data && data?.length === 1) {
+        const serverTime = data[0]?.serverTime;
+
+        calculateServerOffset(serverTime);
+
+        dispatch(setConfigEventQr(data[0]));
+      } else if (data?.length && data.length > 1) {
+        const configObject = data.find((config) => config.code === eventCode);
+
+        const serverTime = configObject?.serverTime;
+        calculateServerOffset(serverTime);
+
+        dispatch(setConfigEventQr(configObject!));
+      }
+    } catch (error) {
+      logError(error as Error);
+      return;
+    }
+  };
+
   const closeSession = () => {
     logout({ accountId: userData?.accountId });
     dispatch(setLogout());
     dispatch(resetUserData());
+    dispatch(setSelectedEvent(null));
+    if (db) {
+      clearAllData(db);
+    }
   };
 
   const onRefresh = () => {
@@ -70,6 +118,7 @@ const SelectEventsScreen = () => {
     </View>
   );
 
+  //Si habia un evento seleccionado lo pone como default, sirve cuando vuelve a la screen de inicio
   useEffect(() => {
     if (selectedEvent && dataEvents) {
       const selected = dataEvents?.config.find((event) => event.eventCode === selectedEvent);
@@ -77,29 +126,41 @@ const SelectEventsScreen = () => {
     }
   }, []);
 
+  //Cada vez que cambia el event seleccionado trae la lista de tickets VALIDOS del event
+  //y guarda la config del QR para saber si es dinamico o estatico y el offset del server para controlar la validez de los QR dinamicos
   useEffect(() => {
     const handleSelectedEventChange = async () => {
-      if (itemSelected) {
+      if (itemSelected && dataEvents && db) {
         const selected = dataEvents?.config.find(
           (event) => event.eventCode === itemSelected.eventCode,
         );
 
         if (selected) {
-          await initialSyncTickets(itemSelected.eventCode);
+          try {
+            await initialSyncTickets(itemSelected.eventCode, db);
 
-          dispatch(setSelectedEvent(selected.eventCode));
-          dispatch(setVerifyOnly(selected.mode === 'CHECK'));
+            saveQrConfig(selected.eventCode);
+
+            setItemSelected(selected);
+            dispatch(setSelectedEvent(selected.eventCode));
+            dispatch(setSelectedEventConfig(dataEvents?.config[0]));
+            dispatch(setVerifyOnly(selected.mode === 'CHECK'));
+          } catch {
+            setItemSelected(null);
+          }
         }
       }
     };
 
     handleSelectedEventChange();
-  }, [itemSelected]);
+  }, [itemSelected, dataEvents, db]);
 
+  //Trae la data de los eventos asignados al user y si solo tiene uno asignado lo selecciona por defecto
   useEffect(() => {
     try {
       if (dataEvents && dataEvents?.config.length === 1) {
         setItemSelected(dataEvents?.config[0]);
+        dispatch(setSelectedEventConfig(dataEvents?.config[0]));
         dispatch(setSelectedEvent(dataEvents?.config[0].eventCode));
         dispatch(setVerifyOnly(dataEvents?.config[0].mode === 'CHECK'));
       }
@@ -108,11 +169,12 @@ const SelectEventsScreen = () => {
     }
   }, [dataEvents]);
 
+  //Cuando recupera conexion y si tiene un evento seleccionado trata de hacer el sync de tickets leidos
   useEffect(() => {
-    if (isOnline && selectedEvent) {
+    if (isOnline && selectedEvent && db) {
       sync();
     }
-  }, [isOnline, selectedEvent]);
+  }, [isOnline]);
 
   if (isLoading || isFetching) {
     return (

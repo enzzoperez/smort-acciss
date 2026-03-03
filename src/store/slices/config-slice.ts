@@ -1,13 +1,19 @@
+import { EventData, ResConfigEventQr } from '@/api/events-api';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
 interface ConfigSlice {
   selectedEvent: string | null;
   verifyOnly: boolean;
+  configEventQr: ResConfigEventQr | null;
+  serverOffset: number;
+  selectedEventConfig: EventData | null;
 }
 
 const initialState: ConfigSlice = {
   selectedEvent: null,
   verifyOnly: true,
+  configEventQr: null,
+  serverOffset: 0,
+  selectedEventConfig: null,
 };
 
 export const configSlice = createSlice({
@@ -21,11 +27,33 @@ export const configSlice = createSlice({
       state.verifyOnly = action.payload;
     },
 
+    setConfigEventQr: (state, action: PayloadAction<ResConfigEventQr>) => {
+      state.configEventQr = action.payload;
+    },
+
+    setServerOffset: (state, action: PayloadAction<number>) => {
+      state.serverOffset = action.payload;
+    },
+
+    setSelectedEventConfig: (state, action: PayloadAction<EventData>) => {
+      state.selectedEventConfig = action.payload;
+    },
+
     setResetConfig: (state) => {
       state.selectedEvent = null;
       state.verifyOnly = true;
+      state.configEventQr = null;
+      state.serverOffset = 0;
+      state.selectedEventConfig = null;
     },
   },
 });
 
-export const { setSelectedEvent, setVerifyOnly, setResetConfig } = configSlice.actions;
+export const {
+  setSelectedEvent,
+  setVerifyOnly,
+  setResetConfig,
+  setConfigEventQr,
+  setServerOffset,
+  setSelectedEventConfig,
+} = configSlice.actions;
