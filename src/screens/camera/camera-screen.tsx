@@ -8,6 +8,8 @@ import Flashlight from '@/assets/svg/flashlight.svg';
 import FlashlightOff from '@/assets/svg/flashlight-off.svg';
 import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
 import { logError } from '@/libs/crashlytics';
+import { useNetwork } from '@/providers/network-provider';
+import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 
 export default function CameraScreen() {
   const router = useRouter();
@@ -15,6 +17,7 @@ export default function CameraScreen() {
   const appState = useRef(AppState.currentState);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const insets = useSafeAreaInsets();
+  const { isOnline } = useNetwork();
 
   const handleScannedCode = ({ data }: { data: string }) => {
     try {
@@ -48,6 +51,12 @@ export default function CameraScreen() {
   return (
     <View style={StyleSheet.absoluteFillObject}>
       <StatusBar hidden translucent backgroundColor="transparent" />
+
+      {!isOnline && (
+        <View style={styles.bannerContainer}>
+          <ConnectionStatusBanner isOnline={false} />
+        </View>
+      )}
 
       <CameraView
         style={StyleSheet.absoluteFillObject}
@@ -89,5 +98,18 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  bannerContainer: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    right: 16,
+    padding: 12,
+    borderRadius: 8,
+    zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
 });

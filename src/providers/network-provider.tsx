@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { Alert } from 'react-native';
 
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 
@@ -19,25 +18,43 @@ export const NetworkProvider = ({ children }: { children: React.ReactNode }) => 
 
   const [isOnline, setIsOnline] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      const connected = Boolean(state.isConnected);
-      const reachable = state.isInternetReachable ?? connected;
+  const previousOnline = useRef<boolean | null>(null);
 
-      setIsOnline(connected && reachable);
+  const updateState = async () => {
+    const state = await NetInfo.fetch();
+
+    const online = Boolean(state.isConnected);
+
+    if (previousOnline.current === null) {
+      previousOnline.current = online;
+      setIsOnline(online);
+      return;
+    }
+
+    if (previousOnline.current !== online) {
+      previousOnline.current = online;
+      setIsOnline(online);
+
+      if (online) {
+        sync();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(() => {
+      updateState();
     });
 
-    return () => unsubscribe();
-  }, []);
+    updateState();
 
-  useEffect(() => {
-    if (!isOnline) {
-      Alert.alert(
-        'Sin conexión',
-        'Estás en modo offline. Los datos se guardarán localmente y se enviarán al recuperar la conexión.',
-      );
-    }
-  }, [isOnline, sync]);
+    const interval = setInterval(updateState, 4000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <NetworkContext.Provider value={{ isOnline, isSyncing }}>{children}</NetworkContext.Provider>
