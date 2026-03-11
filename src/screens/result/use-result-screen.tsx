@@ -12,7 +12,7 @@ import { getReadErrorByCode } from '@/utils/get-error-result';
 import { useNetwork } from '@/providers/network-provider';
 import { saveQrOffline } from '@/storage/qr-storage';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { logError } from '@/libs/crashlytics';
+import { logError, logMessage } from '@/libs/crashlytics';
 
 export const useResultScreen = () => {
   const router = useRouter();
@@ -75,24 +75,28 @@ export const useResultScreen = () => {
       message: verifyOnly
         ? 'El código QR es válido para este sector/puerta.'
         : 'El código QR es válido para este sector/puerta. Este ticket no podrá reutilizarse.',
+      key: null,
       actionLabel: <ActionLabel type={'success'} />,
     },
     onlineError: {
       mainIcon: errorItem?.icon,
       title: errorItem?.title,
       message: errorItem?.message,
+      key: errorItem?.key,
       actionLabel: <ActionLabel type={'error'} />,
     },
     offlineError: {
       mainIcon: errorItem?.icon,
       title: errorItem?.title,
       message: errorItem?.message,
+      key: 'NETWORK_ERROR',
       actionLabel: <ActionLabel type={'success'} />,
     },
     defaultError: {
       mainIcon: <NotValidTicket />,
       title: (errorParsed && errorParsed?.code) || 'Error desconocido',
       message: `Ha ocurrido un error desconocido. Por favor, inténtalo de nuevo. ${(errorParsed && errorParsed?.message) || ''}`,
+      key: errorItem?.key,
       actionLabel: <ActionLabel type={'error'} />,
     },
   };
@@ -112,6 +116,12 @@ export const useResultScreen = () => {
 
     return screenElements.defaultError;
   };
+
+  useEffect(() => {
+    if (errorRequest) {
+      logMessage(`Error desconocido en validación de QR: ${JSON.stringify(errorRequest)}`);
+    }
+  }, [errorRequest]);
 
   return {
     scannedCode,

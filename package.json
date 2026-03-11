@@ -1,7 +1,7 @@
 {
   "name": "tuti-qr-reader",
   "main": "expo-router/entry",
-  "version": "1.0.6",
+  "version": "1.0.11",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -31,7 +31,7 @@
     "@react-native-picker/picker": "^2.11.1",
     "@react-navigation/native": "^7.1.17",
     "@reduxjs/toolkit": "^2.9.2",
-    "@shopify/react-native-skia": "^2.3.7",
+    "@shopify/react-native-skia": "^2.4.14",
     "axios": "^1.13.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",

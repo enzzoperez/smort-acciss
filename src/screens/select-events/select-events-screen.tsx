@@ -12,7 +12,13 @@ import {
 } from 'react-native';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
-import { resetUserData, setLogout, setSelectedEvent, setVerifyOnly } from '@/store/slices';
+import {
+  resetUserData,
+  setLogout,
+  setResetConfig,
+  setSelectedEvent,
+  setVerifyOnly,
+} from '@/store/slices';
 import { useRouter } from 'expo-router';
 import Layer from '@/components/layer';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -21,8 +27,7 @@ import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
-import { hasTickets, initialSyncTickets } from '@/db/utils';
-import { clearTickets } from '@/db/repositories/ticketsRepository';
+import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
@@ -32,7 +37,13 @@ const SelectEventsScreen = () => {
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
-  const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
+  const {
+    data: dataEvents,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetEventsQuery(undefined, { skip: !isOnline, refetchOnMountOrArgChange: isOnline });
 
   const [itemSelected, setItemSelected] = useState<{
     eventCode: string;
@@ -45,10 +56,13 @@ const SelectEventsScreen = () => {
     logout({ accountId: userData?.accountId });
     dispatch(setLogout());
     dispatch(resetUserData());
+    dispatch(setResetConfig());
   };
 
   const onRefresh = () => {
-    refetch();
+    if (isOnline) {
+      refetch();
+    }
   };
 
   const onChangeSelectedEvent = async (item: {
@@ -79,23 +93,18 @@ const SelectEventsScreen = () => {
   }, []);
 
   useEffect(() => {
-    const handleSelectedEventChange = async () => {
-      if (itemSelected) {
-        const selected = dataEvents?.config.find(
-          (event) => event.eventCode === itemSelected.eventCode,
-        );
+    if (itemSelected) {
+      const selected = dataEvents?.config.find(
+        (event) => event.eventCode === itemSelected.eventCode,
+      );
 
-        if (selected) {
-          await initialSyncTickets(itemSelected.eventCode);
-
-          dispatch(setSelectedEvent(selected.eventCode));
-          dispatch(setVerifyOnly(selected.mode === 'CHECK'));
-        }
+      if (selected) {
+        setItemSelected(selected);
+        dispatch(setSelectedEvent(selected.eventCode));
+        dispatch(setVerifyOnly(selected.mode === 'CHECK'));
       }
-    };
-
-    handleSelectedEventChange();
-  }, [itemSelected]);
+    }
+  }, [itemSelected, dataEvents]);
 
   useEffect(() => {
     try {
@@ -160,6 +169,7 @@ const SelectEventsScreen = () => {
       >
         <View style={styles.container}>
           <View style={{ marginBottom: 32 }}>
+            {!isOnline && <ConnectionStatusBanner isOnline={false} />}
             <ThemedText type="title" style={styles.title}>
               Control de accesos en:
             </ThemedText>
