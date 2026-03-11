@@ -27,6 +27,7 @@ import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
+import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
@@ -159,6 +160,7 @@ const SelectEventsScreen = () => {
       >
         <View style={styles.container}>
           <View style={{ marginBottom: 32 }}>
+            {!isOnline && <ConnectionStatusBanner isOnline={false} />}
             <ThemedText type="title" style={styles.title}>
               Control de accesos en:
             </ThemedText>
