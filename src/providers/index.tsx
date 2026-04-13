@@ -14,13 +14,13 @@ export const CustomProviders: React.FC<ICustomProviders> = ({ children }) => {
   return (
     <DbProvider>
       <StoreProvider>
-        <UiProvider>
-          <NetworkProvider>
+        <NetworkProvider>
+          <UiProvider>
             <AuthProvider>
               <SafeAreaProvider>{children}</SafeAreaProvider>
             </AuthProvider>
-          </NetworkProvider>
-        </UiProvider>
+          </UiProvider>
+        </NetworkProvider>
       </StoreProvider>
     </DbProvider>
   );

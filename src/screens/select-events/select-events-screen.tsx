@@ -4,6 +4,7 @@ import { UiButton } from '@/components/ui-button';
 import { appVersion } from '@/utils/device-utils';
 import {
   ActivityIndicator,
+  Alert,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -20,6 +21,7 @@ import {
   setSelectedEventConfig,
   setServerOffset,
   setVerifyOnly,
+  setResetConfig,
 } from '@/store/slices';
 import { useRouter } from 'expo-router';
 import Layer from '@/components/layer';
@@ -29,8 +31,10 @@ import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
-import { clearAllData, initialSyncTickets } from '@/db/utils';
+import { clearAllData, syncTicketsForEvent } from '@/db/utils';
 import { useDb } from '@/hooks/use-db';
+import { ConnectionStatusBanner } from '@/components/connection-status-banner';
+import { getEventSync } from '@/db/repositories/events-sync.repository';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
@@ -40,7 +44,13 @@ const SelectEventsScreen = () => {
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
-  const { data: dataEvents, isLoading, isFetching, isError, refetch } = useGetEventsQuery();
+  const {
+    data: dataEvents,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetEventsQuery(undefined, { skip: !isOnline, refetchOnMountOrArgChange: isOnline });
   const [getQrConfig] = useGetEventQrConfigMutation();
   const { db } = useDb();
 
@@ -50,6 +60,11 @@ const SelectEventsScreen = () => {
     mode: string;
     sections: string[];
   } | null>(null);
+  const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
+  const [hasTicketsDownloaded, setHasTicketsDownloaded] = useState(false);
+
+  const isDisabledButton =
+    !selectedEvent || isLoading || isFetching || (!isOnline && !hasTicketsDownloaded);
 
   const calculateServerOffset = (serverTime: string | undefined) => {
     if (serverTime) {
@@ -89,13 +104,16 @@ const SelectEventsScreen = () => {
     dispatch(setLogout());
     dispatch(resetUserData());
     dispatch(setSelectedEvent(null));
+    dispatch(setResetConfig());
     if (db) {
       clearAllData(db);
     }
   };
 
   const onRefresh = () => {
-    refetch();
+    if (isOnline) {
+      refetch();
+    }
   };
 
   const onChangeSelectedEvent = async (item: {
@@ -107,13 +125,21 @@ const SelectEventsScreen = () => {
     setItemSelected(item);
   };
 
+  const handleScanButton = async () => {
+    // if (isOnline && db && selectedEvent) {
+    //   await incrementalSyncTickets(selectedEvent, db);
+    // }
+
+    router.push('/camera');
+  };
+
   const Buttons = () => (
     <View style={{ gap: 16 }}>
       <UiButton
-        disabled={!selectedEvent}
+        disabled={isDisabledButton}
         variant="tertiary"
         text={'Escanear'}
-        onPress={() => router.push('/camera')}
+        onPress={handleScanButton}
       />
     </View>
   );
@@ -136,14 +162,27 @@ const SelectEventsScreen = () => {
         );
 
         if (selected) {
-          try {
-            await initialSyncTickets(itemSelected.eventCode, db);
+          const eventSync = await getEventSync(db, itemSelected.eventCode);
+          const alreadyDownloaded = eventSync?.initialSyncDone === 1;
 
-            saveQrConfig(selected.eventCode);
+          if (!isOnline && !alreadyDownloaded) {
+            Alert.alert(
+              'Evento seleccionado',
+              'No se pudo conectar a internet para la descarga de tickets del evento seleccionado. Por favor revisa tu conexión e inténtalo de nuevo.',
+            );
+            setItemSelected(null);
+            dispatch(setSelectedEvent(null));
+            setHasTicketsDownloaded(false);
+            return;
+          }
+
+          try {
+            await syncTicketsForEvent({ eventId: itemSelected.eventCode, db, isOnline });
+            await saveQrConfig(selected.eventCode);
 
             setItemSelected(selected);
             dispatch(setSelectedEvent(selected.eventCode));
-            dispatch(setSelectedEventConfig(dataEvents?.config[0]));
+            dispatch(setSelectedEventConfig(selected));
             dispatch(setVerifyOnly(selected.mode === 'CHECK'));
           } catch {
             setItemSelected(null);
@@ -175,6 +214,14 @@ const SelectEventsScreen = () => {
       sync();
     }
   }, [isOnline]);
+
+  useEffect(() => {
+    if (!db || !selectedEvent) return;
+    getEventSync(db, selectedEvent).then((sync) => {
+      setLastSyncDate(sync?.lastSyncDate ?? null);
+      setHasTicketsDownloaded(sync?.initialSyncDone === 1);
+    });
+  }, [db, selectedEvent]);
 
   if (isLoading || isFetching) {
     return (
@@ -221,6 +268,9 @@ const SelectEventsScreen = () => {
       >
         <View style={styles.container}>
           <View style={{ marginBottom: 32 }}>
+            {!!selectedEvent && (
+              <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
+            )}
             <ThemedText type="title" style={styles.title}>
               Control de accesos en:
             </ThemedText>
