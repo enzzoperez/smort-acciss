@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { tickets, noValidTickets, ticketScan } from '@/db/schema';
 import { decryptDynamicQR, calculateMyTimeSlot } from '../../../utils/qr-utils';
 import { logError } from '@/libs/crashlytics';
@@ -41,6 +41,7 @@ export async function validateQrOfflineFlow({
     try {
       const { ticketQr, timeslot } = decryptDynamicQR(qr, configEventQr.eventSeed);
 
+      // Validar timeslot con tolerancia 1 minuto
       const { timeSlot: currentSlot } = calculateMyTimeSlot(
         configEventQr.refreshInterval,
         serverOffset,
@@ -48,6 +49,7 @@ export async function validateQrOfflineFlow({
 
       const qrSlot = Number(timeslot);
 
+      // tolerancia dinámica de 1 minuto
       const toleranceSlots = Math.ceil(60000 / configEventQr.refreshInterval);
 
       const isWithinTolerance = Math.abs(qrSlot - currentSlot) <= toleranceSlots;
@@ -67,22 +69,43 @@ export async function validateQrOfflineFlow({
       finalQr = ticketQr;
     } catch (error) {
       logError(error);
-      // console.log('Error al desencriptar QR dinámico:', { error, qr });
-
       await db.insert(noValidTickets).values({
         id: crypto.randomUUID(),
         qr,
         scannedAt: now,
-        reason: 'QR_DYNAMIC_FORMAT_ERROR',
+        reason: 'QR_INVALID_DYNAMIC',
         syncStatus: 'pending',
       });
 
-      return { type: 'error', reason: 'QR_DYNAMIC_FORMAT_ERROR' };
+      return { type: 'error', reason: 'QR_INVALID_DYNAMIC' };
     }
   }
 
   // ======================================
-  // 1️⃣ ¿EXISTE EN TICKETS?
+  // 1️⃣ ¿YA ESCANEADO?
+  // ======================================
+  const alreadyScanned = await db
+    .select()
+    .from(ticketScan)
+    .where(eq(ticketScan.qr, finalQr))
+    .limit(1);
+
+  if (alreadyScanned.length > 0) {
+    if (!verifyOnly) {
+      await db.insert(noValidTickets).values({
+        id: crypto.randomUUID(),
+        qr: finalQr,
+        scannedAt: now,
+        reason: 'QR_HAS_USED',
+        syncStatus: 'pending',
+      });
+    }
+
+    return { type: 'error', reason: 'QR_HAS_USED' };
+  }
+
+  // ======================================
+  // 2️⃣ ¿EXISTE EN TICKETS?
   // ======================================
   const ticketResult = await db.select().from(tickets).where(eq(tickets.qr, finalQr)).limit(1);
 
@@ -103,7 +126,7 @@ export async function validateQrOfflineFlow({
   const ticket = ticketResult[0];
 
   // ======================================
-  // 2️⃣ EVENT MATCH
+  // 3️⃣ EVENT MATCH (doble seguridad)
   // ======================================
   if (ticket.eventId !== currentEventId) {
     if (!verifyOnly) {
@@ -120,7 +143,7 @@ export async function validateQrOfflineFlow({
   }
 
   // ======================================
-  // 3️⃣ VALIDACIÓN POR SECTOR
+  // 4️⃣ VALIDACIÓN POR SECTOR
   // ======================================
   if (allowedSections && allowedSections.length > 0 && !allowedSections.includes(ticket.section)) {
     if (!verifyOnly) {
@@ -137,38 +160,8 @@ export async function validateQrOfflineFlow({
   }
 
   // ======================================
-  // 4️⃣ VALIDACIÓN DE USO (SINGLE / MULTI)
-  // ======================================
-
-  if (ticket.redeemType === 'SINGLE') {
-    const offlineReadsCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(ticketScan)
-      .where(eq(ticketScan.qr, finalQr));
-
-    const offlineReads = offlineReadsCount[0]?.count ?? 0;
-
-    const totalReads = ticket.successfulReads + offlineReads;
-
-    if (totalReads >= 1) {
-      if (!verifyOnly) {
-        await db.insert(noValidTickets).values({
-          id: crypto.randomUUID(),
-          qr: finalQr,
-          scannedAt: now,
-          reason: 'QR_HAS_USED',
-          syncStatus: 'pending',
-        });
-      }
-
-      return { type: 'error', reason: 'QR_HAS_USED' };
-    }
-  }
-
-  // ======================================
   // ✅ VALIDACIÓN OK
   // ======================================
-
   if (!verifyOnly) {
     await db.insert(ticketScan).values({
       id: crypto.randomUUID(),

@@ -28,7 +28,3 @@ project.xcworkspace
 
 # CocoaPods
 /Pods/
-
-
-#firebase
-./tutismartaccess/GoogleService-Info.plist

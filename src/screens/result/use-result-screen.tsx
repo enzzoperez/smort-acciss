@@ -11,13 +11,12 @@ import ScanAccess from '@/assets/svg/scan-access.svg';
 import { getReadErrorByCode, ReasonErrorResult } from '@/utils/get-error-result';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { logError, logMessage } from '@/libs/crashlytics';
+import { logError } from '@/libs/crashlytics';
+import { insertNoValidTicket } from '@/db/repositories/no-valid-tickets.repository';
 import { insertTicketScan } from '@/db/repositories/valid-tickets.repository';
 import { useDb } from '@/hooks/use-db';
 import * as crypto from 'expo-crypto';
 import { validateQrOfflineFlow } from './utils/offline-validator';
-import { incrementalSyncTickets } from '@/db/utils';
-import { getEventSync } from '@/db/repositories/events-sync.repository';
 
 export const useResultScreen = () => {
   const router = useRouter();
@@ -59,6 +58,7 @@ export const useResultScreen = () => {
         return;
       }
 
+      const qr = scannedCode as string;
       const eventId = selectedEvent!;
       const online = onlineSnapshotRef.current;
 
@@ -67,10 +67,11 @@ export const useResultScreen = () => {
       // ====================
       // OFFLINE
       // ====================
+
       if (!online) {
         const result = await validateQrOfflineFlow({
           db,
-          qr: scannedCode as string,
+          qr,
           currentEventId: eventId,
           serverOffset,
           configEventQr,
@@ -86,16 +87,13 @@ export const useResultScreen = () => {
       // ONLINE
       // ====================
       try {
+        await sync();
         await validateAndRegister({
           eventCode: selectedEvent!,
-          qrCode: scannedCode as string,
+          qrCode: qr,
         });
-        await sync();
       } catch (error) {
         logError(error);
-      } finally {
-        const eventSync = await getEventSync(db, eventId);
-        await incrementalSyncTickets({ eventId, db, fromDate: eventSync?.lastSyncDate });
       }
     };
 
@@ -112,6 +110,19 @@ export const useResultScreen = () => {
       });
     }
   }, [isSuccessRequest]);
+
+  useEffect(() => {
+    if (errorRequest && db) {
+      logError('Error en resultado de validación');
+      insertNoValidTicket(db, {
+        id: crypto.randomUUID(),
+        qr: scannedCode as string,
+        scannedAt: new Date().toISOString(),
+        reason: errorParsed?.code || 'UNKNOWN_ERROR',
+        syncStatus: 'pending',
+      });
+    }
+  }, [errorRequest]);
 
   const handleScanQr = () => {
     router.replace('/camera');
@@ -175,12 +186,6 @@ export const useResultScreen = () => {
       actionLabel: <ActionLabel type="error" />,
     };
   }, [localResult, isSuccessRequest, errorItem, verifyOnly]);
-
-  useEffect(() => {
-    if (errorRequest) {
-      logMessage(`Error desconocido en validación de QR: ${JSON.stringify(errorRequest)}`);
-    }
-  }, [errorRequest]);
 
   return {
     scannedCode,

@@ -93,12 +93,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-
-  codeError: {
-    fontSize: 12,
-    textAlign: 'center',
-    fontWeight: 'light',
-  },
 });
 
 export default ResultScreen;

@@ -3,11 +3,11 @@ export const up = `
 -- TICKETS
 -- ======================================
 CREATE TABLE IF NOT EXISTS tickets (
-  qr TEXT PRIMARY KEY NOT NULL,
+  id TEXT PRIMARY KEY,
   event_id TEXT NOT NULL,
-  section TEXT,
-  redeem_type TEXT NOT NULL,
-  successful_reads INTEGER NOT NULL DEFAULT 0
+  qr TEXT NOT NULL,
+  status TEXT NOT NULL, -- valid | used | blocked
+  section TEXT
 );
 
 -- ======================================
@@ -28,18 +28,9 @@ CREATE TABLE IF NOT EXISTS no_valid_tickets (
   qr TEXT NOT NULL,
   reason TEXT NOT NULL, 
   -- QR_HAS_USED | QR_NOT_FOUND | QR_EVENT_MISMATCH | 
-  -- QR_SECTION_NOT_ALLOWED | QR_TIMESLOT_INVALID | 
+  -- QR_SECTION_NOT_ALLOWED | QR_TIMESLOT_INVALID | QR_INVALID_DYNAMIC
   scanned_at TEXT NOT NULL,
   sync_status TEXT NOT NULL -- pending | synced | error
-);
-
--- ======================================
--- EVENTS SYNC
--- ======================================
-CREATE TABLE IF NOT EXISTS events_sync (
-  event_id TEXT PRIMARY KEY,
-  last_sync_date TEXT,
-  initial_sync_done INTEGER NOT NULL DEFAULT 0
 );
 
 -- ======================================
