@@ -9,7 +9,6 @@ export type ReasonErrorResult =
   | 'QR_ZONE_MISMATCH'
   | 'QR_EXPIRED'
   | 'NETWORK_ERROR'
-  | 'QR_INVALID_DYNAMIC'
   | 'QR_PROVIDER_ERROR'
   | 'QR_DYNAMIC_FORMAT_ERROR'
   | 'QR_TYPE_ERROR'

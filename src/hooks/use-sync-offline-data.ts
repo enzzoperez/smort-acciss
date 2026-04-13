@@ -27,7 +27,7 @@ export const useSyncOfflineData = () => {
     } catch (err) {
       console.error('Falló la sincronización offline:', err);
     }
-  }, [triggerSync, selectedEvent]);
+  }, [triggerSync, selectedEvent, db, ready]);
 
   return {
     sync,
