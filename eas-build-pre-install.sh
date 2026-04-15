@@ -6,8 +6,8 @@ echo "Creating Google Services files from secrets..."
 
 # Android
 mkdir -p android/app
-echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
 # iOS
-mkdir -p ios
-echo "$GOOGLE_SERVICE_INFO_PLIST" > ios/GoogleService-Info.plist
+mkdir -p ios/tutismartaccess
+printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > ios/tutismartaccess/GoogleService-Info.plist
