@@ -22,6 +22,7 @@ import {
   setServerOffset,
   setVerifyOnly,
   setResetConfig,
+  setAvailableEvents,
 } from '@/store/slices';
 import { useRouter } from 'expo-router';
 import Layer from '@/components/layer';
@@ -40,7 +41,9 @@ const SelectEventsScreen = () => {
   const router = useRouter();
   const { sync } = useSyncOfflineData();
   const { userData } = useAppSelector((state) => state.user);
-  const { selectedEvent } = useAppSelector((state) => state.config);
+  const { selectedEvent, selectedEventConfig, availableEvents } = useAppSelector(
+    (state) => state.config,
+  );
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
@@ -126,10 +129,9 @@ const SelectEventsScreen = () => {
   };
 
   const handleScanButton = async () => {
-    // if (isOnline && db && selectedEvent) {
-    //   await incrementalSyncTickets(selectedEvent, db);
-    // }
-
+    if (isOnline && selectedEvent && db) {
+      await syncTicketsForEvent({ eventId: selectedEvent, db, isOnline });
+    }
     router.push('/camera');
   };
 
@@ -149,6 +151,8 @@ const SelectEventsScreen = () => {
     if (selectedEvent && dataEvents) {
       const selected = dataEvents?.config.find((event) => event.eventCode === selectedEvent);
       setItemSelected(selected || null);
+    } else if (selectedEvent && selectedEventConfig) {
+      setItemSelected(selectedEventConfig);
     }
   }, []);
 
@@ -156,8 +160,9 @@ const SelectEventsScreen = () => {
   //y guarda la config del QR para saber si es dinamico o estatico y el offset del server para controlar la validez de los QR dinamicos
   useEffect(() => {
     const handleSelectedEventChange = async () => {
-      if (itemSelected && dataEvents && db) {
-        const selected = dataEvents?.config.find(
+      const eventsConfig = dataEvents?.config ?? availableEvents;
+      if (itemSelected && eventsConfig.length > 0 && db) {
+        const selected = eventsConfig.find(
           (event) => event.eventCode === itemSelected.eventCode,
         );
 
@@ -192,11 +197,14 @@ const SelectEventsScreen = () => {
     };
 
     handleSelectedEventChange();
-  }, [itemSelected, dataEvents, db]);
+  }, [itemSelected, dataEvents, availableEvents, db]);
 
   //Trae la data de los eventos asignados al user y si solo tiene uno asignado lo selecciona por defecto
   useEffect(() => {
     try {
+      if (dataEvents?.config) {
+        dispatch(setAvailableEvents(dataEvents.config));
+      }
       if (dataEvents && dataEvents?.config.length === 1) {
         setItemSelected(dataEvents?.config[0]);
         dispatch(setSelectedEventConfig(dataEvents?.config[0]));
@@ -275,7 +283,7 @@ const SelectEventsScreen = () => {
               Control de accesos en:
             </ThemedText>
 
-            {dataEvents?.config && (
+            {(dataEvents?.config || availableEvents.length > 0) && (
               <View style={{ gap: 24 }}>
                 {/* Select event */}
                 <View style={{ gap: 8 }}>
@@ -287,7 +295,7 @@ const SelectEventsScreen = () => {
                     placeholderStyle={styles.placeholderStyle}
                     selectedTextStyle={styles.selectedTextStyle}
                     iconStyle={styles.iconStyle}
-                    data={dataEvents?.config}
+                    data={dataEvents?.config ?? availableEvents}
                     maxHeight={300}
                     labelField="eventName"
                     valueField="eventCode"

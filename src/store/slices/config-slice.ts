@@ -7,6 +7,7 @@ interface ConfigSlice {
   serverOffset: number;
   selectedEventConfig: EventData | null;
   totalAssigned: number | null;
+  availableEvents: EventData[];
 }
 
 const initialState: ConfigSlice = {
@@ -16,6 +17,7 @@ const initialState: ConfigSlice = {
   serverOffset: 0,
   selectedEventConfig: null,
   totalAssigned: null,
+  availableEvents: [],
 };
 
 export const configSlice = createSlice({
@@ -45,6 +47,10 @@ export const configSlice = createSlice({
       state.totalAssigned = action.payload;
     },
 
+    setAvailableEvents: (state, action: PayloadAction<EventData[]>) => {
+      state.availableEvents = action.payload;
+    },
+
     setResetConfig: (state) => {
       state.selectedEvent = null;
       state.verifyOnly = true;
@@ -52,6 +58,7 @@ export const configSlice = createSlice({
       state.serverOffset = 0;
       state.selectedEventConfig = null;
       state.totalAssigned = null;
+      state.availableEvents = [];
     },
   },
 });
@@ -64,4 +71,5 @@ export const {
   setServerOffset,
   setSelectedEventConfig,
   setTotalAssigned,
+  setAvailableEvents,
 } = configSlice.actions;

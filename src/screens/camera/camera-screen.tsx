@@ -18,6 +18,7 @@ import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 import { useDb } from '@/hooks/use-db';
 import { getAllScannedTickets } from '@/db/repositories/valid-tickets.repository';
 import { getEventSync } from '@/db/repositories/events-sync.repository';
+import InfoIcon from '@/assets/svg/info.svg';
 
 function StatItem({ value, label }: { value: string | number; label: string }) {
   return (
@@ -128,14 +129,14 @@ export default function CameraScreen() {
               style={styles.headerButton}
               onPress={() => setInfoVisible((prev) => !prev)}
             >
-              <Ionicons name="information-circle-outline" size={24} color="#1D252D" />
+              <InfoIcon width={24} height={24} />
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
       {/* Offline banner */}
-      {isOnline && headerHeight > 0 && (
+      {!isOnline && headerHeight > 0 && (
         <View style={[styles.offlineBanner, { top: headerHeight + 8 }]}>
           <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
         </View>
