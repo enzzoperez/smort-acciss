@@ -9,8 +9,8 @@ import FlashlightOff from '@/assets/svg/flashlight-off.svg';
 import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
 import { logError } from '@/libs/crashlytics';
 import { useNetwork } from '@/providers/network-provider';
-import { Ionicons } from '@expo/vector-icons';
 import Cloud from '@/assets/svg/cloud.svg';
+import CloseIcon from '@/assets/svg/close-icon.svg';
 import CloudOff from '@/assets/svg/cloud-off.svg';
 import { useAppSelector } from '@/libs/redux';
 import { ThemedText } from '@/components/themed-text';
@@ -147,7 +147,7 @@ export default function CameraScreen() {
         <View style={infoSheetStyle}>
           <View style={styles.infoSheetHandle} />
           <TouchableOpacity style={styles.infoSheetClose} onPress={() => setInfoVisible(false)}>
-            <Ionicons name="close" size={24} color="#1D252D" />
+            <CloseIcon width={24} height={24} />
           </TouchableOpacity>
           <View style={styles.infoSheetStats}>
             <StatItem label="Total asignados" value={totalAssigned ?? '-'} />
