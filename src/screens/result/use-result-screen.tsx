@@ -24,6 +24,7 @@ export const useResultScreen = () => {
   const { scannedCode } = useLocalSearchParams();
   const { selectedEvent, verifyOnly, configEventQr, serverOffset, selectedEventConfig } =
     useAppSelector((state) => state.config);
+  const { userData } = useAppSelector((state) => state.user);
   const { db } = useDb();
 
   const { isOnline } = useNetwork();
@@ -94,7 +95,7 @@ export const useResultScreen = () => {
       } catch (error) {
         logError(error);
       } finally {
-        const eventSync = await getEventSync(db, eventId);
+        const eventSync = await getEventSync(db, eventId, userData?.accountId ?? '');
         await incrementalSyncTickets({ eventId, db, fromDate: eventSync?.lastSyncDate });
       }
     };
@@ -113,11 +114,20 @@ export const useResultScreen = () => {
     }
   }, [isSuccessRequest]);
 
-  const handleScanQr = () => {
+  const syncIfOnline = async () => {
+    if (!isOnline || !db || !selectedEvent || !userData?.accountId) return;
+    await sync();
+    const eventSync = await getEventSync(db, selectedEvent, userData.accountId);
+    await incrementalSyncTickets({ eventId: selectedEvent, db, fromDate: eventSync?.lastSyncDate });
+  };
+
+  const handleScanQr = async () => {
+    await syncIfOnline();
     router.replace('/camera');
   };
 
-  const handleGoHome = () => {
+  const handleGoHome = async () => {
+    await syncIfOnline();
     router.replace('/select-events');
   };
 

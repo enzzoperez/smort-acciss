@@ -45,6 +45,7 @@ export default function CameraScreen() {
   const { selectedEventConfig, totalAssigned, selectedEvent } = useAppSelector(
     (state) => state.config,
   );
+  const { userData } = useAppSelector((state) => state.user);
   const { db } = useDb();
 
   const totalPending = totalAssigned != null ? totalAssigned - myScans : null;
@@ -84,9 +85,11 @@ export default function CameraScreen() {
   }, [db]);
 
   useEffect(() => {
-    if (!db || !selectedEvent) return;
-    getEventSync(db, selectedEvent).then((sync) => setLastSyncDate(sync?.lastSyncDate ?? null));
-  }, [db, selectedEvent]);
+    if (!db || !selectedEvent || !userData?.accountId) return;
+    getEventSync(db, selectedEvent, userData.accountId).then((sync) =>
+      setLastSyncDate(sync?.lastSyncDate ?? null),
+    );
+  }, [db, selectedEvent, userData?.accountId]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {

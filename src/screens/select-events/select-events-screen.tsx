@@ -113,9 +113,23 @@ const SelectEventsScreen = () => {
     }
   };
 
-  const onRefresh = () => {
-    if (isOnline) {
-      refetch();
+  const onRefresh = async () => {
+    if (!isOnline) return;
+
+    refetch();
+
+    if (selectedEvent && db && userData?.accountId) {
+      await syncTicketsForEvent({
+        eventId: selectedEvent,
+        db,
+        isOnline,
+        accountId: userData.accountId,
+      });
+
+      getEventSync(db, selectedEvent, userData.accountId).then((sync) => {
+        setLastSyncDate(sync?.lastSyncDate ?? null);
+        setHasTicketsDownloaded(sync?.initialSyncDone === 1);
+      });
     }
   };
 
@@ -129,8 +143,13 @@ const SelectEventsScreen = () => {
   };
 
   const handleScanButton = async () => {
-    if (isOnline && selectedEvent && db) {
-      await syncTicketsForEvent({ eventId: selectedEvent, db, isOnline });
+    if (isOnline && selectedEvent && db && userData?.accountId) {
+      await syncTicketsForEvent({
+        eventId: selectedEvent,
+        db,
+        isOnline,
+        accountId: userData.accountId,
+      });
     }
     router.push('/camera');
   };
@@ -162,12 +181,11 @@ const SelectEventsScreen = () => {
     const handleSelectedEventChange = async () => {
       const eventsConfig = dataEvents?.config ?? availableEvents;
       if (itemSelected && eventsConfig.length > 0 && db) {
-        const selected = eventsConfig.find(
-          (event) => event.eventCode === itemSelected.eventCode,
-        );
+        const selected = eventsConfig.find((event) => event.eventCode === itemSelected.eventCode);
 
         if (selected) {
-          const eventSync = await getEventSync(db, itemSelected.eventCode);
+          const accountId = userData?.accountId ?? '';
+          const eventSync = await getEventSync(db, itemSelected.eventCode, accountId);
           const alreadyDownloaded = eventSync?.initialSyncDone === 1;
 
           if (!isOnline && !alreadyDownloaded) {
@@ -182,7 +200,7 @@ const SelectEventsScreen = () => {
           }
 
           try {
-            await syncTicketsForEvent({ eventId: itemSelected.eventCode, db, isOnline });
+            await syncTicketsForEvent({ eventId: itemSelected.eventCode, db, isOnline, accountId });
             await saveQrConfig(selected.eventCode);
 
             setItemSelected(selected);
@@ -224,12 +242,12 @@ const SelectEventsScreen = () => {
   }, [isOnline]);
 
   useEffect(() => {
-    if (!db || !selectedEvent) return;
-    getEventSync(db, selectedEvent).then((sync) => {
+    if (!db || !selectedEvent || !userData?.accountId) return;
+    getEventSync(db, selectedEvent, userData.accountId).then((sync) => {
       setLastSyncDate(sync?.lastSyncDate ?? null);
       setHasTicketsDownloaded(sync?.initialSyncDone === 1);
     });
-  }, [db, selectedEvent]);
+  }, [db, selectedEvent, userData?.accountId]);
 
   if (isLoading || isFetching) {
     return (
