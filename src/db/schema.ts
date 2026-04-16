@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const tickets = sqliteTable(
   'tickets',
@@ -27,8 +27,13 @@ export const noValidTickets = sqliteTable('no_valid_tickets', {
   syncStatus: text('sync_status').notNull(), // pending | synced | error
 });
 
-export const eventsSync = sqliteTable('events_sync', {
-  eventId: text('event_id').primaryKey(),
-  lastSyncDate: text('last_sync_date'),
-  initialSyncDone: integer('initial_sync_done').notNull().default(0),
-});
+export const eventsSync = sqliteTable(
+  'events_sync',
+  {
+    eventId: text('event_id').notNull(),
+    accountId: text('account_id').notNull(),
+    lastSyncDate: text('last_sync_date'),
+    initialSyncDone: integer('initial_sync_done').notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.eventId, table.accountId] })],
+);

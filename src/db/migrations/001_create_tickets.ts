@@ -37,9 +37,11 @@ CREATE TABLE IF NOT EXISTS no_valid_tickets (
 -- EVENTS SYNC
 -- ======================================
 CREATE TABLE IF NOT EXISTS events_sync (
-  event_id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  account_id TEXT NOT NULL,
   last_sync_date TEXT,
-  initial_sync_done INTEGER NOT NULL DEFAULT 0
+  initial_sync_done INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (event_id, account_id)
 );
 
 -- ======================================

@@ -1,48 +1,43 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { eventsSync } from '../schema';
 import { Db } from '../types';
 
-/**
- * Obtener el estado de sync de un evento
- */
-export async function getEventSync(db: Db, eventId: string) {
-  const result = await db.select().from(eventsSync).where(eq(eventsSync.eventId, eventId)).limit(1);
+export async function getEventSync(db: Db, eventId: string, accountId: string) {
+  const result = await db
+    .select()
+    .from(eventsSync)
+    .where(and(eq(eventsSync.eventId, eventId), eq(eventsSync.accountId, accountId)))
+    .limit(1);
 
   return result[0] ?? null;
 }
 
-/**
- * Crear registro de sync para un evento
- */
-export async function createEventSync(db: Db, eventId: string) {
+export async function createEventSync(db: Db, eventId: string, accountId: string) {
   await db.insert(eventsSync).values({
     eventId,
+    accountId,
     initialSyncDone: 0,
     lastSyncDate: null,
   });
 }
 
-/**
- * Marcar que el initial sync ya fue realizado
- */
-export async function markInitialSyncDone(db: Db, eventId: string) {
+export async function markInitialSyncDone(db: Db, eventId: string, accountId: string) {
   await db
     .update(eventsSync)
     .set({
       initialSyncDone: 1,
       lastSyncDate: new Date().toISOString(),
     })
-    .where(eq(eventsSync.eventId, eventId));
+    .where(and(eq(eventsSync.eventId, eventId), eq(eventsSync.accountId, accountId)));
 }
 
-/**
- * Actualizar fecha de último sync (para incremental)
- */
-export async function updateLastSyncDate(db: Db, eventId: string) {
+export async function updateLastSyncDate(db: Db, eventId: string, accountId: string) {
+  console.log(`Updating last sync date for event ${eventId} and account ${accountId}`);
+
   await db
     .update(eventsSync)
     .set({
       lastSyncDate: new Date().toISOString(),
     })
-    .where(eq(eventsSync.eventId, eventId));
+    .where(and(eq(eventsSync.eventId, eventId), eq(eventsSync.accountId, accountId)));
 }

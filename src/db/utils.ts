@@ -119,6 +119,13 @@ export async function incrementalSyncTickets({
   fromDate?: string | null;
 }) {
   const accessToken = store?.getState()?.auth?.accessToken;
+  if (!accessToken) {
+    Alert.alert(
+      'Error',
+      'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
+    );
+    return;
+  }
 
   let page = 0;
   let totalPages = 1;
@@ -192,10 +199,12 @@ export async function syncTicketsForEvent({
   eventId,
   db,
   isOnline,
+  accountId,
 }: {
   eventId: string;
   db: Db;
   isOnline: boolean;
+  accountId: string;
 }) {
   const syncingEvents = new Set<string>();
 
@@ -206,7 +215,7 @@ export async function syncTicketsForEvent({
   syncingEvents.add(eventId);
 
   try {
-    const eventSync = await getEventSync(db, eventId);
+    const eventSync = await getEventSync(db, eventId, accountId);
 
     // EVENTO NUNCA DESCARGADO
     if (!eventSync) {
@@ -218,9 +227,9 @@ export async function syncTicketsForEvent({
         return;
       }
 
-      await createEventSync(db, eventId);
+      await createEventSync(db, eventId, accountId);
       await initialSyncTickets(eventId, db);
-      await markInitialSyncDone(db, eventId);
+      await markInitialSyncDone(db, eventId, accountId);
       store.dispatch(setTotalAssigned(await countTickets(db)));
 
       return;
@@ -236,7 +245,7 @@ export async function syncTicketsForEvent({
         db,
         fromDate: isStale ? undefined : eventSync.lastSyncDate,
       });
-      await updateLastSyncDate(db, eventId);
+      await updateLastSyncDate(db, eventId, accountId);
       store.dispatch(setTotalAssigned(await countTickets(db)));
     } else {
       store.dispatch(setTotalAssigned(await countTickets(db)));

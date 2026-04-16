@@ -21,7 +21,7 @@ export function DbProvider({ children }: Props) {
 
   useEffect(() => {
     const init = async () => {
-      const sqlite = SQLite.openDatabaseSync('app_v2.db');
+      const sqlite = SQLite.openDatabaseSync('app_v3.db');
       const database = drizzle(sqlite) as Db;
 
       await runMigrations(sqlite);
