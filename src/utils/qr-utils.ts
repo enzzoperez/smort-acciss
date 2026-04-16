@@ -14,6 +14,8 @@ export const decryptDynamicQR = (
     throw new Error('QR inválido: no tiene prefijo DQR:');
   }
 
+  console.log('Desencriptando QR dinámico:', { eventSeed });
+
   // 1️⃣ Extraer el alias y el bloque Base64
   // substring(4) elimina "DQR:"
   const partsMain = qrText.substring(4).split(':');
