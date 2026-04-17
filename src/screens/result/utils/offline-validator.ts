@@ -67,8 +67,6 @@ export async function validateQrOfflineFlow({
       finalQr = ticketQr;
     } catch (error) {
       logError(error);
-      // console.log('Error al desencriptar QR dinámico:', { error, qr });
-
       await db.insert(noValidTickets).values({
         id: crypto.randomUUID(),
         qr,
