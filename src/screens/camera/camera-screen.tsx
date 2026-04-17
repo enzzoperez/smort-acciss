@@ -10,7 +10,6 @@ import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
 import { logError } from '@/libs/crashlytics';
 import { useNetwork } from '@/providers/network-provider';
 import Cloud from '@/assets/svg/cloud.svg';
-import CloseIcon from '@/assets/svg/close-icon.svg';
 import CloudOff from '@/assets/svg/cloud-off.svg';
 import { useAppSelector } from '@/libs/redux';
 import { ThemedText } from '@/components/themed-text';
@@ -18,7 +17,6 @@ import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 import { useDb } from '@/hooks/use-db';
 import { getAllScannedTickets } from '@/db/repositories/valid-tickets.repository';
 import { getEventSync } from '@/db/repositories/events-sync.repository';
-import InfoIcon from '@/assets/svg/info.svg';
 
 function StatItem({ value, label }: { value: string | number; label: string }) {
   return (
@@ -36,10 +34,10 @@ export default function CameraScreen() {
   const qrLock = useRef(false);
   const appState = useRef(AppState.currentState);
   const [torchEnabled, setTorchEnabled] = useState(false);
-  const [infoVisible, setInfoVisible] = useState(false);
   const [myScans, setMyScans] = useState(0);
   const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [infoSheetHeight, setInfoSheetHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const { isOnline } = useNetwork();
   const { selectedEventConfig, totalAssigned, selectedEvent } = useAppSelector(
@@ -60,7 +58,10 @@ export default function CameraScreen() {
   const { name: eventName, date: eventDateTime } = getEventNameAndDate();
 
   const headerStyle = [styles.header, { paddingTop: insets.top + 8 }];
-  const bottomButtonsStyle = [styles.bottomButtons, { bottom: insets.bottom + 24 }];
+  const bottomButtonsStyle = [
+    styles.bottomButtons,
+    { bottom: infoSheetHeight > 0 ? infoSheetHeight + 16 : insets.bottom + 24 },
+  ];
   const infoSheetStyle = [styles.infoSheet, { paddingBottom: insets.bottom + 16 }];
 
   const handleScannedCode = ({ data }: { data: string }) => {
@@ -128,12 +129,6 @@ export default function CameraScreen() {
           </View>
           <View style={styles.headerRight}>
             <View style={styles.headerButton}>{isOnline ? <Cloud /> : <CloudOff />}</View>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => setInfoVisible((prev) => !prev)}
-            >
-              <InfoIcon width={24} height={24} />
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -146,19 +141,16 @@ export default function CameraScreen() {
       )}
 
       {/* Info sheet */}
-      {infoVisible && (
-        <View style={infoSheetStyle}>
-          <View style={styles.infoSheetHandle} />
-          <TouchableOpacity style={styles.infoSheetClose} onPress={() => setInfoVisible(false)}>
-            <CloseIcon width={24} height={24} />
-          </TouchableOpacity>
-          <View style={styles.infoSheetStats}>
-            <StatItem label="Total asignados" value={totalAssigned ?? '-'} />
-            <StatItem label="Total pendientes" value={totalPending ?? '-'} />
-            <StatItem label="Mis escaneos" value={myScans} />
-          </View>
+      <View
+        style={infoSheetStyle}
+        onLayout={(e) => setInfoSheetHeight(e.nativeEvent.layout.height)}
+      >
+        <View style={styles.infoSheetStats}>
+          <StatItem label="Total asignados" value={totalAssigned ?? '-'} />
+          <StatItem label="Total pendientes" value={totalPending ?? '-'} />
+          <StatItem label="Mis escaneos" value={myScans} />
         </View>
-      )}
+      </View>
 
       <View style={bottomButtonsStyle}>
         <TouchableOpacity style={styles.roundButton} onPress={() => router.back()}>
