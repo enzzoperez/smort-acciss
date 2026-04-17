@@ -32,12 +32,17 @@ export async function markInitialSyncDone(db: Db, eventId: string, accountId: st
 }
 
 export async function updateLastSyncDate(db: Db, eventId: string, accountId: string) {
-  console.log(`Updating last sync date for event ${eventId} and account ${accountId}`);
-
   await db
     .update(eventsSync)
     .set({
       lastSyncDate: new Date().toISOString(),
     })
     .where(and(eq(eventsSync.eventId, eventId), eq(eventsSync.accountId, accountId)));
+}
+
+export async function resetAllEventSync(db: Db) {
+  await db.update(eventsSync).set({
+    initialSyncDone: 0,
+    lastSyncDate: null,
+  });
 }

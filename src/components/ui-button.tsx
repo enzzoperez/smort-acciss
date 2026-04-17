@@ -1,4 +1,4 @@
-import { PressableProps, StyleSheet } from 'react-native';
+import { ActivityIndicator, PressableProps, StyleSheet } from 'react-native';
 import PressableOpacity from './pressable-opacity';
 import { ThemedText } from './themed-text';
 
@@ -7,6 +7,7 @@ interface ButtonsProps extends PressableProps {
   text?: string;
   variant?: 'primary' | 'secondary' | 'tertiary';
   disabled?: boolean;
+  loading?: boolean;
 }
 
 export const UiButton = ({
@@ -14,6 +15,7 @@ export const UiButton = ({
   text,
   variant = 'primary',
   disabled,
+  loading,
   ...props
 }: ButtonsProps) => {
   const getVariant = () => {
@@ -36,13 +38,19 @@ export const UiButton = ({
     return styles.buttonPrimaryText;
   };
 
+  const isDisabled = disabled || loading;
+
   return (
     <PressableOpacity
-      style={[getStyle(), disabled && { backgroundColor: 'gray' }]}
-      onPress={disabled ? null : onPress}
+      style={[getStyle(), isDisabled && { backgroundColor: 'gray' }]}
+      onPress={isDisabled ? null : onPress}
       {...props}
     >
-      <ThemedText style={getTextStyle()}>{text}</ThemedText>
+      {loading ? (
+        <ActivityIndicator color="white" />
+      ) : (
+        <ThemedText style={getTextStyle()}>{text}</ThemedText>
+      )}
     </PressableOpacity>
   );
 };

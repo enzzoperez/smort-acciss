@@ -35,7 +35,7 @@ import { logError } from '@/libs/crashlytics';
 import { clearAllData, syncTicketsForEvent } from '@/db/utils';
 import { useDb } from '@/hooks/use-db';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
-import { getEventSync } from '@/db/repositories/events-sync.repository';
+import { getEventSync, resetAllEventSync } from '@/db/repositories/events-sync.repository';
 
 const SelectEventsScreen = () => {
   const router = useRouter();
@@ -65,6 +65,7 @@ const SelectEventsScreen = () => {
   } | null>(null);
   const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
   const [hasTicketsDownloaded, setHasTicketsDownloaded] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const isDisabledButton =
     !selectedEvent || isLoading || isFetching || (!isOnline && !hasTicketsDownloaded);
@@ -109,6 +110,7 @@ const SelectEventsScreen = () => {
     dispatch(setSelectedEvent(null));
     dispatch(setResetConfig());
     if (db) {
+      resetAllEventSync(db);
       clearAllData(db);
     }
   };
@@ -144,12 +146,14 @@ const SelectEventsScreen = () => {
 
   const handleScanButton = async () => {
     if (isOnline && selectedEvent && db && userData?.accountId) {
+      setIsSyncing(true);
       await syncTicketsForEvent({
         eventId: selectedEvent,
         db,
         isOnline,
         accountId: userData.accountId,
       });
+      setIsSyncing(false);
     }
     router.push('/camera');
   };
@@ -158,6 +162,7 @@ const SelectEventsScreen = () => {
     <View style={{ gap: 16 }}>
       <UiButton
         disabled={isDisabledButton}
+        loading={isSyncing}
         variant="tertiary"
         text={'Escanear'}
         onPress={handleScanButton}
@@ -200,6 +205,7 @@ const SelectEventsScreen = () => {
           }
 
           try {
+            setIsSyncing(true);
             await syncTicketsForEvent({ eventId: itemSelected.eventCode, db, isOnline, accountId });
             await saveQrConfig(selected.eventCode);
 
@@ -209,6 +215,8 @@ const SelectEventsScreen = () => {
             dispatch(setVerifyOnly(selected.mode === 'CHECK'));
           } catch {
             setItemSelected(null);
+          } finally {
+            setIsSyncing(false);
           }
         }
       }
