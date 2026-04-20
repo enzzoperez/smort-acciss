@@ -34,6 +34,7 @@ export type TicketApi = {
   seat?: string;
   cart?: string;
   successfulReads: number;
+  active: boolean;
 };
 
 export type ApiResponse = {
