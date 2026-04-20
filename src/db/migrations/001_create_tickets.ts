@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS tickets (
   event_id TEXT NOT NULL,
   section TEXT,
   redeem_type TEXT NOT NULL,
-  successful_reads INTEGER NOT NULL DEFAULT 0
+  successful_reads INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1
 );
 
 -- ======================================

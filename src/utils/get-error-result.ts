@@ -5,6 +5,7 @@ export type ReasonErrorResult =
   | 'QR_NOT_FOUND'
   | 'QR_HAS_USED'
   | 'QR_NOT_VALID'
+  | 'QR_INACTIVE'
   | 'QR_EVENT_MISMATCH'
   | 'QR_ZONE_MISMATCH'
   | 'QR_EXPIRED'

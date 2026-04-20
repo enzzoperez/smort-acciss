@@ -8,6 +8,7 @@ export const tickets = sqliteTable(
     section: text('section'),
     redeemType: text('redeem_type').notNull(),
     successfulReads: integer('successful_reads').notNull().default(0),
+    active: integer('active').notNull().default(1),
   },
   (table) => [index('idx_tickets_qr').on(table.qr), index('idx_tickets_event').on(table.eventId)],
 );

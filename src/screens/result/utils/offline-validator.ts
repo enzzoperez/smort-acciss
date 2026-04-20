@@ -101,7 +101,24 @@ export async function validateQrOfflineFlow({
   const ticket = ticketResult[0];
 
   // ======================================
-  // 2️⃣ EVENT MATCH
+  // 2️⃣ TICKET ACTIVO
+  // ======================================
+  if (!ticket.active) {
+    if (!verifyOnly) {
+      await db.insert(noValidTickets).values({
+        id: crypto.randomUUID(),
+        qr: finalQr,
+        scannedAt: now,
+        reason: 'QR_INACTIVE',
+        syncStatus: 'pending',
+      });
+    }
+
+    return { type: 'error', reason: 'QR_INACTIVE' };
+  }
+
+  // ======================================
+  // 4️⃣ EVENT MATCH
   // ======================================
   if (ticket.eventId !== currentEventId) {
     if (!verifyOnly) {
@@ -118,7 +135,7 @@ export async function validateQrOfflineFlow({
   }
 
   // ======================================
-  // 3️⃣ VALIDACIÓN POR SECTOR
+  // 5️⃣ VALIDACIÓN POR SECTOR
   // ======================================
   if (allowedSections && allowedSections.length > 0 && !allowedSections.includes(ticket.section)) {
     if (!verifyOnly) {
@@ -135,7 +152,7 @@ export async function validateQrOfflineFlow({
   }
 
   // ======================================
-  // 4️⃣ VALIDACIÓN DE USO (SINGLE / MULTI)
+  // 6️⃣ VALIDACIÓN DE USO (SINGLE / MULTI)
   // ======================================
 
   if (ticket.redeemType === 'SINGLE') {

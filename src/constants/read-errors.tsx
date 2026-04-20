@@ -24,6 +24,14 @@ export const readErrors = [
     icon: <NotValidTicket />,
   },
   {
+    code: 'ACCTRL-006',
+    key: 'QR_INACTIVE',
+    title: 'Ticket inactivo',
+    message: 'Este ticket fue desactivado y no permite el ingreso.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
     code: 'ACCTRL-002',
     key: 'QR_EVENT_MISMATCH',
     title: 'Ticket de otro evento',

@@ -38,6 +38,7 @@ export function mapTicketApiToDb(ticket: TicketApi): TicketDb {
     section: ticket.section || null,
     redeemType: ticket.redeemType ?? 'SINGLE',
     successfulReads: ticket.successfulReads ?? 0,
+    active: ticket.active ? 1 : 0,
   };
 }
 
@@ -93,6 +94,7 @@ export async function initialSyncTickets(eventId: string, db: Db) {
               section: sql`excluded.section`,
               redeemType: sql`excluded.redeem_type`,
               successfulReads: sql`excluded.successful_reads`,
+              active: sql`excluded.active`,
             },
           });
       }
@@ -160,6 +162,7 @@ export async function incrementalSyncTickets({
               section: sql`excluded.section`,
               redeemType: sql`excluded.redeem_type`,
               successfulReads: sql`excluded.successful_reads`,
+              active: sql`excluded.active`,
             },
           });
       }
