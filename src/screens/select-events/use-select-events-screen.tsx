@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import {
@@ -86,15 +86,16 @@ export function useSelectEventsScreen() {
   };
 
   const onRefresh = async () => {
-    if (!isOnline) return;
-    refetch();
     if (selectedEvent && db && userData?.accountId) {
-      await syncTicketsForEvent({
-        eventId: selectedEvent,
-        db,
-        isOnline,
-        accountId: userData.accountId,
-      });
+      if (!isOnline) {
+        refetch();
+        await syncTicketsForEvent({
+          eventId: selectedEvent,
+          db,
+          isOnline,
+          accountId: userData.accountId,
+        });
+      }
       getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
         setLastSyncDate(eventSync?.lastSyncDate ?? null);
         setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
@@ -197,14 +198,16 @@ export function useSelectEventsScreen() {
     }
   }, [isOnline]);
 
-  // Load last sync date and download status for the current event
-  useEffect(() => {
-    if (!db || !selectedEvent || !userData?.accountId) return;
-    getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
-      setLastSyncDate(eventSync?.lastSyncDate ?? null);
-      setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
-    });
-  }, [db, selectedEvent, userData?.accountId]);
+  // Load last sync date and download status each time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!db || !selectedEvent || !userData?.accountId) return;
+      getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
+        setLastSyncDate(eventSync?.lastSyncDate ?? null);
+        setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
+      });
+    }, [db, selectedEvent, userData?.accountId]),
+  );
 
   return {
     dataEvents,

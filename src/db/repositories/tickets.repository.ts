@@ -15,8 +15,11 @@ export async function clearTickets(db: Db) {
   await db.delete(tickets);
 }
 
-export async function countTickets(db: Db): Promise<number> {
-  const result = await db.select({ count: sql<number>`count(*)` }).from(tickets);
+export async function countTickets(db: Db, eventId: string): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(tickets)
+    .where(eq(tickets.eventId, eventId));
   return result[0]?.count ?? 0;
 }
 

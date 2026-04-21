@@ -62,6 +62,14 @@ export async function hasTickets(db: Db): Promise<boolean> {
 export async function initialSyncTickets(eventId: string, db: Db) {
   const accessToken = store?.getState()?.auth?.accessToken;
 
+  if (!accessToken) {
+    Alert.alert(
+      'Error',
+      'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
+    );
+    return;
+  }
+
   let page = 0;
   let totalPages = 1;
 
@@ -233,7 +241,7 @@ export async function syncTicketsForEvent({
       await createEventSync(db, eventId, accountId);
       await initialSyncTickets(eventId, db);
       await markInitialSyncDone(db, eventId, accountId);
-      store.dispatch(setTotalAssigned(await countTickets(db)));
+      store.dispatch(setTotalAssigned(await countTickets(db, eventId)));
 
       return;
     }
@@ -249,9 +257,9 @@ export async function syncTicketsForEvent({
         fromDate: isStale ? undefined : eventSync.lastSyncDate,
       });
       await updateLastSyncDate(db, eventId, accountId);
-      store.dispatch(setTotalAssigned(await countTickets(db)));
+      store.dispatch(setTotalAssigned(await countTickets(db, eventId)));
     } else {
-      store.dispatch(setTotalAssigned(await countTickets(db)));
+      store.dispatch(setTotalAssigned(await countTickets(db, eventId)));
       Alert.alert(
         'Sin conexión',
         'Estás usando los tickets descargados anteriormente. Los cambios recientes podrían no estar disponibles.',
