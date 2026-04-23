@@ -38,6 +38,22 @@ export async function validateQrOfflineFlow({
   // 🔐 QR DINÁMICO
   // ======================================
   if (configEventQr?.qrMode === 'DYNAMIC') {
+    const qrAlias = qr.startsWith('DQR:') ? qr.substring(4).split(':')[0] : null;
+
+    if (qrAlias !== configEventQr.alias) {
+      if (!verifyOnly) {
+        await db.insert(noValidTickets).values({
+          id: crypto.randomUUID(),
+          qr,
+          scannedAt: now,
+          reason: 'QR_EVENT_MISMATCH',
+          syncStatus: 'pending',
+        });
+      }
+
+      return { type: 'error', reason: 'QR_EVENT_MISMATCH' };
+    }
+
     try {
       const { ticketQr, timeslot } = decryptDynamicQR(qr, configEventQr.eventSeed);
 
@@ -82,6 +98,7 @@ export async function validateQrOfflineFlow({
   // ======================================
   // 1️⃣ ¿EXISTE EN TICKETS?
   // ======================================
+
   const ticketResult = await db.select().from(tickets).where(eq(tickets.qr, finalQr)).limit(1);
 
   if (ticketResult.length === 0) {
