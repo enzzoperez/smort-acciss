@@ -1,13 +1,16 @@
-import crashlytics from '@react-native-firebase/crashlytics';
+import { setCustomTag } from '@microsoft/react-native-clarity';
 
 export const logError = (error: unknown) => {
-  crashlytics().recordError(error as Error);
+  const message = error instanceof Error ? error.message : String(error);
+  void setCustomTag('error', message);
 };
 
 export const setAttributes = (attributes: { [key: string]: string }) => {
-  crashlytics().setAttributes(attributes);
+  Object.entries(attributes).forEach(([key, value]) => {
+    void setCustomTag(key, value);
+  });
 };
 
 export const logMessage = (message: string) => {
-  crashlytics().log(message);
+  void setCustomTag('log', message);
 };
