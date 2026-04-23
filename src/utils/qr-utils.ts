@@ -1,5 +1,6 @@
 import crypto from 'react-native-quick-crypto';
 import { Buffer } from 'buffer';
+import { logError } from '@/libs/crashlytics';
 
 /**
  * Descifra un QR dinámico siguiendo la lógica de Java (AES-GCM).
@@ -67,6 +68,7 @@ export const decryptDynamicQR = (
     };
   } catch (error) {
     console.log('Error al descifrar QR dinámico:', error);
+    logError(error as Error);
   }
 
   // Return a default value or throw an error if the function reaches this point

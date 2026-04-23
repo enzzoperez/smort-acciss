@@ -86,20 +86,20 @@ export function useSelectEventsScreen() {
   };
 
   const onRefresh = async () => {
-    if (selectedEvent && db && userData?.accountId) {
-      if (!isOnline) {
-        refetch();
+    if (!isOnline) {
+      refetch();
+      if (selectedEvent && db && userData?.accountId) {
         await syncTicketsForEvent({
           eventId: selectedEvent,
           db,
           isOnline,
           accountId: userData.accountId,
         });
+        getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
+          setLastSyncDate(eventSync?.lastSyncDate ?? null);
+          setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
+        });
       }
-      getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
-        setLastSyncDate(eventSync?.lastSyncDate ?? null);
-        setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
-      });
     }
   };
 
