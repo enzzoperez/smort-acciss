@@ -188,6 +188,13 @@ export function useSelectEventsScreen() {
     handleSelectedEventChange();
   }, [itemSelected, dataEvents, availableEvents, db]);
 
+  // Keep itemSelected display data fresh when dataEvents refreshes (sections, mode, etc.)
+  useEffect(() => {
+    if (!itemSelected || !dataEvents?.config) return;
+    const updated = dataEvents.config.find((e) => e.eventCode === itemSelected.eventCode);
+    if (updated) setItemSelected(updated);
+  }, [dataEvents]);
+
   // Auto-select event if only one is assigned to the user
   useEffect(() => {
     try {
