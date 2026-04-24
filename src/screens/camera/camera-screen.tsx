@@ -133,12 +133,9 @@ export default function CameraScreen() {
         </View>
       </View>
 
-      {/* Offline banner */}
-      {isOnline && headerHeight > 0 && (
-        <View style={[styles.offlineBanner, { top: headerHeight + 8 }]}>
-          <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
-        </View>
-      )}
+      <View style={[styles.offlineBanner, { top: headerHeight + 8 }]}>
+        <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
+      </View>
 
       {/* Info sheet */}
       <View

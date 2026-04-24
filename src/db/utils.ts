@@ -23,7 +23,7 @@ import {
 } from '@/db/repositories/events-sync.repository';
 import { setTotalAssigned } from '@/store/slices/config-slice';
 import { countTickets } from '@/db/repositories/tickets.repository';
-import { formatDateWithoutTimezone, isOlderThan30Minutes } from '@/utils/dates-utils';
+import { formatDateGMTMinus3, isOlderThan30Minutes } from '@/utils/dates-utils';
 
 export async function runMigrations(sqlite: SQLiteDatabase) {
   for (const sql of migrations) {
@@ -110,11 +110,6 @@ export async function initialSyncTickets(eventId: string, db: Db) {
       page++;
     }
   } catch (error) {
-    Alert.alert(
-      'Error in select event',
-      `Ocurrio un error: ${error || 'No se pudieron obtener los tickets'}`,
-    );
-
     throw error;
   }
 }
@@ -147,7 +142,7 @@ export async function incrementalSyncTickets({
         {
           params: {
             page: page,
-            fromDate: fromDate ? formatDateWithoutTimezone(fromDate) : undefined,
+            fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
           },
           headers: {
             Authorization: `Bearer ${accessToken}`,

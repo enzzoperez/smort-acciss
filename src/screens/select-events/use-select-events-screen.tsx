@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useLogoutMutation } from '@/api/auth-api';
@@ -46,6 +46,7 @@ export function useSelectEventsScreen() {
   const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
   const [hasTicketsDownloaded, setHasTicketsDownloaded] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const lastProcessedEventCode = useRef<string | null>(null);
 
   const isDisabledButton =
     !selectedEvent || isLoading || isFetching || (!isOnline && !hasTicketsDownloaded);
@@ -86,20 +87,24 @@ export function useSelectEventsScreen() {
   };
 
   const onRefresh = async () => {
-    if (!isOnline) {
+    if (isOnline) {
       refetch();
-      if (selectedEvent && db && userData?.accountId) {
-        await syncTicketsForEvent({
-          eventId: selectedEvent,
-          db,
-          isOnline,
-          accountId: userData.accountId,
-        });
-        getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
-          setLastSyncDate(eventSync?.lastSyncDate ?? null);
-          setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
-        });
-      }
+    }
+
+    if (isOnline && selectedEvent && db && userData?.accountId) {
+      await syncTicketsForEvent({
+        eventId: selectedEvent,
+        db,
+        isOnline,
+        accountId: userData.accountId,
+      });
+    }
+
+    if (selectedEvent && db && userData?.accountId) {
+      getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
+        setLastSyncDate(eventSync?.lastSyncDate ?? null);
+        setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
+      });
     }
   };
 
@@ -137,6 +142,9 @@ export function useSelectEventsScreen() {
       const eventsConfig = dataEvents?.config ?? availableEvents;
       if (!itemSelected || eventsConfig.length === 0 || !db) return;
 
+      // Skip if this event was already processed — prevents double-sync on pull-to-refresh
+      if (itemSelected.eventCode === lastProcessedEventCode.current) return;
+
       const selected = eventsConfig.find((event) => event.eventCode === itemSelected.eventCode);
       if (!selected) return;
 
@@ -160,12 +168,18 @@ export function useSelectEventsScreen() {
         await syncTicketsForEvent({ eventId: itemSelected.eventCode, db, isOnline, accountId });
         await saveQrConfig(selected.eventCode);
 
+        lastProcessedEventCode.current = selected.eventCode;
         setItemSelected(selected);
         dispatch(setSelectedEvent(selected.eventCode));
         dispatch(setSelectedEventConfig(selected));
         dispatch(setVerifyOnly(selected.mode === 'CHECK'));
       } catch {
+        lastProcessedEventCode.current = null;
         setItemSelected(null);
+        Alert.alert(
+          'Error al sincronizar',
+          'No se pudieron descargar los tickets del evento. Por favor intentá de nuevo.',
+        );
       } finally {
         setIsSyncing(false);
       }
