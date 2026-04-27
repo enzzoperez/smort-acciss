@@ -157,6 +157,7 @@ export function useSelectEventsScreen() {
           'Evento seleccionado',
           'No se pudo conectar a internet para la descarga de tickets del evento seleccionado. Por favor revisa tu conexión e inténtalo de nuevo.',
         );
+        lastProcessedEventCode.current = null;
         setItemSelected(null);
         dispatch(setSelectedEvent(null));
         setHasTicketsDownloaded(false);
