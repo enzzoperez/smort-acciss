@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import NetInfo from '@react-native-community/netinfo';
 
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
+import { TrackingEvents } from '@/constants/tracking-events';
+import { trackEvent } from '@/libs/tracking';
 
 type NetworkContextType = {
   isOnline: boolean;
@@ -36,7 +38,10 @@ export const NetworkProvider = ({ children }: { children: React.ReactNode }) => 
       setIsOnline(online);
 
       if (online) {
+        trackEvent(TrackingEvents.NETWORK_CONNECTION_RESTORED);
         sync();
+      } else {
+        trackEvent(TrackingEvents.NETWORK_CONNECTION_LOST);
       }
     }
   };

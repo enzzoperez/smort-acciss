@@ -7,9 +7,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 SplashScreen.preventAutoHideAsync();
-Clarity.initialize('wg9y6k3p11', {
-  logLevel: Clarity.LogLevel.Verbose,
-  // Note: Use "LogLevel.Verbose" value while testing to debug initialization issues.
+Clarity.initialize(process.env.EXPO_PUBLIC_CLARITY_PROJECT_ID!, {
+  logLevel: __DEV__ ? Clarity.LogLevel.Verbose : Clarity.LogLevel.None,
 });
 
 export default function RootLayout() {

@@ -11,7 +11,7 @@ import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
 import { useAppDispatch } from '@/libs/redux';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import { TrackingEvents } from '@/constants/tracking-events';
-import { trackEvent } from '@/libs/tracking';
+import { trackEvent, setTrackingUserId } from '@/libs/tracking';
 import MainLogo from '@/assets/svg/main-logo.svg';
 import Layer from '@/components/layer';
 import { Feather } from '@expo/vector-icons';
@@ -31,7 +31,6 @@ const LoginScreen = () => {
   const isPermissionGranted = Boolean(permission?.granted);
 
   const handleLoginRequest = async () => {
-    trackEvent(TrackingEvents.LOGIN_BUTTON_PRESSED);
     try {
       const data = await login({
         accountCredentialType: 'PHONE_NUMBER',
@@ -44,6 +43,8 @@ const LoginScreen = () => {
       dispatch(setAccessToken(tokens.accessToken));
       dispatch(setRefreshToken(tokens.refreshToken));
       dispatch(setUserData(userWithoutTokens));
+      setTrackingUserId(phoneNumber);
+      trackEvent(TrackingEvents.LOGIN_SUCCESS);
     } catch (error) {
       apiErrorHandler(error);
     }

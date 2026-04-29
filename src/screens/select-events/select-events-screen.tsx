@@ -27,6 +27,8 @@ import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { logError } from '@/libs/crashlytics';
+import { TrackingEvents } from '@/constants/tracking-events';
+import { trackEvent } from '@/libs/tracking';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 
 const SelectEventsScreen = () => {
@@ -57,6 +59,7 @@ const SelectEventsScreen = () => {
     dispatch(setLogout());
     dispatch(resetUserData());
     dispatch(setResetConfig());
+    trackEvent(TrackingEvents.LOGOUT_SUCCESS);
   };
 
   const onRefresh = () => {
@@ -71,7 +74,10 @@ const SelectEventsScreen = () => {
         disabled={!selectedEvent}
         variant="tertiary"
         text={'Escanear'}
-        onPress={() => router.push('/camera')}
+        onPress={() => {
+          trackEvent(TrackingEvents.SCAN_BUTTON_PRESSED);
+          router.push('/camera');
+        }}
       />
     </View>
   );
@@ -185,6 +191,7 @@ const SelectEventsScreen = () => {
                     searchPlaceholder="Buscar..."
                     value={selectedEvent}
                     onChange={(item) => {
+                      trackEvent(TrackingEvents.EVENT_SELECTED, { event_code: item.eventCode });
                       setItemSelected(item);
                     }}
                   />

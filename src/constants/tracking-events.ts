@@ -1,3 +1,10 @@
 export const TrackingEvents = {
-  LOGIN_BUTTON_PRESSED: 'login_button_pressed',
+  LOGIN_SUCCESS: 'login_success',
+  LOGOUT_SUCCESS: 'logout_success',
+  EVENT_SELECTED: 'event_selected',
+  SCAN_BUTTON_PRESSED: 'scan_button_pressed',
+  FLASHLIGHT_TOGGLED: 'flashlight_toggled',
+  SCAN_RESULT_RECEIVED: 'scan_result_received',
+  NETWORK_CONNECTION_LOST: 'network_connection_lost',
+  NETWORK_CONNECTION_RESTORED: 'network_connection_restored',
 } as const;
