@@ -31,6 +31,7 @@ const SelectEventsScreen = () => {
     isDisabledButton,
     onChangeSelectedEvent,
     handleScanButton,
+    handleDownload,
     onRefresh,
     closeSession,
   } = useSelectEventsScreen();
@@ -70,7 +71,11 @@ const SelectEventsScreen = () => {
     <Layer>
       <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
 
-      <Header onRightPress={closeSession} />
+      <Header
+        onRightPress={closeSession}
+        onDownload={handleDownload}
+        hasSelectedEvent={!!selectedEvent}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}

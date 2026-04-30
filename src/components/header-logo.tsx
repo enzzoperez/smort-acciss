@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import CloseSession from '@/assets/svg/close-session.svg';
 import HeaderLogo from '@/assets/svg/logo-header.svg';
+import Download from '@/assets/svg/download.svg';
 import PressableOpacity from './pressable-opacity';
 import Cloud from '@/assets/svg/cloud.svg';
 import CloudOff from '@/assets/svg/cloud-off.svg';
@@ -10,9 +11,11 @@ import { useNetwork } from '@/providers/network-provider';
 
 interface HeaderProps {
   onRightPress?: () => void;
+  onDownload?: () => void;
+  hasSelectedEvent?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRightPress }) => {
+export const Header: React.FC<HeaderProps> = ({ onRightPress, onDownload, hasSelectedEvent }) => {
   const { isOnline } = useNetwork();
   return (
     <View style={styles.container}>
@@ -21,12 +24,18 @@ export const Header: React.FC<HeaderProps> = ({ onRightPress }) => {
         <HeaderLogo />
       </View>
 
-      {/* Right icon */}
-      <View style={{ flexDirection: 'row', gap: 24 }}>
+      {/* Right icons */}
+      <View style={styles.rightContainer}>
         {isOnline ? <Cloud /> : <CloudOff />}
 
+        {isOnline && hasSelectedEvent && (
+          <PressableOpacity styleAnimated={styles.rightIcon} onPress={onDownload}>
+            <Download width={24} height={24} />
+          </PressableOpacity>
+        )}
+
         <PressableOpacity styleAnimated={styles.rightIcon} onPress={onRightPress}>
-          <CloseSession />
+          <CloseSession height={24} />
         </PressableOpacity>
       </View>
     </View>
@@ -42,6 +51,11 @@ const styles = StyleSheet.create({
   },
   leftContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    gap: 24,
     alignItems: 'center',
   },
   rightIcon: {

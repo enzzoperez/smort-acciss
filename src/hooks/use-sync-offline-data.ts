@@ -3,34 +3,32 @@ import { useSyncOfflineDataMutation } from '@/api/scanner-api';
 import { useAppSelector } from '@/libs/redux';
 import { clearOfflineQueue, getOfflineQrList } from '@/db/utils';
 import { useDb } from './use-db';
-import { Alert } from 'react-native';
 
 export const useSyncOfflineData = () => {
   const [triggerSync, { isLoading, isError, error }] = useSyncOfflineDataMutation();
   const { selectedEvent } = useAppSelector((state) => state.config);
   const { db, ready } = useDb();
 
-  const sync = useCallback(async () => {
+  // Returns true if sync succeeded (or nothing to sync), false if it failed.
+  const sync = useCallback(async (): Promise<boolean> => {
     try {
       if (!ready || !db) {
-        return;
+        return true;
       }
 
       const pendingList = await getOfflineQrList(db);
 
       if (!pendingList || pendingList.length === 0) {
-        return;
+        return true;
       }
 
       await triggerSync({ eventCode: selectedEvent as string, qrCodes: pendingList }).unwrap();
 
       await clearOfflineQueue(db);
+      return true;
     } catch (err) {
       console.error('Falló la sincronización offline:', err);
-      Alert.alert(
-        'Error de sincronización',
-        'No se pudieron sincronizar los datos pendientes. Por favor, inténtalo de nuevo más tarde.',
-      );
+      return false;
     }
   }, [triggerSync, selectedEvent, db, ready]);
 

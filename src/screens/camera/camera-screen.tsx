@@ -7,6 +7,7 @@ import { Overlay } from './overlay';
 import Flashlight from '@/assets/svg/flashlight.svg';
 import FlashlightOff from '@/assets/svg/flashlight-off.svg';
 import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
+import Download from '@/assets/svg/download.svg';
 import { logError } from '@/libs/crashlytics';
 import { useNetwork } from '@/providers/network-provider';
 import Cloud from '@/assets/svg/cloud.svg';
@@ -17,6 +18,7 @@ import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 import { useDb } from '@/hooks/use-db';
 import { getAllScannedTickets } from '@/db/repositories/valid-tickets.repository';
 import { getEventSync } from '@/db/repositories/events-sync.repository';
+import { syncTicketsForEvent } from '@/db/utils';
 
 function StatItem({ value, label }: { value: string | number; label: string }) {
   return (
@@ -47,6 +49,19 @@ export default function CameraScreen() {
   const { db } = useDb();
 
   const totalPending = totalAssigned != null ? totalAssigned - myScans : null;
+
+  const handleDownload = async () => {
+    if (!selectedEvent || !db || !userData?.accountId) return;
+    await syncTicketsForEvent({
+      eventId: selectedEvent,
+      db,
+      isOnline,
+      accountId: userData.accountId,
+    });
+    getEventSync(db, selectedEvent, userData.accountId).then((sync) =>
+      setLastSyncDate(sync?.lastSyncDate ?? null),
+    );
+  };
 
   const getEventNameAndDate = (): { name: string; date: string } => {
     const match = selectedEventConfig?.eventName?.match(/^\((.+?)\)\s*(.+)$/);
@@ -129,6 +144,11 @@ export default function CameraScreen() {
           </View>
           <View style={styles.headerRight}>
             <View style={styles.headerButton}>{isOnline ? <Cloud /> : <CloudOff />}</View>
+            {isOnline && (
+              <TouchableOpacity style={styles.headerButton} onPress={handleDownload}>
+                <Download width={24} height={24} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

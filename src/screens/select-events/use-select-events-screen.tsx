@@ -74,7 +74,15 @@ export function useSelectEventsScreen() {
     }
   };
 
-  const closeSession = () => {
+  const closeSession = async () => {
+    const synced = await sync();
+    if (!synced) {
+      Alert.alert(
+        'No se pudo cerrar sesión',
+        'Hay escaneos pendientes de sincronizar. Por favor revisá tu conexión e intentá nuevamente en un rato.',
+      );
+      return;
+    }
     logout({ accountId: userData?.accountId });
     dispatch(setLogout());
     dispatch(resetUserData());
@@ -110,6 +118,25 @@ export function useSelectEventsScreen() {
 
   const onChangeSelectedEvent = (item: EventData) => {
     setItemSelected(item);
+  };
+
+  const handleDownload = async () => {
+    if (!selectedEvent || !db || !userData?.accountId) return;
+    setIsSyncing(true);
+    try {
+      await syncTicketsForEvent({
+        eventId: selectedEvent,
+        db,
+        isOnline,
+        accountId: userData.accountId,
+      });
+      getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
+        setLastSyncDate(eventSync?.lastSyncDate ?? null);
+        setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
+      });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleScanButton = async () => {
@@ -245,6 +272,7 @@ export function useSelectEventsScreen() {
     isDisabledButton,
     onChangeSelectedEvent,
     handleScanButton,
+    handleDownload,
     onRefresh,
     closeSession,
   };
