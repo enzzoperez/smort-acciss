@@ -14,6 +14,7 @@ import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import {
   resetUserData,
+  setAvailableEvents,
   setLogout,
   setResetConfig,
   setSelectedEvent,
@@ -35,7 +36,7 @@ const SelectEventsScreen = () => {
   const router = useRouter();
   const { sync } = useSyncOfflineData();
   const { userData } = useAppSelector((state) => state.user);
-  const { selectedEvent } = useAppSelector((state) => state.config);
+  const { selectedEvent, availableEvents } = useAppSelector((state) => state.config);
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
@@ -82,18 +83,24 @@ const SelectEventsScreen = () => {
     </View>
   );
 
+  const eventsList = dataEvents?.config ?? availableEvents;
+
   useEffect(() => {
-    if (selectedEvent && dataEvents) {
-      const selected = dataEvents?.config.find((event) => event.eventCode === selectedEvent);
+    if (dataEvents?.config && dataEvents.config.length > 0) {
+      dispatch(setAvailableEvents(dataEvents.config));
+    }
+  }, [dataEvents]);
+
+  useEffect(() => {
+    if (selectedEvent && eventsList.length > 0) {
+      const selected = eventsList.find((event) => event.eventCode === selectedEvent);
       setItemSelected(selected || null);
     }
   }, []);
 
   useEffect(() => {
     if (itemSelected) {
-      const selected = dataEvents?.config.find(
-        (event) => event.eventCode === itemSelected.eventCode,
-      );
+      const selected = eventsList.find((event) => event.eventCode === itemSelected.eventCode);
 
       if (selected) {
         setItemSelected(selected);
@@ -105,10 +112,10 @@ const SelectEventsScreen = () => {
 
   useEffect(() => {
     try {
-      if (dataEvents && dataEvents?.config.length === 1) {
-        setItemSelected(dataEvents?.config[0]);
-        dispatch(setSelectedEvent(dataEvents?.config[0].eventCode));
-        dispatch(setVerifyOnly(dataEvents?.config[0].mode === 'CHECK'));
+      if (eventsList.length === 1 && !selectedEvent) {
+        setItemSelected(eventsList[0]);
+        dispatch(setSelectedEvent(eventsList[0].eventCode));
+        dispatch(setVerifyOnly(eventsList[0].mode === 'CHECK'));
       }
     } catch (error) {
       logError(error as Error);
@@ -171,7 +178,7 @@ const SelectEventsScreen = () => {
               Control de accesos en:
             </ThemedText>
 
-            {dataEvents?.config && (
+            {eventsList.length > 0 && (
               <View style={{ gap: 24 }}>
                 {/* Select event */}
                 <View style={{ gap: 8 }}>
@@ -183,7 +190,7 @@ const SelectEventsScreen = () => {
                     placeholderStyle={styles.placeholderStyle}
                     selectedTextStyle={styles.selectedTextStyle}
                     iconStyle={styles.iconStyle}
-                    data={dataEvents?.config}
+                    data={eventsList}
                     maxHeight={300}
                     labelField="eventName"
                     valueField="eventCode"

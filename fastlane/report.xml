@@ -40,7 +40,7 @@
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="07: increment_version_code" time="0.001979">
+      <testcase classname="fastlane.lanes" name="07: increment_version_code" time="0.00342">
         
       </testcase>
     
