@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 
 SplashScreen.preventAutoHideAsync();
 Clarity.initialize(process.env.EXPO_PUBLIC_CLARITY_PROJECT_ID!, {
-  logLevel: __DEV__ ? Clarity.LogLevel.Verbose : Clarity.LogLevel.None,
+  logLevel: Clarity.LogLevel.Verbose,
 });
 
 export default function RootLayout() {
