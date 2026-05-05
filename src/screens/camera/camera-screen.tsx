@@ -7,7 +7,7 @@ import { Overlay } from './overlay';
 import Flashlight from '@/assets/svg/flashlight.svg';
 import FlashlightOff from '@/assets/svg/flashlight-off.svg';
 import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
-import { logError } from '@/libs/crashlytics';
+import { reportError as logError } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
 import { useNetwork } from '@/providers/network-provider';

@@ -1,4 +1,4 @@
-import { logError } from '@/libs/crashlytics';
+import { reportError as logError } from '@/utils/error-logger';
 import { Alert } from 'react-native';
 
 export const useApiErrorHandler = () => {

@@ -12,7 +12,7 @@ import { getReadErrorByCode } from '@/utils/get-error-result';
 import { useNetwork } from '@/providers/network-provider';
 import { saveQrOffline } from '@/storage/qr-storage';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { logError, logMessage } from '@/libs/crashlytics';
+import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
 

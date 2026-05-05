@@ -1,4 +1,4 @@
-import { logError, logMessage } from '@/libs/crashlytics';
+import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
 import { resetUserData, setLogout, setResetConfig } from '@/store/slices';
 import { RootState } from '@/store/store';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';

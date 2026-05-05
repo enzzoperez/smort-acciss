@@ -26,7 +26,7 @@ import { useGetEventsQuery } from '@/api/events-api';
 import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { logError } from '@/libs/crashlytics';
+import { reportError as logError } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
