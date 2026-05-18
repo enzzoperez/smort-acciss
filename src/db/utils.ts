@@ -43,7 +43,7 @@ export function mapTicketApiToDb(ticket: TicketApi): TicketDb {
 }
 
 export function mapTicketsApiToDb(tickets: TicketApi[]): TicketDb[] {
-  return tickets?.length < 1 ? [] : tickets.map(mapTicketApiToDb);
+  return tickets?.map(mapTicketApiToDb) ?? [];
 }
 
 export async function hasTickets(db: Db): Promise<boolean> {
