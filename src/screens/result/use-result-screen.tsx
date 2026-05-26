@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useValidateAndRegisterMutation } from '@/api/scanner-api';
+import { isApiError, useValidateAndRegisterMutation } from '@/api/scanner-api';
 import { useAppSelector } from '@/libs/redux';
 import { ActionLabel } from './action-label';
 import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
@@ -33,12 +33,14 @@ export const useResultScreen = () => {
 
   const [errorNetwork, setErrorNetwork] = useState<boolean>(false);
 
-  const errorParsed = errorRequest?.data?.errors && errorRequest?.data?.errors[0];
+  const errorParsed = isApiError(errorRequest) ? errorRequest.data.errors[0] : undefined;
 
   const errorItem = getReadErrorByCode({
-    code: errorParsed?.code,
+    code: errorParsed?.code ?? '',
     isConnected: onlineSnapshotRef.current,
   });
+
+  const infoUsedData = errorItem?.code === 'ACCTRL-004' ? errorParsed : null;
 
   useEffect(() => {
     const processQr = async () => {
@@ -141,5 +143,6 @@ export const useResultScreen = () => {
     handleScanQr,
     handleGoHome,
     getScreenElements,
+    infoUsedData,
   };
 };
