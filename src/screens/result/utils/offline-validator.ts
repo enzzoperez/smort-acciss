@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import { tickets, noValidTickets, ticketScan } from '@/db/schema';
 import { decryptDynamicQR, calculateMyTimeSlot } from '../../../utils/qr-utils';
 import { logError } from '@/libs/crashlytics';
@@ -17,7 +17,7 @@ type OfflineValidationResult =
 export async function validateQrOfflineFlow({
   db,
   qr,
-  currentEventId,
+  validEventIds,
   configEventQr,
   serverOffset,
   allowedSections,
@@ -25,9 +25,9 @@ export async function validateQrOfflineFlow({
 }: {
   db: any;
   qr: string;
-  currentEventId: string;
+  validEventIds: string[];
   serverOffset: number;
-  configEventQr: ResConfigEventQr | null;
+  configEventQr: ResConfigEventQr[] | null;
   allowedSections: string[] | null;
   verifyOnly?: boolean;
 }): Promise<OfflineValidationResult> {
@@ -37,10 +37,13 @@ export async function validateQrOfflineFlow({
   // ======================================
   // 🔐 QR DINÁMICO
   // ======================================
-  if (configEventQr?.qrMode === 'DYNAMIC') {
+  if (configEventQr?.[0]?.qrMode === 'DYNAMIC') {
     const qrAlias = qr.startsWith('DQR:') ? qr.substring(4).split(':')[0] : null;
 
-    if (qrAlias !== configEventQr.alias) {
+    // Find the config whose alias matches the QR alias
+    const matchingConfig = configEventQr.find((c) => c.alias === qrAlias);
+
+    if (!matchingConfig) {
       if (!verifyOnly) {
         await db.insert(noValidTickets).values({
           id: crypto.randomUUID(),
@@ -55,17 +58,15 @@ export async function validateQrOfflineFlow({
     }
 
     try {
-      const { ticketQr, timeslot } = decryptDynamicQR(qr, configEventQr.eventSeed);
+      const { ticketQr, timeslot } = decryptDynamicQR(qr, matchingConfig.eventSeed);
 
       const { timeSlot: currentSlot } = calculateMyTimeSlot(
-        configEventQr.refreshInterval,
+        matchingConfig.refreshInterval,
         serverOffset,
       );
 
       const qrSlot = Number(timeslot);
-
-      const toleranceSlots = Math.ceil(60000 / configEventQr.refreshInterval);
-
+      const toleranceSlots = Math.ceil(60000 / matchingConfig.refreshInterval);
       const isWithinTolerance = Math.abs(qrSlot - currentSlot) <= toleranceSlots;
 
       if (!isWithinTolerance) {
@@ -99,7 +100,11 @@ export async function validateQrOfflineFlow({
   // 1️⃣ ¿EXISTE EN TICKETS?
   // ======================================
 
-  const ticketResult = await db.select().from(tickets).where(eq(tickets.qr, finalQr)).limit(1);
+  const ticketResult = await db
+    .select()
+    .from(tickets)
+    .where(inArray(tickets.qr, [finalQr]))
+    .limit(1);
 
   if (ticketResult.length === 0) {
     if (!verifyOnly) {
@@ -137,7 +142,7 @@ export async function validateQrOfflineFlow({
   // ======================================
   // 4️⃣ EVENT MATCH
   // ======================================
-  if (ticket.eventId !== currentEventId) {
+  if (!validEventIds.includes(ticket.eventId)) {
     if (!verifyOnly) {
       await db.insert(noValidTickets).values({
         id: crypto.randomUUID(),
@@ -176,10 +181,9 @@ export async function validateQrOfflineFlow({
     const offlineReadsCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(ticketScan)
-      .where(eq(ticketScan.qr, finalQr));
+      .where(inArray(ticketScan.qr, [finalQr]));
 
     const offlineReads = offlineReadsCount[0]?.count ?? 0;
-
     const totalReads = ticket.successfulReads + offlineReads;
 
     if (totalReads >= 1) {

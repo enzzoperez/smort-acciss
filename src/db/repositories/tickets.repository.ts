@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { tickets } from '../schema';
 import { Db, NewTicketDb, TicketDb } from '../types';
 
@@ -15,11 +15,12 @@ export async function clearTickets(db: Db) {
   await db.delete(tickets);
 }
 
-export async function countTickets(db: Db, eventId: string): Promise<number> {
+export async function countTickets(db: Db, eventIds: string | string[]): Promise<number> {
+  const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(tickets)
-    .where(eq(tickets.eventId, eventId));
+    .where(inArray(tickets.eventId, ids));
   return result[0]?.count ?? 0;
 }
 

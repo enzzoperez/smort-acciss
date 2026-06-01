@@ -13,6 +13,7 @@ import {
   setVerifyOnly,
   setResetConfig,
   setAvailableEvents,
+  setTotalAssigned,
 } from '@/store/slices';
 import { useGetEventQrConfigMutation, useGetEventsQuery, EventData } from '@/api/events-api';
 import { useNetwork } from '@/providers/network-provider';
@@ -21,6 +22,27 @@ import { logError } from '@/libs/crashlytics';
 import { clearAllData, syncTicketsForEvent } from '@/db/utils';
 import { useDb } from '@/hooks/use-db';
 import { getEventSync, resetAllEventSync } from '@/db/repositories/events-sync.repository';
+import { countTickets } from '@/db/repositories/tickets.repository';
+
+function getValidEventIds(event: EventData): string[] {
+  if (event.type === 'ALIAS') {
+    return event.item?.map((i) => i.eventCode) ?? [];
+  }
+  return [event.eventCode];
+}
+
+async function aggregateSyncState(
+  event: EventData,
+  db: NonNullable<ReturnType<typeof useDb>['db']>,
+  accountId: string,
+): Promise<{ hasTicketsDownloaded: boolean; lastSyncDate: string | null }> {
+  const ids = getValidEventIds(event);
+  const records = await Promise.all(ids.map((id) => getEventSync(db, id, accountId)));
+  const allDone = records.every((r) => r?.initialSyncDone === 1);
+  const dates = records.map((r) => r?.lastSyncDate).filter(Boolean) as string[];
+  const oldest = dates.length ? dates.reduce((a, b) => (a < b ? a : b)) : null;
+  return { hasTicketsDownloaded: allDone, lastSyncDate: oldest };
+}
 
 export function useSelectEventsScreen() {
   const router = useRouter();
@@ -61,13 +83,9 @@ export function useSelectEventsScreen() {
   const saveQrConfig = async (eventCode: string) => {
     try {
       const data = await getQrConfig({ eventCode }).unwrap();
-      if (data?.length === 1) {
+      if (data?.length) {
         calculateServerOffset(data[0]?.serverTime);
-        dispatch(setConfigEventQr(data[0]));
-      } else if (data?.length && data.length > 1) {
-        const configObject = data.find((config) => config.code === eventCode);
-        calculateServerOffset(configObject?.serverTime);
-        dispatch(setConfigEventQr(configObject!));
+        dispatch(setConfigEventQr(data));
       }
     } catch (error) {
       logError(error as Error);
@@ -99,20 +117,18 @@ export function useSelectEventsScreen() {
       refetch();
     }
 
-    if (isOnline && selectedEvent && db && userData?.accountId) {
-      await syncTicketsForEvent({
-        eventId: selectedEvent,
-        db,
-        isOnline,
-        accountId: userData.accountId,
-      });
+    if (isOnline && selectedEventConfig && db && userData?.accountId) {
+      const validIds = getValidEventIds(selectedEventConfig);
+      for (const id of validIds) {
+        await syncTicketsForEvent({ eventId: id, db, isOnline, accountId: userData.accountId });
+      }
+      dispatch(setTotalAssigned(await countTickets(db, validIds)));
     }
 
-    if (selectedEvent && db && userData?.accountId) {
-      getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
-        setLastSyncDate(eventSync?.lastSyncDate ?? null);
-        setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
-      });
+    if (selectedEventConfig && db && userData?.accountId) {
+      const state = await aggregateSyncState(selectedEventConfig, db, userData.accountId);
+      setLastSyncDate(state.lastSyncDate);
+      setHasTicketsDownloaded(state.hasTicketsDownloaded);
     }
   };
 
@@ -121,33 +137,30 @@ export function useSelectEventsScreen() {
   };
 
   const handleDownload = async () => {
-    if (!selectedEvent || !db || !userData?.accountId) return;
+    if (!selectedEventConfig || !db || !userData?.accountId) return;
     setIsSyncing(true);
     try {
-      await syncTicketsForEvent({
-        eventId: selectedEvent,
-        db,
-        isOnline,
-        accountId: userData.accountId,
-      });
-      getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
-        setLastSyncDate(eventSync?.lastSyncDate ?? null);
-        setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
-      });
+      const validIds = getValidEventIds(selectedEventConfig);
+      for (const id of validIds) {
+        await syncTicketsForEvent({ eventId: id, db, isOnline, accountId: userData.accountId });
+      }
+      dispatch(setTotalAssigned(await countTickets(db, validIds)));
+      const state = await aggregateSyncState(selectedEventConfig, db, userData.accountId);
+      setLastSyncDate(state.lastSyncDate);
+      setHasTicketsDownloaded(state.hasTicketsDownloaded);
     } finally {
       setIsSyncing(false);
     }
   };
 
   const handleScanButton = async () => {
-    if (isOnline && selectedEvent && db && userData?.accountId) {
+    if (isOnline && selectedEventConfig && db && userData?.accountId) {
       setIsSyncing(true);
-      await syncTicketsForEvent({
-        eventId: selectedEvent,
-        db,
-        isOnline,
-        accountId: userData.accountId,
-      });
+      const validIds = getValidEventIds(selectedEventConfig);
+      for (const id of validIds) {
+        await syncTicketsForEvent({ eventId: id, db, isOnline, accountId: userData.accountId });
+      }
+      dispatch(setTotalAssigned(await countTickets(db, validIds)));
       setIsSyncing(false);
     }
     router.push('/camera');
@@ -176,8 +189,11 @@ export function useSelectEventsScreen() {
       if (!selected) return;
 
       const accountId = userData?.accountId ?? '';
-      const eventSync = await getEventSync(db, itemSelected.eventCode, accountId);
-      const alreadyDownloaded = eventSync?.initialSyncDone === 1;
+      const validIds = getValidEventIds(selected);
+
+      // Check all sub-events are downloaded (for ALIAS: all must be done)
+      const syncRecords = await Promise.all(validIds.map((id) => getEventSync(db, id, accountId)));
+      const alreadyDownloaded = syncRecords.every((s) => s?.initialSyncDone === 1);
 
       if (!isOnline && !alreadyDownloaded) {
         Alert.alert(
@@ -193,8 +209,11 @@ export function useSelectEventsScreen() {
 
       try {
         setIsSyncing(true);
-        await syncTicketsForEvent({ eventId: itemSelected.eventCode, db, isOnline, accountId });
+        for (const id of validIds) {
+          await syncTicketsForEvent({ eventId: id, db, isOnline, accountId });
+        }
         await saveQrConfig(selected.eventCode);
+        dispatch(setTotalAssigned(await countTickets(db, validIds)));
 
         lastProcessedEventCode.current = selected.eventCode;
         setItemSelected(selected);
@@ -250,12 +269,12 @@ export function useSelectEventsScreen() {
   // Load last sync date and download status each time the screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      if (!db || !selectedEvent || !userData?.accountId) return;
-      getEventSync(db, selectedEvent, userData.accountId).then((eventSync) => {
-        setLastSyncDate(eventSync?.lastSyncDate ?? null);
-        setHasTicketsDownloaded(eventSync?.initialSyncDone === 1);
+      if (!db || !selectedEventConfig || !userData?.accountId) return;
+      aggregateSyncState(selectedEventConfig, db, userData.accountId).then((state) => {
+        setLastSyncDate(state.lastSyncDate);
+        setHasTicketsDownloaded(state.hasTicketsDownloaded);
       });
-    }, [db, selectedEvent, userData?.accountId]),
+    }, [db, selectedEventConfig, userData?.accountId]),
   );
 
   return {

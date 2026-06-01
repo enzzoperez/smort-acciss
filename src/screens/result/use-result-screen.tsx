@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useValidateAndRegisterMutation } from '@/api/scanner-api';
-import { useAppSelector } from '@/libs/redux';
+import { useAppSelector, useAppDispatch } from '@/libs/redux';
 import { ActionLabel } from './action-label';
 import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
 
@@ -18,14 +19,23 @@ import * as crypto from 'expo-crypto';
 import { validateQrOfflineFlow } from './utils/offline-validator';
 import { incrementalSyncTickets } from '@/db/utils';
 import { getEventSync } from '@/db/repositories/events-sync.repository';
+import { countTickets } from '@/db/repositories/tickets.repository';
+import { setTotalAssigned } from '@/store/slices';
 
 export const useResultScreen = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { scannedCode } = useLocalSearchParams();
   const { selectedEvent, verifyOnly, configEventQr, serverOffset, selectedEventConfig } =
     useAppSelector((state) => state.config);
   const { userData } = useAppSelector((state) => state.user);
   const { db } = useDb();
+  const validEventIds: string[] =
+    selectedEventConfig?.type === 'ALIAS'
+      ? (selectedEventConfig.item?.map((i) => i.eventCode) ?? [])
+      : selectedEvent
+        ? [selectedEvent]
+        : [];
 
   const { isOnline } = useNetwork();
   const onlineSnapshotRef = useRef(isOnline);
@@ -60,7 +70,6 @@ export const useResultScreen = () => {
         return;
       }
 
-      const eventId = selectedEvent!;
       const online = onlineSnapshotRef.current;
 
       setLocalResult(null);
@@ -72,7 +81,7 @@ export const useResultScreen = () => {
         const result = await validateQrOfflineFlow({
           db,
           qr: scannedCode as string,
-          currentEventId: eventId,
+          validEventIds,
           serverOffset,
           configEventQr,
           allowedSections: selectedEventConfig?.sections || null,
@@ -95,8 +104,11 @@ export const useResultScreen = () => {
       } catch (error) {
         logError(error);
       } finally {
-        const eventSync = await getEventSync(db, eventId, userData?.accountId ?? '');
-        await incrementalSyncTickets({ eventId, db, fromDate: eventSync?.lastSyncDate });
+        for (const id of validEventIds) {
+          const eventSync = await getEventSync(db, id, userData?.accountId ?? '');
+          await incrementalSyncTickets({ eventId: id, db, fromDate: eventSync?.lastSyncDate });
+        }
+        dispatch(setTotalAssigned(await countTickets(db, validEventIds)));
       }
     };
 
@@ -115,10 +127,20 @@ export const useResultScreen = () => {
   }, [isSuccessRequest]);
 
   const syncIfOnline = async () => {
-    if (!isOnline || !db || !selectedEvent || !userData?.accountId) return;
-    await sync();
-    const eventSync = await getEventSync(db, selectedEvent, userData.accountId);
-    await incrementalSyncTickets({ eventId: selectedEvent, db, fromDate: eventSync?.lastSyncDate });
+    if (!isOnline || !db || !userData?.accountId || validEventIds.length === 0) return;
+    const synced = await sync();
+    if (!synced) {
+      Alert.alert(
+        'Error de sincronización',
+        'No se pudieron enviar los escaneos pendientes. Por favor revisá tu conexión e intentá nuevamente.',
+      );
+      return;
+    }
+    for (const id of validEventIds) {
+      const eventSync = await getEventSync(db, id, userData.accountId);
+      await incrementalSyncTickets({ eventId: id, db, fromDate: eventSync?.lastSyncDate });
+    }
+    dispatch(setTotalAssigned(await countTickets(db, validEventIds)));
   };
 
   const handleScanQr = async () => {

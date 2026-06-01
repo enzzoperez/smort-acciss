@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface ConfigSlice {
   selectedEvent: string | null;
   verifyOnly: boolean;
-  configEventQr: ResConfigEventQr | null;
+  configEventQr: ResConfigEventQr[] | null;
   serverOffset: number;
   selectedEventConfig: EventData | null;
   totalAssigned: number | null;
@@ -31,7 +31,7 @@ export const configSlice = createSlice({
       state.verifyOnly = action.payload;
     },
 
-    setConfigEventQr: (state, action: PayloadAction<ResConfigEventQr>) => {
+    setConfigEventQr: (state, action: PayloadAction<ResConfigEventQr[]>) => {
       state.configEventQr = action.payload;
     },
 

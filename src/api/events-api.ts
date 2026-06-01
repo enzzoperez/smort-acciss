@@ -10,10 +10,17 @@ export interface ResConfigEventQr {
 }
 
 export interface EventData {
+  accountId: string;
   eventCode: string;
   eventName: string;
+  id: string;
   mode: string;
   sections: string[];
+  type: 'EVENT' | 'ALIAS';
+  item?: {
+    eventCode: string;
+    sections: string[];
+  }[];
 }
 
 export interface ResGetEvents {

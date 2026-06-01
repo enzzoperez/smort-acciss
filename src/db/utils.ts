@@ -21,8 +21,7 @@ import {
   markInitialSyncDone,
   updateLastSyncDate,
 } from '@/db/repositories/events-sync.repository';
-import { setTotalAssigned } from '@/store/slices/config-slice';
-import { countTickets } from '@/db/repositories/tickets.repository';
+
 import { formatDateGMTMinus3, isOlderThan30Minutes } from '@/utils/dates-utils';
 
 export async function runMigrations(sqlite: SQLiteDatabase) {
@@ -191,6 +190,7 @@ export async function getOfflineQrList(db: Db) {
       ...noValidTickets.map((ticket) => ({
         qrCode: ticket.qr,
         timeScan: ticket.scannedAt,
+        errorCode: ticket.reason ?? undefined,
       })),
     ];
 
@@ -236,7 +236,6 @@ export async function syncTicketsForEvent({
       await createEventSync(db, eventId, accountId);
       await initialSyncTickets(eventId, db);
       await markInitialSyncDone(db, eventId, accountId);
-      store.dispatch(setTotalAssigned(await countTickets(db, eventId)));
 
       return;
     }
@@ -252,9 +251,7 @@ export async function syncTicketsForEvent({
         fromDate: isStale ? undefined : eventSync.lastSyncDate,
       });
       await updateLastSyncDate(db, eventId, accountId);
-      store.dispatch(setTotalAssigned(await countTickets(db, eventId)));
     } else {
-      store.dispatch(setTotalAssigned(await countTickets(db, eventId)));
       Alert.alert(
         'Sin conexión',
         'Estás usando los tickets descargados anteriormente. Los cambios recientes podrían no estar disponibles.',

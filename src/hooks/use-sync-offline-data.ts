@@ -9,11 +9,10 @@ export const useSyncOfflineData = () => {
   const { selectedEvent } = useAppSelector((state) => state.config);
   const { db, ready } = useDb();
 
-  // Returns true if sync succeeded (or nothing to sync), false if it failed.
   const sync = useCallback(async (): Promise<boolean> => {
     try {
       if (!ready || !db) {
-        return true;
+        return false;
       }
 
       const pendingList = await getOfflineQrList(db);
