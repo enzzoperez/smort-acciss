@@ -65,10 +65,12 @@ export const useResultScreen = () => {
   }, [scannedCode]);
 
   const handleScanQr = () => {
+    trackEvent(TrackingEvents.SCAN_AGAIN_PRESSED);
     router.replace('/camera');
   };
 
   const handleGoHome = () => {
+    trackEvent(TrackingEvents.GO_HOME_PRESSED);
     router.replace('/select-events');
   };
 

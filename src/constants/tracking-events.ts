@@ -7,4 +7,6 @@ export const TrackingEvents = {
   SCAN_RESULT_RECEIVED: 'scan_result_received',
   NETWORK_CONNECTION_LOST: 'network_connection_lost',
   NETWORK_CONNECTION_RESTORED: 'network_connection_restored',
+  SCAN_AGAIN_PRESSED: 'scan_again_pressed',
+  GO_HOME_PRESSED: 'go_home_pressed',
 } as const;
