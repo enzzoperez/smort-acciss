@@ -220,6 +220,9 @@ export function useSelectEventsScreen() {
         dispatch(setSelectedEvent(selected.eventCode));
         dispatch(setSelectedEventConfig(selected));
         dispatch(setVerifyOnly(selected.mode === 'CHECK'));
+        const state = await aggregateSyncState(selected, db, accountId);
+        setLastSyncDate(state.lastSyncDate);
+        setHasTicketsDownloaded(true);
       } catch {
         lastProcessedEventCode.current = null;
         setItemSelected(null);
