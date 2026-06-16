@@ -9,22 +9,24 @@ export const useSyncOfflineData = () => {
   const { selectedEvent } = useAppSelector((state) => state.config);
   const { db, ready } = useDb();
 
-  const sync = useCallback(async (): Promise<boolean> => {
+  const sync = useCallback(async (): Promise<boolean | undefined> => {
     try {
       if (!ready || !db) {
         return false;
       }
 
-      const pendingList = await getOfflineQrList(db);
+      if (!isLoading) {
+        const pendingList = await getOfflineQrList(db);
 
-      if (!pendingList || pendingList.length === 0) {
+        if (!pendingList || pendingList.length === 0) {
+          return true;
+        }
+
+        await triggerSync({ eventCode: selectedEvent as string, qrCodes: pendingList }).unwrap();
+
+        await clearOfflineQueue(db);
         return true;
       }
-
-      await triggerSync({ eventCode: selectedEvent as string, qrCodes: pendingList }).unwrap();
-
-      await clearOfflineQueue(db);
-      return true;
     } catch (err) {
       console.error('Falló la sincronización offline:', err);
       return false;

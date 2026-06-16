@@ -72,9 +72,9 @@ export async function validateQrOfflineFlow({
       if (!isWithinTolerance) {
         await db.insert(noValidTickets).values({
           id: crypto.randomUUID(),
-          qr,
+          qr: ticketQr,
           scannedAt: now,
-          reason: 'QR_TIMESLOT_INVALID',
+          reason: 'QR_EXPIRED',
           syncStatus: 'pending',
         });
 
