@@ -250,7 +250,7 @@ export async function syncTicketsForEvent({
         db,
         fromDate: isStale ? undefined : eventSync.lastSyncDate,
       });
-      await updateLastSyncDate(db, eventId, accountId);
+      await markInitialSyncDone(db, eventId, accountId);
     } else {
       Alert.alert(
         'Sin conexión',

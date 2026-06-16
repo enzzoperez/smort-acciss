@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS no_valid_tickets (
   qr TEXT NOT NULL,
   reason TEXT NOT NULL, 
   -- QR_HAS_USED | QR_NOT_FOUND | QR_EVENT_MISMATCH | 
-  -- QR_SECTION_NOT_ALLOWED | QR_TIMESLOT_INVALID | 
+  -- QR_SECTION_NOT_ALLOWED | QR_EXPIRED | 
   scanned_at TEXT NOT NULL,
   sync_status TEXT NOT NULL -- pending | synced | error
 );
