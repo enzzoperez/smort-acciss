@@ -4,10 +4,18 @@ import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import Layer from '@/components/layer';
 import { useResultScreen } from './use-result-screen';
+import { theme } from '@/themes/theme';
+import { formatDateAndHour } from '@/utils/dates-utils';
 
 const ResultScreen = () => {
-  const { getScreenElements, handleGoHome, handleScanQr, scannedCode, isLoadingRequest } =
-    useResultScreen();
+  const {
+    infoUsedData,
+    getScreenElements,
+    handleGoHome,
+    handleScanQr,
+    scannedCode,
+    isLoadingRequest,
+  } = useResultScreen();
 
   if (!scannedCode) {
     return (
@@ -25,7 +33,7 @@ const ResultScreen = () => {
     return (
       <Layer>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color={theme.colors.activityIndicator} />
           <ThemedText type="title" style={styles.resultText}>
             Validando QR...
           </ThemedText>
@@ -36,10 +44,10 @@ const ResultScreen = () => {
 
   return (
     <Layer>
-      <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} translucent={false} />
 
       <View style={styles.container}>
-        <View style={{ gap: 32, alignItems: 'center' }}>
+        <View style={styles.iconRow}>
           {getScreenElements().mainIcon}
 
           <ThemedText type="title" style={styles.resultText}>
@@ -58,17 +66,31 @@ const ResultScreen = () => {
             Code: {getScreenElements().key}
           </ThemedText>
         )}
+
+        {infoUsedData && (
+          <View style={styles.infoSection}>
+            <View>
+              <ThemedText style={{ color: theme.colors.grayText }}>
+                Fecha y hora de escaneo:
+              </ThemedText>
+              <ThemedText type="title" style={styles.infoValue}>
+                {infoUsedData?.data?.lastScanDate
+                  ? formatDateAndHour(new Date(infoUsedData?.data?.lastScanDate))
+                  : '-'}
+              </ThemedText>
+            </View>
+            <View>
+              <ThemedText style={{ color: theme.colors.grayText }}>Operador:</ThemedText>
+              <ThemedText type="title" style={styles.infoValue}>
+                {infoUsedData?.data?.scannedBy || 'Desconocido'}
+              </ThemedText>
+            </View>
+          </View>
+        )}
       </View>
 
-      <View
-        style={{
-          width: '100%',
-          gap: 10,
-          paddingVertical: 24,
-        }}
-      >
+      <View style={styles.buttonsContainer}>
         <UiButton variant="tertiary" text="Escanear otro código QR" onPress={handleScanQr} />
-
         <UiButton variant="secondary" text="Ir al inicio" onPress={handleGoHome} />
       </View>
     </Layer>
@@ -86,24 +108,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  iconRow: {
+    gap: 32,
+    alignItems: 'center',
   },
   resultText: {
     fontSize: 40,
     textAlign: 'center',
   },
   descriptionError: {
-    fontSize: 16,
+    fontSize: theme.typography.sizes.md,
     textAlign: 'center',
   },
-
   codeError: {
-    fontSize: 12,
+    fontSize: theme.typography.sizes.xs,
     textAlign: 'center',
-    fontWeight: 'light',
+  },
+  infoSection: {
+    marginTop: 32,
+    width: '100%',
+    gap: 12,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: theme.colors.grayText,
+  },
+  buttonsContainer: {
+    width: '100%',
+    gap: 10,
+    paddingVertical: 24,
   },
 });
 

@@ -86,14 +86,20 @@ const userPersistConfig = {
   storage: createCustomStorage(),
 };
 
+const configPersistConfig = {
+  key: 'config',
+  storage: createCustomStorage(),
+};
+
 const persistedAuthReducer = persistReducer(authPersistConfig, authSlice.reducer);
 const persistedUserReducer = persistReducer(userPersistConfig, userSlice.reducer);
+const persistedConfigReducer = persistReducer(configPersistConfig, configSlice.reducer);
 
 const rootReducer = combineReducers({
   [rootApi.reducerPath]: rootApi.reducer,
   auth: persistedAuthReducer,
   user: persistedUserReducer,
-  config: configSlice.reducer,
+  config: persistedConfigReducer,
 });
 
 const middlewares = [rootApi.middleware];

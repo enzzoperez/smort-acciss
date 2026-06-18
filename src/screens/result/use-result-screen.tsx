@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useValidateAndRegisterMutation } from '@/api/scanner-api';
+import { isApiError, useValidateAndRegisterMutation } from '@/api/scanner-api';
 import { useAppSelector } from '@/libs/redux';
 import { ActionLabel } from './action-label';
 import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
@@ -12,7 +12,9 @@ import { getReadErrorByCode } from '@/utils/get-error-result';
 import { useNetwork } from '@/providers/network-provider';
 import { saveQrOffline } from '@/storage/qr-storage';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { logError, logMessage } from '@/libs/crashlytics';
+import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
+import { TrackingEvents } from '@/constants/tracking-events';
+import { trackEvent } from '@/libs/tracking';
 
 export const useResultScreen = () => {
   const router = useRouter();
@@ -31,12 +33,14 @@ export const useResultScreen = () => {
 
   const [errorNetwork, setErrorNetwork] = useState<boolean>(false);
 
-  const errorParsed = errorRequest?.data?.errors && errorRequest?.data?.errors[0];
+  const errorParsed = isApiError(errorRequest) ? errorRequest.data.errors[0] : undefined;
 
   const errorItem = getReadErrorByCode({
-    code: errorParsed?.code,
+    code: errorParsed?.code ?? '',
     isConnected: onlineSnapshotRef.current,
   });
+
+  const infoUsedData = errorItem?.code === 'ACCTRL-004' ? errorParsed : null;
 
   useEffect(() => {
     const processQr = async () => {
@@ -61,10 +65,12 @@ export const useResultScreen = () => {
   }, [scannedCode]);
 
   const handleScanQr = () => {
+    trackEvent(TrackingEvents.SCAN_AGAIN_PRESSED);
     router.replace('/camera');
   };
 
   const handleGoHome = () => {
+    trackEvent(TrackingEvents.GO_HOME_PRESSED);
     router.replace('/select-events');
   };
 
@@ -118,7 +124,15 @@ export const useResultScreen = () => {
   };
 
   useEffect(() => {
+    if (isSuccessRequest) {
+      trackEvent(TrackingEvents.SCAN_RESULT_RECEIVED);
+    }
+  }, [isSuccessRequest]);
+
+  useEffect(() => {
     if (errorRequest) {
+      const errorCode = errorParsed?.code ?? 'UNKNOWN';
+      trackEvent(TrackingEvents.SCAN_RESULT_RECEIVED, { error_code: errorCode });
       logMessage(`Error desconocido en validación de QR: ${JSON.stringify(errorRequest)}`);
     }
   }, [errorRequest]);
@@ -131,5 +145,6 @@ export const useResultScreen = () => {
     handleScanQr,
     handleGoHome,
     getScreenElements,
+    infoUsedData,
   };
 };

@@ -1,11 +1,15 @@
 import '@/i18n/i18n-config';
 import { CustomProviders } from '@/providers';
+import * as Clarity from '@microsoft/react-native-clarity';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
 SplashScreen.preventAutoHideAsync();
+Clarity.initialize(process.env.EXPO_PUBLIC_CLARITY_PROJECT_ID!, {
+  logLevel: Clarity.LogLevel.Verbose,
+});
 
 export default function RootLayout() {
   const [fontsLoaded, fontsError] = useFonts({
