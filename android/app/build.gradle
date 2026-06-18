@@ -105,6 +105,18 @@ android {
             keyPassword 'android'
         }
     }
+    flavorDimensions "env"
+    productFlavors {
+        development {
+            dimension "env"
+            applicationId "com.itti.tuti.smartaccess.dev"
+        }
+        production {
+            dimension "env"
+            applicationId "com.itti.tuti.smartaccess"
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
