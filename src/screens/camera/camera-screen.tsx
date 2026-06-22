@@ -8,11 +8,14 @@ import Flashlight from '@/assets/svg/flashlight.svg';
 import FlashlightOff from '@/assets/svg/flashlight-off.svg';
 import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
 import Download from '@/assets/svg/download.svg';
-import { logError } from '@/libs/crashlytics';
+import { reportError as logError } from '@/utils/error-logger';
+import { TrackingEvents } from '@/constants/tracking-events';
+import { trackEvent } from '@/libs/tracking';
 import { useNetwork } from '@/providers/network-provider';
 import Cloud from '@/assets/svg/cloud.svg';
 import CloudOff from '@/assets/svg/cloud-off.svg';
-import { useAppSelector } from '@/libs/redux';
+import { useAppSelector, useAppDispatch } from '@/libs/redux';
+import { setLastSyncDate } from '@/store/slices';
 import { ThemedText } from '@/components/themed-text';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 import { useDb } from '@/hooks/use-db';
@@ -37,12 +40,12 @@ export default function CameraScreen() {
   const appState = useRef(AppState.currentState);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [myScans, setMyScans] = useState(0);
-  const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [infoSheetHeight, setInfoSheetHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const { isOnline } = useNetwork();
-  const { selectedEventConfig, totalAssigned, selectedEvent } = useAppSelector(
+  const dispatch = useAppDispatch();
+  const { selectedEventConfig, totalAssigned, selectedEvent, lastSyncDate } = useAppSelector(
     (state) => state.config,
   );
   const { userData } = useAppSelector((state) => state.user);
@@ -58,9 +61,8 @@ export default function CameraScreen() {
       isOnline,
       accountId: userData.accountId,
     });
-    getEventSync(db, selectedEvent, userData.accountId).then((sync) =>
-      setLastSyncDate(sync?.lastSyncDate ?? null),
-    );
+    const sync = await getEventSync(db, selectedEvent, userData.accountId);
+    dispatch(setLastSyncDate(sync?.lastSyncDate ?? null));
   };
 
   const getEventNameAndDate = (): { name: string; date: string } => {
@@ -99,13 +101,6 @@ export default function CameraScreen() {
     if (!db) return;
     getAllScannedTickets(db).then((scans) => setMyScans(scans.length));
   }, [db]);
-
-  useEffect(() => {
-    if (!db || !selectedEvent || !userData?.accountId) return;
-    getEventSync(db, selectedEvent, userData.accountId).then((sync) =>
-      setLastSyncDate(sync?.lastSyncDate ?? null),
-    );
-  }, [db, selectedEvent, userData?.accountId]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -178,7 +173,13 @@ export default function CameraScreen() {
 
         <TouchableOpacity
           style={styles.roundButton}
-          onPress={() => setTorchEnabled((prev) => !prev)}
+          onPress={() => {
+            const next = !torchEnabled;
+            trackEvent(TrackingEvents.FLASHLIGHT_TOGGLED, {
+              flashlight_state: next ? 'on' : 'off',
+            });
+            setTorchEnabled(next);
+          }}
         >
           {torchEnabled ? <Flashlight /> : <FlashlightOff />}
         </TouchableOpacity>

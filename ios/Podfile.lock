@@ -1,10 +1,11 @@
 PODS:
+  - Clarity (3.5.2)
   - EXConstants (18.0.13):
     - ExpoModulesCore
   - EXJSONUtils (0.15.0)
   - EXManifests (1.0.11):
     - ExpoModulesCore
-  - Expo (54.0.34):
+  - Expo (54.0.9):
     - ExpoModulesCore
     - hermes-engine
     - RCTRequired
@@ -29,15 +30,15 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - expo-dev-client (6.0.21):
+  - expo-dev-client (6.0.12):
     - EXManifests
     - expo-dev-launcher
     - expo-dev-menu
     - expo-dev-menu-interface
     - EXUpdatesInterface
-  - expo-dev-launcher (6.0.21):
+  - expo-dev-launcher (6.0.11):
     - EXManifests
-    - expo-dev-launcher/Main (= 6.0.21)
+    - expo-dev-launcher/Main (= 6.0.11)
     - expo-dev-menu
     - expo-dev-menu-interface
     - ExpoModulesCore
@@ -66,7 +67,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - expo-dev-launcher/Main (6.0.21):
+  - expo-dev-launcher/Main (6.0.11):
     - EXManifests
     - expo-dev-launcher/Unsafe
     - expo-dev-menu
@@ -97,7 +98,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - expo-dev-launcher/Unsafe (6.0.21):
+  - expo-dev-launcher/Unsafe (6.0.11):
     - EXManifests
     - expo-dev-menu
     - expo-dev-menu-interface
@@ -127,9 +128,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - expo-dev-menu (7.0.19):
-    - expo-dev-menu/Main (= 7.0.19)
-    - expo-dev-menu/ReactNativeCompatibles (= 7.0.19)
+  - expo-dev-menu (7.0.11):
+    - expo-dev-menu/Main (= 7.0.11)
+    - expo-dev-menu/ReactNativeCompatibles (= 7.0.11)
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -152,7 +153,7 @@ PODS:
     - ReactNativeDependencies
     - Yoga
   - expo-dev-menu-interface (2.0.0)
-  - expo-dev-menu/Main (7.0.19):
+  - expo-dev-menu/Main (7.0.11):
     - EXManifests
     - expo-dev-menu-interface
     - ExpoModulesCore
@@ -178,7 +179,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - expo-dev-menu/ReactNativeCompatibles (7.0.19):
+  - expo-dev-menu/ReactNativeCompatibles (7.0.11):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -206,18 +207,20 @@ PODS:
     - ExpoModulesCore
     - ZXingObjC/OneD
     - ZXingObjC/PDF417
-  - ExpoFileSystem (19.0.22):
+  - ExpoCrypto (15.0.9):
     - ExpoModulesCore
-  - ExpoFont (14.0.11):
+  - ExpoFileSystem (19.0.23):
     - ExpoModulesCore
-  - ExpoHead (6.0.23):
+  - ExpoFont (14.0.12):
+    - ExpoModulesCore
+  - ExpoHead (6.0.24):
     - ExpoModulesCore
     - RNScreens
   - ExpoKeepAwake (15.0.8):
     - ExpoModulesCore
   - ExpoLinking (8.0.12):
     - ExpoModulesCore
-  - ExpoModulesCore (3.0.30):
+  - ExpoModulesCore (3.0.17):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -243,6 +246,8 @@ PODS:
   - ExpoSecureStore (15.0.8):
     - ExpoModulesCore
   - ExpoSplashScreen (31.0.13):
+    - ExpoModulesCore
+  - ExpoSQLite (16.0.10):
     - ExpoModulesCore
   - ExpoWebBrowser (15.0.11):
     - ExpoModulesCore
@@ -387,9 +392,56 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
+  - NitroModules (0.35.9):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - PromisesObjC (2.4.0)
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
+  - QuickCrypto (1.0.6):
+    - hermes-engine
+    - NitroModules
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RCTDeprecation (0.81.4)
   - RCTRequired (0.81.4)
   - RCTTypeSafety (0.81.4):
@@ -1669,6 +1721,9 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
+  - react-native-clarity (4.6.2):
+    - Clarity (= 3.5.2)
+    - React-Core
   - react-native-netinfo (11.5.2):
     - hermes-engine
     - RCTRequired
@@ -1691,6 +1746,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-quick-base64 (2.2.2):
+    - React-Core
   - react-native-safe-area-context (5.6.2):
     - hermes-engine
     - RCTRequired
@@ -1760,7 +1817,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-skia (2.6.2):
+  - react-native-skia (2.6.5):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2483,16 +2540,18 @@ DEPENDENCIES:
   - expo-dev-launcher (from `../node_modules/expo-dev-launcher`)
   - expo-dev-menu (from `../node_modules/expo-dev-menu`)
   - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
-  - ExpoAsset (from `../node_modules/expo-asset/ios`)
+  - ExpoAsset (from `../node_modules/expo/node_modules/expo-asset/ios`)
   - ExpoCamera (from `../node_modules/expo-camera/ios`)
-  - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
+  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
+  - ExpoFileSystem (from `../node_modules/expo/node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
   - ExpoHead (from `../node_modules/expo-router/ios`)
-  - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
+  - ExpoKeepAwake (from `../node_modules/expo/node_modules/expo-keep-awake/ios`)
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
+  - ExpoSQLite (from `../node_modules/expo-sqlite/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -2506,6 +2565,8 @@ DEPENDENCIES:
   - GoogleUtilities
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - nanopb
+  - NitroModules (from `../node_modules/react-native-nitro-modules`)
+  - QuickCrypto (from `../node_modules/react-native-quick-crypto`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -2540,7 +2601,9 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - "react-native-clarity (from `../node_modules/@microsoft/react-native-clarity`)"
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
+  - react-native-quick-base64 (from `../node_modules/react-native-quick-base64`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2588,6 +2651,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - Clarity
     - Firebase
     - FirebaseAnalytics
     - FirebaseCore
@@ -2624,17 +2688,19 @@ EXTERNAL SOURCES:
   expo-dev-menu-interface:
     :path: "../node_modules/expo-dev-menu-interface/ios"
   ExpoAsset:
-    :path: "../node_modules/expo-asset/ios"
+    :path: "../node_modules/expo/node_modules/expo-asset/ios"
   ExpoCamera:
     :path: "../node_modules/expo-camera/ios"
+  ExpoCrypto:
+    :path: "../node_modules/expo-crypto/ios"
   ExpoFileSystem:
-    :path: "../node_modules/expo-file-system/ios"
+    :path: "../node_modules/expo/node_modules/expo-file-system/ios"
   ExpoFont:
     :path: "../node_modules/expo-font/ios"
   ExpoHead:
     :path: "../node_modules/expo-router/ios"
   ExpoKeepAwake:
-    :path: "../node_modules/expo-keep-awake/ios"
+    :path: "../node_modules/expo/node_modules/expo-keep-awake/ios"
   ExpoLinking:
     :path: "../node_modules/expo-linking/ios"
   ExpoModulesCore:
@@ -2643,6 +2709,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-secure-store/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
+  ExpoSQLite:
+    :path: "../node_modules/expo-sqlite/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
   EXUpdatesInterface:
@@ -2652,6 +2720,10 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
+  NitroModules:
+    :path: "../node_modules/react-native-nitro-modules"
+  QuickCrypto:
+    :path: "../node_modules/react-native-quick-crypto"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -2718,8 +2790,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-clarity:
+    :path: "../node_modules/@microsoft/react-native-clarity"
   react-native-netinfo:
     :path: "../node_modules/@react-native-community/netinfo"
+  react-native-quick-base64:
+    :path: "../node_modules/react-native-quick-base64"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-skia:
@@ -2810,24 +2886,27 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  Clarity: 26b69506b51fdc75d03c56f3b928292b5ac7ba73
   EXConstants: fce59a631a06c4151602843667f7cfe35f81e271
   EXJSONUtils: 1d3e4590438c3ee593684186007028a14b3686cd
   EXManifests: 378c7742de02a8605093b1c82b5774d8f9875cec
-  Expo: 514ae3ec54a086aab509f255abfbf37be0fcc0e2
-  expo-dev-client: b8adef5e6847b5335a3b95a1fd2edc731d4331ee
-  expo-dev-launcher: 62424c01202c528a0421e5736c7cba2aa95312b6
-  expo-dev-menu: ffb77acaa6a91d260780ab72a7d236ece882c787
+  Expo: ced678abc0c40ce8d0ee929e0901acde3024e3cb
+  expo-dev-client: f3434d6ca09ecb14ae48c2a3912bdbb07464cc85
+  expo-dev-launcher: b9538b1e0dc3fd2ddad75017b6ee9c8dfb206925
+  expo-dev-menu: 8f868d1bab6d673d59e5a08ca610056b290dd555
   expo-dev-menu-interface: 600df12ea01efecdd822daaf13cc0ac091775533
   ExpoAsset: 9e5a7c9c0a9fb83ad5b2bb365141f2bd7f289b66
   ExpoCamera: 6a326deb45ba840749652e4c15198317aa78497e
-  ExpoFileSystem: ad991457efaa14253723f1dda997eac6024c700d
-  ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
-  ExpoHead: 7e19b2272edf492262acf8afb391a295198a6b23
+  ExpoCrypto: e2a2c4c748aac8485e5675f027b7901f511d43ff
+  ExpoFileSystem: a8e7fb1e958471764fb48d281cf9fa81a9e4d77c
+  ExpoFont: dfb7c572372b610da45b41e3b436321fd6a97215
+  ExpoHead: 33924c5829f9a3f98a5bd432d23c0e02ef64afcc
   ExpoKeepAwake: 55f75eca6499bb9e4231ebad6f3e9cb8f99c0296
   ExpoLinking: 2ef632ad5013e3f1568fae9408d56ab9af5efc55
-  ExpoModulesCore: 9e6a5514828e7dd5ded9e99d33557be2d284e660
+  ExpoModulesCore: 2f5ed1b2b1feec38036e1e366faecb362350ef27
   ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
   ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
+  ExpoSQLite: 7eedbe476870a5f18d6b89c817c4ac6f299830ad
   ExpoWebBrowser: 970dd4c64c29c955c3af664c8058ba768a4c9187
   EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: 9e0cd874afd81d9a4d36679daca991b58b260d42
@@ -2846,8 +2925,10 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   hermes-engine: 35c763d57c9832d0eef764316ca1c4d043581394
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  NitroModules: 7b5ab273abd90ab15d69f4ac1272e34e368051af
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
+  QuickCrypto: af5772620d9059c3b6265c62b8c255c7bb303c87
   RCTDeprecation: 7487d6dda857ccd4cb3dd6ecfccdc3170e85dcbc
   RCTRequired: 54128b7df8be566881d48c7234724a78cb9b6157
   RCTTypeSafety: d2b07797a79e45d7b19e1cd2f53c79ab419fe217
@@ -2881,9 +2962,11 @@ SPEC CHECKSUMS:
   React-logger: 7b234de35acb469ce76d6bbb0457f664d6f32f62
   React-Mapbuffer: fbe1da882a187e5898bdf125e1cc6e603d27ecae
   React-microtasksnativemodule: 76905804171d8ccbe69329fc84c57eb7934add7f
+  react-native-clarity: 96769d6033ce4f8c8fb01a096305694cec85d943
   react-native-netinfo: f852c868bf5175e46165c7e4db48a204a95c3800
+  react-native-quick-base64: 6568199bb2ac8e72ecdfdc73a230fbc5c1d3aac4
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
-  react-native-skia: e8b9354dc16c4099537ba0659cd70ea4adf8efc4
+  react-native-skia: 1c548a08287ff0836483252f217b667c9b9ecaa8
   React-NativeModulesApple: a9464983ccc0f66f45e93558671f60fc7536e438
   React-oscompat: 73db7dbc80edef36a9d6ed3c6c4e1724ead4236d
   React-perflogger: 123272debf907cc423962adafcf4513320e43757
@@ -2928,6 +3011,6 @@ SPEC CHECKSUMS:
   Yoga: 051f086b5ccf465ff2ed38a2cf5a558ae01aaaa1
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 
-PODFILE CHECKSUM: bd8b83bf94c364fe4a126ced74855c85b14e7fef
+PODFILE CHECKSUM: 7e721488cbf7ac67a22df5eba07318366321cfe9
 
 COCOAPODS: 1.16.2

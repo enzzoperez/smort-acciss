@@ -1,5 +1,5 @@
 import { readErrors } from '@/constants/read-errors';
-import { logError } from '@/libs/crashlytics';
+import { reportError as logError } from '@/utils/error-logger';
 
 export type ReasonErrorResult =
   | 'QR_NOT_FOUND'

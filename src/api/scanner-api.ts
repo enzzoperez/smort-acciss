@@ -1,5 +1,27 @@
 import { rootApi } from './root-api';
 
+export interface ApiErrorItem {
+  code: string;
+  message: string;
+  data?: Record<string, string> | null;
+}
+
+export interface ApiErrorResponse {
+  id: string;
+  errors: [ApiErrorItem];
+}
+
+export function isApiError(error: unknown): error is { status: number; data: ApiErrorResponse } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'data' in error &&
+    typeof (error as Record<string, unknown>).data === 'object' &&
+    (error as Record<string, unknown>).data !== null &&
+    'errors' in ((error as Record<string, unknown>).data as object)
+  );
+}
+
 interface ReqValidateOnly {
   eventCode: string;
   qrCode?: string;

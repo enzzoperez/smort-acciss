@@ -40,6 +40,19 @@ export async function validateQrOfflineFlow({
   if (configEventQr?.[0]?.qrMode === 'DYNAMIC') {
     const qrAlias = qr.startsWith('DQR:') ? qr.substring(4).split(':')[0] : null;
 
+    if (!qrAlias) {
+      if (!verifyOnly) {
+        await db.insert(noValidTickets).values({
+          id: crypto.randomUUID(),
+          qr,
+          scannedAt: now,
+          reason: 'QR_NOT_FOUND',
+          syncStatus: 'pending',
+        });
+      }
+      return { type: 'error', reason: 'QR_NOT_FOUND' };
+    }
+
     // Find the config whose alias matches the QR alias
     const matchingConfig = configEventQr.find((c) => c.alias === qrAlias);
 

@@ -14,15 +14,18 @@ import {
   setResetConfig,
   setAvailableEvents,
   setTotalAssigned,
+  setLastSyncDate,
 } from '@/store/slices';
 import { useGetEventQrConfigMutation, useGetEventsQuery, EventData } from '@/api/events-api';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { logError } from '@/libs/crashlytics';
 import { clearAllData, syncTicketsForEvent } from '@/db/utils';
 import { useDb } from '@/hooks/use-db';
 import { getEventSync, resetAllEventSync } from '@/db/repositories/events-sync.repository';
 import { countTickets } from '@/db/repositories/tickets.repository';
+import { reportError as logError } from '@/utils/error-logger';
+import { TrackingEvents } from '@/constants/tracking-events';
+import { trackEvent } from '@/libs/tracking';
 
 function getValidEventIds(event: EventData): string[] {
   if (event.type === 'ALIAS') {
@@ -48,7 +51,7 @@ export function useSelectEventsScreen() {
   const router = useRouter();
   const { sync } = useSyncOfflineData();
   const { userData } = useAppSelector((state) => state.user);
-  const { selectedEvent, selectedEventConfig, availableEvents } = useAppSelector(
+  const { selectedEvent, selectedEventConfig, availableEvents, lastSyncDate } = useAppSelector(
     (state) => state.config,
   );
   const dispatch = useAppDispatch();
@@ -65,7 +68,6 @@ export function useSelectEventsScreen() {
   const { db } = useDb();
 
   const [itemSelected, setItemSelected] = useState<EventData | null>(null);
-  const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
   const [hasTicketsDownloaded, setHasTicketsDownloaded] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const lastProcessedEventCode = useRef<string | null>(null);
@@ -101,6 +103,7 @@ export function useSelectEventsScreen() {
       );
       return;
     }
+    trackEvent(TrackingEvents.LOGOUT_SUCCESS);
     logout({ accountId: userData?.accountId });
     dispatch(setLogout());
     dispatch(resetUserData());
@@ -127,12 +130,13 @@ export function useSelectEventsScreen() {
 
     if (selectedEventConfig && db && userData?.accountId) {
       const state = await aggregateSyncState(selectedEventConfig, db, userData.accountId);
-      setLastSyncDate(state.lastSyncDate);
+      dispatch(setLastSyncDate(state.lastSyncDate));
       setHasTicketsDownloaded(state.hasTicketsDownloaded);
     }
   };
 
   const onChangeSelectedEvent = (item: EventData) => {
+    trackEvent(TrackingEvents.EVENT_SELECTED, { event_code: item.eventCode });
     setItemSelected(item);
   };
 
@@ -146,7 +150,7 @@ export function useSelectEventsScreen() {
       }
       dispatch(setTotalAssigned(await countTickets(db, validIds)));
       const state = await aggregateSyncState(selectedEventConfig, db, userData.accountId);
-      setLastSyncDate(state.lastSyncDate);
+      dispatch(setLastSyncDate(state.lastSyncDate));
       setHasTicketsDownloaded(state.hasTicketsDownloaded);
     } finally {
       setIsSyncing(false);
@@ -163,6 +167,7 @@ export function useSelectEventsScreen() {
       dispatch(setTotalAssigned(await countTickets(db, validIds)));
       setIsSyncing(false);
     }
+    trackEvent(TrackingEvents.SCAN_BUTTON_PRESSED);
     router.push('/camera');
   };
 
@@ -221,7 +226,7 @@ export function useSelectEventsScreen() {
         dispatch(setSelectedEventConfig(selected));
         dispatch(setVerifyOnly(selected.mode === 'CHECK'));
         const state = await aggregateSyncState(selected, db, accountId);
-        setLastSyncDate(state.lastSyncDate);
+        dispatch(setLastSyncDate(state.lastSyncDate));
         setHasTicketsDownloaded(true);
       } catch {
         lastProcessedEventCode.current = null;
@@ -274,7 +279,7 @@ export function useSelectEventsScreen() {
     useCallback(() => {
       if (!db || !selectedEventConfig || !userData?.accountId) return;
       aggregateSyncState(selectedEventConfig, db, userData.accountId).then((state) => {
-        setLastSyncDate(state.lastSyncDate);
+        dispatch(setLastSyncDate(state.lastSyncDate));
         setHasTicketsDownloaded(state.hasTicketsDownloaded);
       });
     }, [db, selectedEventConfig, userData?.accountId]),
