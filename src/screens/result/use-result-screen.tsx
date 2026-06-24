@@ -38,6 +38,10 @@ export const useResultScreen = () => {
       : selectedEvent
         ? [selectedEvent]
         : [];
+  const validSections: string[] =
+    selectedEventConfig?.type === 'ALIAS'
+      ? [...new Set(selectedEventConfig.item?.flatMap((i) => i.sections) ?? [])]
+      : (selectedEventConfig?.sections ?? []);
 
   const { isOnline } = useNetwork();
   const onlineSnapshotRef = useRef(isOnline);
@@ -112,7 +116,7 @@ export const useResultScreen = () => {
           const eventSync = await getEventSync(db, id, userData?.accountId ?? '');
           await incrementalSyncTickets({ eventId: id, db, fromDate: eventSync?.lastSyncDate });
         }
-        dispatch(setTotalAssigned(await countTickets(db, validEventIds)));
+        dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
       }
     };
 
@@ -144,7 +148,7 @@ export const useResultScreen = () => {
       const eventSync = await getEventSync(db, id, userData.accountId);
       await incrementalSyncTickets({ eventId: id, db, fromDate: eventSync?.lastSyncDate });
     }
-    dispatch(setTotalAssigned(await countTickets(db, validEventIds)));
+    dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
   };
 
   const handleScanQr = async () => {

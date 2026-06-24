@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, StatusBar, View, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { CameraView } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Overlay } from './overlay';
@@ -21,7 +21,23 @@ import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 import { useDb } from '@/hooks/use-db';
 import { getAllScannedTickets } from '@/db/repositories/valid-tickets.repository';
 import { getEventSync } from '@/db/repositories/events-sync.repository';
+import { countPendingTickets } from '@/db/repositories/tickets.repository';
 import { syncTicketsForEvent } from '@/db/utils';
+import { EventData } from '@/api/events-api';
+
+function getValidEventIds(event: EventData): string[] {
+  if (event.type === 'ALIAS') {
+    return event.item?.map((i) => i.eventCode) ?? [];
+  }
+  return [event.eventCode];
+}
+
+function getValidSections(event: EventData): string[] {
+  if (event.type === 'ALIAS') {
+    return [...new Set(event.item?.flatMap((i) => i.sections) ?? [])];
+  }
+  return event.sections ?? [];
+}
 
 function StatItem({ value, label }: { value: string | number; label: string }) {
   return (
@@ -40,6 +56,7 @@ export default function CameraScreen() {
   const appState = useRef(AppState.currentState);
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [myScans, setMyScans] = useState(0);
+  const [totalPending, setTotalPending] = useState<number | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [infoSheetHeight, setInfoSheetHeight] = useState(0);
   const insets = useSafeAreaInsets();
@@ -51,7 +68,22 @@ export default function CameraScreen() {
   const { userData } = useAppSelector((state) => state.user);
   const { db } = useDb();
 
-  const totalPending = totalAssigned != null ? totalAssigned - myScans : null;
+  useFocusEffect(
+    useCallback(() => {
+      if (!db || !selectedEventConfig) return;
+      const validIds = getValidEventIds(selectedEventConfig);
+      const sections = getValidSections(selectedEventConfig);
+      getAllScannedTickets(db).then(async (scans) => {
+        const scanCount = scans.length;
+        setMyScans(scanCount);
+        if (isOnline) {
+          setTotalPending(await countPendingTickets(db, validIds, sections));
+        } else {
+          setTotalPending(totalAssigned != null ? totalAssigned - scanCount : null);
+        }
+      });
+    }, [db, selectedEventConfig, isOnline, totalAssigned]),
+  );
 
   const handleDownload = async () => {
     if (!selectedEvent || !db || !userData?.accountId) return;
@@ -96,11 +128,6 @@ export default function CameraScreen() {
       logError(error);
     }
   };
-
-  useEffect(() => {
-    if (!db) return;
-    getAllScannedTickets(db).then((scans) => setMyScans(scans.length));
-  }, [db]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {

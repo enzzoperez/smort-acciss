@@ -34,6 +34,13 @@ function getValidEventIds(event: EventData): string[] {
   return [event.eventCode];
 }
 
+function getValidSections(event: EventData): string[] {
+  if (event.type === 'ALIAS') {
+    return [...new Set(event.item?.flatMap((i) => i.sections) ?? [])];
+  }
+  return event.sections ?? [];
+}
+
 async function aggregateSyncState(
   event: EventData,
   db: NonNullable<ReturnType<typeof useDb>['db']>,
@@ -122,10 +129,11 @@ export function useSelectEventsScreen() {
 
     if (isOnline && selectedEventConfig && db && userData?.accountId) {
       const validIds = getValidEventIds(selectedEventConfig);
+      const sections = getValidSections(selectedEventConfig);
       for (const id of validIds) {
         await syncTicketsForEvent({ eventId: id, db, isOnline, accountId: userData.accountId });
       }
-      dispatch(setTotalAssigned(await countTickets(db, validIds)));
+      dispatch(setTotalAssigned(await countTickets(db, validIds, sections)));
     }
 
     if (selectedEventConfig && db && userData?.accountId) {
@@ -145,10 +153,11 @@ export function useSelectEventsScreen() {
     setIsSyncing(true);
     try {
       const validIds = getValidEventIds(selectedEventConfig);
+      const sections = getValidSections(selectedEventConfig);
       for (const id of validIds) {
         await syncTicketsForEvent({ eventId: id, db, isOnline, accountId: userData.accountId });
       }
-      dispatch(setTotalAssigned(await countTickets(db, validIds)));
+      dispatch(setTotalAssigned(await countTickets(db, validIds, sections)));
       const state = await aggregateSyncState(selectedEventConfig, db, userData.accountId);
       dispatch(setLastSyncDate(state.lastSyncDate));
       setHasTicketsDownloaded(state.hasTicketsDownloaded);
@@ -161,10 +170,11 @@ export function useSelectEventsScreen() {
     if (isOnline && selectedEventConfig && db && userData?.accountId) {
       setIsSyncing(true);
       const validIds = getValidEventIds(selectedEventConfig);
+      const sections = getValidSections(selectedEventConfig);
       for (const id of validIds) {
         await syncTicketsForEvent({ eventId: id, db, isOnline, accountId: userData.accountId });
       }
-      dispatch(setTotalAssigned(await countTickets(db, validIds)));
+      dispatch(setTotalAssigned(await countTickets(db, validIds, sections)));
       setIsSyncing(false);
     }
     trackEvent(TrackingEvents.SCAN_BUTTON_PRESSED);
@@ -218,7 +228,7 @@ export function useSelectEventsScreen() {
           await syncTicketsForEvent({ eventId: id, db, isOnline, accountId });
         }
         await saveQrConfig(selected.eventCode);
-        dispatch(setTotalAssigned(await countTickets(db, validIds)));
+        dispatch(setTotalAssigned(await countTickets(db, validIds, getValidSections(selected))));
 
         lastProcessedEventCode.current = selected.eventCode;
         setItemSelected(selected);

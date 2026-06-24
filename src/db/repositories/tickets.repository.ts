@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { tickets } from '../schema';
 import { Db, NewTicketDb, TicketDb } from '../types';
 
@@ -15,12 +15,31 @@ export async function clearTickets(db: Db) {
   await db.delete(tickets);
 }
 
-export async function countTickets(db: Db, eventIds: string | string[]): Promise<number> {
+export async function countTickets(
+  db: Db,
+  eventIds: string | string[],
+  sections?: string[],
+): Promise<number> {
   const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
+  const sectionFilter = sections?.length ? inArray(tickets.section, sections) : undefined;
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(tickets)
-    .where(inArray(tickets.eventId, ids));
+    .where(and(inArray(tickets.eventId, ids), sectionFilter));
+  return result[0]?.count ?? 0;
+}
+
+export async function countPendingTickets(
+  db: Db,
+  eventIds: string | string[],
+  sections?: string[],
+): Promise<number> {
+  const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
+  const sectionFilter = sections?.length ? inArray(tickets.section, sections) : undefined;
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(tickets)
+    .where(and(inArray(tickets.eventId, ids), eq(tickets.successfulReads, 0), sectionFilter));
   return result[0]?.count ?? 0;
 }
 
