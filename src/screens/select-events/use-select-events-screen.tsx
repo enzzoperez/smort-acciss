@@ -253,11 +253,14 @@ export function useSelectEventsScreen() {
     handleSelectedEventChange();
   }, [itemSelected, dataEvents, availableEvents, db]);
 
-  // Keep itemSelected display data fresh when dataEvents refreshes (sections, mode, etc.)
+  // Keep itemSelected and Redux selectedEventConfig fresh when dataEvents refreshes (sections, mode, etc.)
   useEffect(() => {
     if (!itemSelected || !dataEvents?.config) return;
     const updated = dataEvents.config.find((e) => e.eventCode === itemSelected.eventCode);
-    if (updated) setItemSelected(updated);
+    if (updated) {
+      setItemSelected(updated);
+      dispatch(setSelectedEventConfig(updated));
+    }
   }, [dataEvents]);
 
   // Auto-select event if only one is assigned to the user

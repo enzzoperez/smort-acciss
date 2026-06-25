@@ -92,7 +92,7 @@ export const useResultScreen = () => {
           validEventIds,
           serverOffset,
           configEventQr,
-          allowedSections: selectedEventConfig?.sections || null,
+          allowedSections: validSections.length > 0 ? validSections : null,
           verifyOnly,
         });
 
