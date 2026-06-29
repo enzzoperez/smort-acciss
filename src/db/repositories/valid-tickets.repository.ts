@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { ticketScan } from '../schema';
 import { Db, NewTicketScanDb, TicketScanDb } from '../types';
 
@@ -23,6 +23,18 @@ export const getAllScannedTickets = async (db: Db): Promise<TicketScanDb[]> => {
 export const getAllPendingScannedTickets = async (db: Db): Promise<TicketScanDb[]> => {
   return db.select().from(ticketScan).where(eq(ticketScan.syncStatus, 'pending'));
 };
+
+export async function countScannedTicketsByEvent(
+  db: Db,
+  eventIds: string | string[],
+): Promise<number> {
+  const ids = Array.isArray(eventIds) ? eventIds : [eventIds];
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(ticketScan)
+    .where(inArray(ticketScan.eventId, ids));
+  return result[0]?.count ?? 0;
+}
 
 export async function clearTicketScans(db: Db) {
   await db.delete(ticketScan);

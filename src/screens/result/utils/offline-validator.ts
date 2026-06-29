@@ -222,6 +222,7 @@ export async function validateQrOfflineFlow({
     await db.insert(ticketScan).values({
       id: crypto.randomUUID(),
       qr: finalQr,
+      eventId: ticket.eventId,
       scannedAt: now,
       syncStatus: 'pending',
     });

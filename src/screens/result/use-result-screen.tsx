@@ -13,12 +13,12 @@ import { getReadErrorByCode, ReasonErrorResult } from '@/utils/get-error-result'
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { insertTicketScan } from '@/db/repositories/valid-tickets.repository';
+import { getTicketByQr , countTickets } from '@/db/repositories/tickets.repository';
 import { useDb } from '@/hooks/use-db';
 import * as crypto from 'expo-crypto';
 import { validateQrOfflineFlow } from './utils/offline-validator';
 import { incrementalSyncTickets } from '@/db/utils';
 import { getEventSync } from '@/db/repositories/events-sync.repository';
-import { countTickets } from '@/db/repositories/tickets.repository';
 import { setTotalAssigned } from '@/store/slices';
 import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
@@ -125,11 +125,14 @@ export const useResultScreen = () => {
 
   useEffect(() => {
     if (isSuccessRequest && db) {
-      insertTicketScan(db, {
-        id: crypto.randomUUID(),
-        qr: scannedCode as string,
-        scannedAt: new Date().toISOString(),
-        syncStatus: 'synced',
+      getTicketByQr(db, scannedCode as string).then((ticket) => {
+        insertTicketScan(db, {
+          id: crypto.randomUUID(),
+          qr: scannedCode as string,
+          eventId: ticket?.eventId ?? selectedEvent!,
+          scannedAt: new Date().toISOString(),
+          syncStatus: 'synced',
+        });
       });
     }
   }, [isSuccessRequest]);

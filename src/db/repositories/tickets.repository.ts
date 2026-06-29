@@ -25,7 +25,7 @@ export async function countTickets(
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(tickets)
-    .where(and(inArray(tickets.eventId, ids), sectionFilter));
+    .where(and(inArray(tickets.eventId, ids), eq(tickets.active, 1), sectionFilter));
   return result[0]?.count ?? 0;
 }
 
@@ -39,7 +39,14 @@ export async function countPendingTickets(
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(tickets)
-    .where(and(inArray(tickets.eventId, ids), eq(tickets.successfulReads, 0), sectionFilter));
+    .where(
+      and(
+        inArray(tickets.eventId, ids),
+        eq(tickets.active, 1),
+        eq(tickets.successfulReads, 0),
+        sectionFilter,
+      ),
+    );
   return result[0]?.count ?? 0;
 }
 

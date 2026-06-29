@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS tickets (
 CREATE TABLE IF NOT EXISTS ticket_scan (
   id TEXT PRIMARY KEY,
   qr TEXT NOT NULL,
+  event_id TEXT NOT NULL DEFAULT '',
   scanned_at TEXT NOT NULL,
   sync_status TEXT NOT NULL -- pending | synced | error
 );

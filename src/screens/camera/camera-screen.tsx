@@ -19,7 +19,7 @@ import { setLastSyncDate } from '@/store/slices';
 import { ThemedText } from '@/components/themed-text';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 import { useDb } from '@/hooks/use-db';
-import { getAllScannedTickets } from '@/db/repositories/valid-tickets.repository';
+import { countScannedTicketsByEvent } from '@/db/repositories/valid-tickets.repository';
 import { getEventSync } from '@/db/repositories/events-sync.repository';
 import { countPendingTickets } from '@/db/repositories/tickets.repository';
 import { syncTicketsForEvent } from '@/db/utils';
@@ -73,8 +73,7 @@ export default function CameraScreen() {
       if (!db || !selectedEventConfig) return;
       const validIds = getValidEventIds(selectedEventConfig);
       const sections = getValidSections(selectedEventConfig);
-      getAllScannedTickets(db).then(async (scans) => {
-        const scanCount = scans.length;
+      countScannedTicketsByEvent(db, validIds).then(async (scanCount) => {
         setMyScans(scanCount);
         if (isOnline) {
           setTotalPending(await countPendingTickets(db, validIds, sections));

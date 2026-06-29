@@ -16,6 +16,7 @@ export const tickets = sqliteTable(
 export const ticketScan = sqliteTable('ticket_scan', {
   id: text('id').primaryKey(),
   qr: text('qr').notNull(),
+  eventId: text('event_id').notNull(),
   scannedAt: text('scanned_at').notNull(),
   syncStatus: text('sync_status').notNull(), // pending | synced | error
 });
