@@ -26,6 +26,7 @@ import { countTickets } from '@/db/repositories/tickets.repository';
 import { reportError as logError } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
+import { useIsFocused } from '@react-navigation/native';
 
 function getValidEventIds(event: EventData): string[] {
   if (event.type === 'ALIAS') {
