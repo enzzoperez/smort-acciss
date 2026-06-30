@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useIsFocused, useRouter } from 'expo-router';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import {
@@ -73,6 +73,7 @@ export function useSelectEventsScreen() {
   } = useGetEventsQuery(undefined, { skip: !isOnline, refetchOnMountOrArgChange: isOnline });
   const [getQrConfig] = useGetEventQrConfigMutation();
   const { db } = useDb();
+  const isFocused = useIsFocused();
 
   const [itemSelected, setItemSelected] = useState<EventData | null>(null);
   const [hasTicketsDownloaded, setHasTicketsDownloaded] = useState(false);
@@ -280,9 +281,9 @@ export function useSelectEventsScreen() {
     }
   }, [dataEvents]);
 
-  // Sync offline scanned data when the connection is recovered
+  // Sync offline scanned data when the connection is recovered, only if this screen is active
   useEffect(() => {
-    if (isOnline && selectedEvent && db) {
+    if (isOnline && selectedEvent && db && isFocused) {
       sync();
     }
   }, [isOnline]);
