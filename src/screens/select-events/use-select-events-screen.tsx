@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import { useFocusEffect, useIsFocused, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import {
