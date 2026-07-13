@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, StatusBar, View, TouchableOpacity, StyleSheet } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { StatusBar, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { CameraView } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Overlay } from './overlay';
@@ -8,36 +6,11 @@ import Flashlight from '@/assets/svg/flashlight.svg';
 import FlashlightOff from '@/assets/svg/flashlight-off.svg';
 import BackButtonCamera from '@/assets/svg/back-button-camera.svg';
 import Download from '@/assets/svg/download.svg';
-import { reportError as logError } from '@/utils/error-logger';
-import { TrackingEvents } from '@/constants/tracking-events';
-import { trackEvent } from '@/libs/tracking';
-import { useNetwork } from '@/providers/network-provider';
 import Cloud from '@/assets/svg/cloud.svg';
 import CloudOff from '@/assets/svg/cloud-off.svg';
-import { useAppSelector, useAppDispatch } from '@/libs/redux';
-import { setLastSyncDate } from '@/store/slices';
 import { ThemedText } from '@/components/themed-text';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
-import { useDb } from '@/hooks/use-db';
-import { countScannedTicketsByEvent } from '@/db/repositories/valid-tickets.repository';
-import { getEventSync } from '@/db/repositories/events-sync.repository';
-import { countPendingTickets } from '@/db/repositories/tickets.repository';
-import { syncTicketsForEvent } from '@/db/utils';
-import { EventData } from '@/api/events-api';
-
-function getValidEventIds(event: EventData): string[] {
-  if (event.type === 'ALIAS') {
-    return event.item?.map((i) => i.eventCode) ?? [];
-  }
-  return [event.eventCode];
-}
-
-function getValidSections(event: EventData): string[] {
-  if (event.type === 'ALIAS') {
-    return [...new Set(event.item?.flatMap((i) => i.sections) ?? [])];
-  }
-  return event.sections ?? [];
-}
+import { useCameraScreen } from './use-camera-screen';
 
 function StatItem({ value, label }: { value: string | number; label: string }) {
   return (
@@ -51,95 +24,32 @@ function StatItem({ value, label }: { value: string | number; label: string }) {
 }
 
 export default function CameraScreen() {
-  const router = useRouter();
-  const qrLock = useRef(false);
-  const appState = useRef(AppState.currentState);
-  const [torchEnabled, setTorchEnabled] = useState(false);
-  const [myScans, setMyScans] = useState(0);
-  const [totalPending, setTotalPending] = useState<number | null>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [infoSheetHeight, setInfoSheetHeight] = useState(0);
+  const {
+    torchEnabled,
+    myScans,
+    totalPending,
+    totalAssigned,
+    headerHeight,
+    setHeaderHeight,
+    infoSheetHeight,
+    setInfoSheetHeight,
+    isOnline,
+    lastSyncDate,
+    eventName,
+    eventDateTime,
+    handleDownload,
+    handleScannedCode,
+    handleToggleTorch,
+    handleBack,
+  } = useCameraScreen();
+
   const insets = useSafeAreaInsets();
-  const { isOnline } = useNetwork();
-  const dispatch = useAppDispatch();
-  const { selectedEventConfig, totalAssigned, selectedEvent, lastSyncDate } = useAppSelector(
-    (state) => state.config,
-  );
-  const { userData } = useAppSelector((state) => state.user);
-  const { db } = useDb();
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!db || !selectedEventConfig) return;
-      const validIds = getValidEventIds(selectedEventConfig);
-      const sections = getValidSections(selectedEventConfig);
-      countScannedTicketsByEvent(db, validIds).then(async (scanCount) => {
-        setMyScans(scanCount);
-        if (isOnline) {
-          setTotalPending(await countPendingTickets(db, validIds, sections));
-        } else {
-          setTotalPending(totalAssigned != null ? totalAssigned - scanCount : null);
-        }
-      });
-    }, [db, selectedEventConfig, isOnline, totalAssigned]),
-  );
-
-  const handleDownload = async () => {
-    if (!selectedEvent || !db || !userData?.accountId) return;
-    await syncTicketsForEvent({
-      eventId: selectedEvent,
-      db,
-      isOnline,
-      accountId: userData.accountId,
-    });
-    const sync = await getEventSync(db, selectedEvent, userData.accountId);
-    dispatch(setLastSyncDate(sync?.lastSyncDate ?? null));
-  };
-
-  const getEventNameAndDate = (): { name: string; date: string } => {
-    const match = selectedEventConfig?.eventName?.match(/^\((.+?)\)\s*(.+)$/);
-    return {
-      date: match?.[1] ?? 'Fecha no disponible',
-      name: match?.[2] ?? selectedEventConfig?.eventName ?? '',
-    };
-  };
-  const { name: eventName, date: eventDateTime } = getEventNameAndDate();
-
   const headerStyle = [styles.header, { paddingTop: insets.top + 8 }];
   const bottomButtonsStyle = [
     styles.bottomButtons,
     { bottom: infoSheetHeight > 0 ? infoSheetHeight + 16 : insets.bottom + 24 },
   ];
   const infoSheetStyle = [styles.infoSheet, { paddingBottom: insets.bottom + 16 }];
-
-  const handleScannedCode = ({ data }: { data: string }) => {
-    try {
-      if (data && !qrLock.current) {
-        qrLock.current = true;
-        setTimeout(() => {
-          router.replace({
-            pathname: '/scan-result',
-            params: { scannedCode: data },
-          });
-        }, 500);
-      }
-    } catch (error) {
-      logError(error);
-    }
-  };
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        qrLock.current = false;
-      }
-      appState.current = nextAppState;
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
 
   return (
     <View style={StyleSheet.absoluteFillObject}>
@@ -193,20 +103,11 @@ export default function CameraScreen() {
       </View>
 
       <View style={bottomButtonsStyle}>
-        <TouchableOpacity style={styles.roundButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.roundButton} onPress={handleBack}>
           <BackButtonCamera />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.roundButton}
-          onPress={() => {
-            const next = !torchEnabled;
-            trackEvent(TrackingEvents.FLASHLIGHT_TOGGLED, {
-              flashlight_state: next ? 'on' : 'off',
-            });
-            setTorchEnabled(next);
-          }}
-        >
+        <TouchableOpacity style={styles.roundButton} onPress={handleToggleTorch}>
           {torchEnabled ? <Flashlight /> : <FlashlightOff />}
         </TouchableOpacity>
       </View>
@@ -261,20 +162,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     zIndex: 10,
   },
-  infoSheetHandle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#00000020',
-    marginBottom: 16,
-  },
-  infoSheetClose: {
-    position: 'absolute',
-    top: 12,
-    right: 16,
-    padding: 8,
-  },
   infoSheetStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -293,13 +180,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     fontSize: 14,
     textAlign: 'center',
-  },
-  infoSheetLastSync: {
-    color: '#1D252D',
-    opacity: 0.5,
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 8,
   },
   bottomButtons: {
     position: 'absolute',
