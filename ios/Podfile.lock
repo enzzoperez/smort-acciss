@@ -1817,7 +1817,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-skia (2.6.9):
+  - react-native-skia (2.7.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2966,7 +2966,7 @@ SPEC CHECKSUMS:
   react-native-netinfo: f852c868bf5175e46165c7e4db48a204a95c3800
   react-native-quick-base64: 6568199bb2ac8e72ecdfdc73a230fbc5c1d3aac4
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
-  react-native-skia: e1b11279d1498807b52cf8106531d1eb70477d1d
+  react-native-skia: 5235dd66d91d88fe707bba7e2bbd5492a7a41c49
   React-NativeModulesApple: a9464983ccc0f66f45e93558671f60fc7536e438
   React-oscompat: 73db7dbc80edef36a9d6ed3c6c4e1724ead4236d
   React-perflogger: 123272debf907cc423962adafcf4513320e43757

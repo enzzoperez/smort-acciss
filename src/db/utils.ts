@@ -79,6 +79,7 @@ export async function initialSyncTickets(eventId: string, db: Db) {
         {
           params: {
             page: page,
+            size: 500,
           },
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -140,6 +141,7 @@ export async function incrementalSyncTickets({
         `${process.env.EXPO_PUBLIC_BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
         {
           params: {
+            size: 500,
             page: page,
             fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
           },
