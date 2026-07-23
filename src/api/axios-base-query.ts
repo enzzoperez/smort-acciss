@@ -1,9 +1,43 @@
 import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
-import { resetUserData, setLogout, setResetConfig } from '@/store/slices';
+import { resetUserData, setAccessToken, setLogout, setResetConfig } from '@/store/slices';
 import { RootState } from '@/store/store';
 import type { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
 import { Alert } from 'react-native';
+import { isTokenExpired, isTokenExpiringSoon } from '@/utils/jwt-utils';
+
+let isRefreshing = false;
+
+async function tryRefreshToken(
+  baseUrl: string,
+  accessToken: string,
+  refreshToken: string,
+  dispatch: (action: unknown) => void,
+): Promise<string | null> {
+  try {
+    isRefreshing = true;
+    const response = await axios.put(
+      `${baseUrl}/accounts/refresh-token`,
+      { refreshToken },
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    const newAccessToken = response.data.tokens.accessToken;
+    dispatch(setAccessToken(newAccessToken));
+    return newAccessToken;
+  } catch {
+    return null;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
+function logoutUser(dispatch: (action: unknown) => void) {
+  Alert.alert('Sesión expirada', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+  logMessage('Token expired, logging out user');
+  dispatch(setLogout());
+  dispatch(resetUserData());
+  dispatch(setResetConfig());
+}
 
 export const axiosBaseQuery =
   (
@@ -21,8 +55,23 @@ export const axiosBaseQuery =
   > =>
   async ({ url, method = 'GET', data, params, headers }, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const accessToken = state.auth?.accessToken;
-    // const refreshToken = state.auth?.refreshToken;
+    let accessToken = state.auth?.accessToken;
+    const refreshToken = state.auth?.refreshToken;
+
+    // Proactive refresh: if token expires within 1 hour, refresh before the request
+    if (accessToken && refreshToken && isTokenExpiringSoon(accessToken) && !isRefreshing) {
+      if (isTokenExpired(accessToken)) {
+        // Token already expired — refresh won't work, logout immediately
+        logoutUser(dispatch);
+        return { error: { status: 401, data: 'Token expired' } };
+      }
+      const newToken = await tryRefreshToken(baseUrl, accessToken, refreshToken, dispatch);
+      if (newToken) {
+        accessToken = newToken;
+      } else {
+        logMessage('Proactive refresh failed, continuing with current valid token');
+      }
+    }
 
     try {
       const authHeaders = {
@@ -45,38 +94,7 @@ export const axiosBaseQuery =
       const status = err.response?.status;
 
       if (status === 401) {
-        Alert.alert(
-          'Sesión expirada',
-          'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
-        );
-        logMessage('Unauthorized error, logging out user');
-        try {
-          dispatch(setLogout());
-          dispatch(resetUserData());
-          dispatch(setResetConfig());
-
-          // const refreshResponse = await axios.put(
-          //   `${baseUrl}/accounts/refresh-token`,
-          //   { refreshToken },
-          //   { headers: { Authorization: `Bearer ${accessToken}` } },
-          // );
-
-          // const newAccessToken = refreshResponse.data.tokens.accessToken;
-
-          // // Save the new accesToken in redux
-          // dispatch(setAccessToken(newAccessToken));
-
-          // // Retry the original request with the new token
-          // const retryResult = await axios({
-          //   url: `${baseUrl}${url}`,
-          //   method,
-          //   data,
-          // });
-
-          // return { data: retryResult.data };
-        } catch {
-          // dispatch(setLogout());
-        }
+        logoutUser(dispatch);
       }
 
       return { error: { status, data: err.response?.data } };

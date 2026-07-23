@@ -27,7 +27,7 @@ import { useGetEventsQuery } from '@/api/events-api';
 import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { reportError as logError } from '@/utils/error-logger';
+import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
@@ -55,8 +55,16 @@ const SelectEventsScreen = () => {
     sections: string[];
   } | null>(null);
 
-  const closeSession = () => {
-    logout({ accountId: userData?.accountId });
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const closeSession = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout({ accountId: userData?.accountId }).unwrap();
+    } catch (error) {
+      logMessage('Logout request failed, proceeding with local logout');
+      logError(error);
+    }
     dispatch(setLogout());
     dispatch(resetUserData());
     dispatch(setResetConfig());
@@ -163,7 +171,7 @@ const SelectEventsScreen = () => {
     <Layer>
       <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
 
-      <Header onRightPress={closeSession} />
+      <Header onRightPress={closeSession} isLoggingOut={isLoggingOut} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}

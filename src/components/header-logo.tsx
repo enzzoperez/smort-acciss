@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import CloseSession from '@/assets/svg/close-session.svg';
 import HeaderLogo from '@/assets/svg/logo-header.svg';
 import PressableOpacity from './pressable-opacity';
@@ -10,9 +10,10 @@ import { useNetwork } from '@/providers/network-provider';
 
 interface HeaderProps {
   onRightPress?: () => void;
+  isLoggingOut?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRightPress }) => {
+export const Header: React.FC<HeaderProps> = ({ onRightPress, isLoggingOut }) => {
   const { isOnline } = useNetwork();
   return (
     <View style={styles.container}>
@@ -25,8 +26,8 @@ export const Header: React.FC<HeaderProps> = ({ onRightPress }) => {
       <View style={{ flexDirection: 'row', gap: 24 }}>
         {isOnline ? <Cloud /> : <CloudOff />}
 
-        <PressableOpacity styleAnimated={styles.rightIcon} onPress={onRightPress}>
-          <CloseSession />
+        <PressableOpacity styleAnimated={styles.rightIcon} onPress={isLoggingOut ? undefined : onRightPress}>
+          {isLoggingOut ? <ActivityIndicator size="small" /> : <CloseSession />}
         </PressableOpacity>
       </View>
     </View>
