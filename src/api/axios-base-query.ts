@@ -24,7 +24,12 @@ async function tryRefreshToken(
     const newAccessToken = response.data.tokens.accessToken;
     dispatch(setAccessToken(newAccessToken));
     return newAccessToken;
-  } catch {
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    logMessage(
+      `Token refresh failed: status=${axiosError.response?.status ?? 'network'}, message=${axiosError.message}`,
+    );
+    logError(error);
     return null;
   } finally {
     isRefreshing = false;

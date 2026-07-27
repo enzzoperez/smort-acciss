@@ -8,22 +8,27 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { useLogoutMutation } from '@/api/auth-api';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import {
   resetUserData,
   setAvailableEvents,
+  setConfigEventQr,
   setLogout,
   setResetConfig,
+  setScanDirection,
   setSelectedEvent,
+  setSelectedEventConfig,
   setVerifyOnly,
 } from '@/store/slices';
 import { useRouter } from 'expo-router';
 import Layer from '@/components/layer';
 import { Dropdown } from 'react-native-element-dropdown';
-import { useGetEventsQuery } from '@/api/events-api';
+import { useGetEventQrConfigMutation, useGetEventsQuery } from '@/api/events-api';
 import { Header } from '@/components/header-logo';
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
@@ -32,7 +37,10 @@ import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 
+const SECTIONS_PREVIEW = 5;
+
 const SelectEventsScreen = () => {
+  const [showAllSections, setShowAllSections] = useState(false);
   const router = useRouter();
   const { sync } = useSyncOfflineData();
   const { userData } = useAppSelector((state) => state.user);
@@ -40,6 +48,7 @@ const SelectEventsScreen = () => {
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const [logout] = useLogoutMutation();
+  const [getQrConfig] = useGetEventQrConfigMutation();
   const {
     data: dataEvents,
     isLoading,
@@ -71,25 +80,22 @@ const SelectEventsScreen = () => {
     trackEvent(TrackingEvents.LOGOUT_SUCCESS);
   };
 
+  const saveQrConfig = async (eventCode: string) => {
+    try {
+      const data = await getQrConfig({ eventCode }).unwrap();
+      if (data?.length) {
+        dispatch(setConfigEventQr(data));
+      }
+    } catch (error) {
+      logError(error as Error);
+    }
+  };
+
   const onRefresh = () => {
     if (isOnline) {
       refetch();
     }
   };
-
-  const Buttons = () => (
-    <View style={{ gap: 16 }}>
-      <UiButton
-        disabled={!selectedEvent}
-        variant="tertiary"
-        text={'Escanear'}
-        onPress={() => {
-          trackEvent(TrackingEvents.SCAN_BUTTON_PRESSED);
-          router.push('/camera');
-        }}
-      />
-    </View>
-  );
 
   const eventsList = dataEvents?.config ?? availableEvents;
 
@@ -109,11 +115,11 @@ const SelectEventsScreen = () => {
   useEffect(() => {
     if (itemSelected) {
       const selected = eventsList.find((event) => event.eventCode === itemSelected.eventCode);
-
       if (selected) {
         setItemSelected(selected);
         dispatch(setSelectedEvent(selected.eventCode));
         dispatch(setVerifyOnly(selected.mode === 'CHECK'));
+        dispatch(setSelectedEventConfig(selected));
       }
     }
   }, [itemSelected, dataEvents]);
@@ -124,6 +130,7 @@ const SelectEventsScreen = () => {
         setItemSelected(eventsList[0]);
         dispatch(setSelectedEvent(eventsList[0].eventCode));
         dispatch(setVerifyOnly(eventsList[0].mode === 'CHECK'));
+        dispatch(setSelectedEventConfig(eventsList[0]));
       }
     } catch (error) {
       logError(error as Error);
@@ -139,7 +146,7 @@ const SelectEventsScreen = () => {
   if (isLoading || isFetching) {
     return (
       <Layer>
-        <View style={{ justifyContent: 'center', flex: 1, alignItems: 'center' }}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
           <ThemedText>Cargando eventos...</ThemedText>
         </View>
@@ -151,17 +158,15 @@ const SelectEventsScreen = () => {
     return (
       <Layer>
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl refreshing={isFetching || isLoading} onRefresh={onRefresh} />
           }
         >
-          <View style={styles.container}>
-            <ThemedText style={{ color: 'red', textAlign: 'center' }}>
-              Error al cargar los eventos. Por favor reinicia sesión o inténtalo de nuevo más tarde.
-            </ThemedText>
-            <UiButton variant="secondary" text={'Cerrar sesión'} onPress={closeSession} />
-          </View>
+          <ThemedText style={styles.errorText}>
+            Error al cargar los eventos. Por favor reinicia sesión o inténtalo de nuevo más tarde.
+          </ThemedText>
+          <UiButton variant="secondary" text="Cerrar sesión" onPress={closeSession} />
         </ScrollView>
       </Layer>
     );
@@ -174,181 +179,200 @@ const SelectEventsScreen = () => {
       <Header onRightPress={closeSession} isLoggingOut={isLoggingOut} />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={isFetching || isLoading} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.container}>
-          <View style={{ marginBottom: 32 }}>
-            {!isOnline && <ConnectionStatusBanner isOnline={false} />}
-            <ThemedText type="title" style={styles.title}>
-              Control de accesos en:
-            </ThemedText>
-
-            {eventsList.length > 0 && (
-              <View style={{ gap: 24 }}>
-                {/* Select event */}
-                <View style={{ gap: 8 }}>
-                  <ThemedText type="subtitle" style={{ fontSize: 16 }}>
-                    Eventos
-                  </ThemedText>
-                  <Dropdown
-                    style={styles.dropdown}
-                    placeholderStyle={styles.placeholderStyle}
-                    selectedTextStyle={styles.selectedTextStyle}
-                    iconStyle={styles.iconStyle}
-                    data={eventsList}
-                    maxHeight={300}
-                    labelField="eventName"
-                    valueField="eventCode"
-                    placeholder="Elegir evento"
-                    searchPlaceholder="Buscar..."
-                    value={selectedEvent}
-                    onChange={(item) => {
-                      trackEvent(TrackingEvents.EVENT_SELECTED, { event_code: item.eventCode });
-                      setItemSelected(item);
-                    }}
-                  />
-                </View>
-
-                {selectedEvent && (
-                  <>
-                    {/* Asociated Sections */}
-                    <View style={{ gap: 8 }}>
-                      <ThemedText type="title" style={styles.title}>
-                        Asignaciones
-                      </ThemedText>
-                      <ScrollView
-                        indicatorStyle="black"
-                        style={{
-                          backgroundColor: '#00000008',
-                          borderRadius: 16,
-                          padding: 20,
-                          maxHeight: 300,
-                        }}
-                      >
-                        {itemSelected &&
-                          itemSelected.sections.map((section) => (
-                            <ThemedText
-                              key={section}
-                              type="default"
-                              style={styles.itemAsociatedSection}
-                            >
-                              → {section}
-                            </ThemedText>
-                          ))}
-                      </ScrollView>
-                    </View>
-
-                    {/* Reader mode */}
-                    <View style={{ gap: 8 }}>
-                      <ThemedText type="title" style={styles.title}>
-                        Método de lectura:
-                      </ThemedText>
-                      <View
-                        style={{
-                          backgroundColor: '#00000008',
-                          borderRadius: 16,
-                          gap: 8,
-                          padding: 20,
-                        }}
-                      >
-                        <ThemedText>
-                          {itemSelected && itemSelected.mode === 'CHECK'
-                            ? '→  Verificación de QR'
-                            : '→  Verificación y quemado de Qr'}
-                        </ThemedText>
-                      </View>
-                    </View>
-                  </>
-                )}
-              </View>
-            )}
-          </View>
-
-          <Buttons />
-        </View>
-
-        <View style={{ alignItems: 'center', marginBottom: 20 }}>
-          <ThemedText type="subtitle" style={{ color: 'black', fontSize: 12 }}>
-            {appVersion}
+        <View style={styles.contentWrapper}>
+          {!isOnline && <ConnectionStatusBanner isOnline={false} />}
+          <ThemedText type="title" style={styles.title}>
+            Control de accesos en:
           </ThemedText>
+
+          {eventsList.length > 0 && (
+            <View style={styles.eventsWrapper}>
+              <View style={styles.section}>
+                <ThemedText type="subtitle" style={styles.sectionLabel}>
+                  Eventos
+                </ThemedText>
+                <Dropdown
+                  style={styles.dropdown}
+                  placeholderStyle={styles.placeholderStyle}
+                  selectedTextStyle={styles.selectedTextStyle}
+                  iconStyle={styles.iconStyle}
+                  data={eventsList}
+                  maxHeight={300}
+                  labelField="eventName"
+                  valueField="eventCode"
+                  placeholder="Elegir evento"
+                  searchPlaceholder="Buscar..."
+                  value={selectedEvent}
+                  onChange={(item) => {
+                    trackEvent(TrackingEvents.EVENT_SELECTED, { event_code: item.eventCode });
+                    setItemSelected(item);
+                    setShowAllSections(false);
+                    dispatch(setScanDirection('check_in'));
+                    if (isOnline) {
+                      saveQrConfig(item.eventCode);
+                    }
+                  }}
+                />
+              </View>
+
+              {selectedEvent && (
+                <>
+                  <View style={styles.section}>
+                    <ThemedText type="title" style={styles.title}>
+                      Método de lectura:
+                    </ThemedText>
+                    <View style={styles.readerModeBox}>
+                      <ThemedText>
+                        {itemSelected?.mode === 'CHECK'
+                          ? '→  Verificación de QR'
+                          : '→  Verificación y quemado de Qr'}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  <View style={styles.section}>
+                    <ThemedText type="title" style={styles.title}>
+                      Asignaciones
+                    </ThemedText>
+                    {(() => {
+                      const sections = itemSelected?.sections ?? [];
+                      const hidden = sections.length - SECTIONS_PREVIEW;
+                      const visible = showAllSections
+                        ? sections
+                        : sections.slice(0, SECTIONS_PREVIEW);
+                      return (
+                        <>
+                          {visible.map((section) => (
+                            <View key={section} style={styles.sectionCard}>
+                              <MaterialIcons name="confirmation-number" size={16} color="#888" />
+                              <ThemedText style={styles.sectionCardText}>{section}</ThemedText>
+                            </View>
+                          ))}
+                          {hidden > 0 && (
+                            <TouchableOpacity
+                              style={styles.showMoreButton}
+                              onPress={() => setShowAllSections((v) => !v)}
+                            >
+                              <ThemedText style={styles.showMoreText}>
+                                {showAllSections ? 'Mostrar menos' : `Mostrar ${hidden} más`}
+                              </ThemedText>
+                              <Feather
+                                name={showAllSections ? 'chevron-up' : 'chevron-down'}
+                                size={14}
+                                color="#1976D2"
+                              />
+                            </TouchableOpacity>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </View>
+                </>
+              )}
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      <View style={styles.buttons}>
+        <UiButton
+          disabled={!selectedEvent}
+          variant="tertiary"
+          text="Escanear"
+          onPress={() => {
+            trackEvent(TrackingEvents.SCAN_BUTTON_PRESSED);
+            router.push('/camera');
+          }}
+        />
+        <ThemedText type="subtitle" style={styles.versionText}>
+          {appVersion}
+        </ThemedText>
+      </View>
     </Layer>
   );
 };
 
 const styles = StyleSheet.create({
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
-  },
-  background: {
-    flex: 1,
+  loadingContainer: {
     justifyContent: 'center',
-  },
-  container: {
-    justifyContent: 'space-between',
     flex: 1,
+    alignItems: 'center',
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+  scrollContent: {
+    flexGrow: 1,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+  },
+  contentWrapper: {
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
     color: 'black',
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: 12,
+    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 18,
-    color: 'black',
-    marginBottom: 16,
+  eventsWrapper: {
+    gap: 24,
   },
-  bold: {
-    color: 'white',
-    fontSize: 20,
+  section: {
+    gap: 8,
   },
-  buttonPrimary: {
-    backgroundColor: 'white',
-    paddingVertical: 14,
-    borderRadius: 30,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  buttonPrimaryText: {
-    color: 'black',
+  sectionLabel: {
     fontSize: 16,
-    fontWeight: '600',
   },
-  buttonSecondary: {
-    borderColor: 'white',
-    borderWidth: 2,
-    paddingVertical: 14,
-    borderRadius: 30,
+  sectionCard: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 8,
   },
-  buttonSecondaryText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+  sectionCardText: {
+    fontSize: 13,
+    color: '#1a1a1a',
   },
-
-  //dropdown
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  showMoreText: {
+    fontSize: 13,
+    color: '#1976D2',
+  },
+  readerModeBox: {
+    backgroundColor: '#00000008',
+    borderRadius: 16,
+    gap: 8,
+    padding: 20,
+  },
+  buttons: {
+    gap: 16,
+    paddingVertical: 16,
+  },
+  versionText: {
+    color: 'black',
+    fontSize: 12,
+    textAlign: 'center',
+  },
   dropdown: {
     height: 50,
     borderColor: '#1D252D',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
-  },
-  icon: {
-    marginRight: 5,
   },
   placeholderStyle: {
     fontSize: 16,
@@ -362,11 +386,6 @@ const styles = StyleSheet.create({
   iconStyle: {
     width: 20,
     height: 20,
-  },
-
-  itemAsociatedSection: {
-    fontSize: 20,
-    marginBottom: 8,
   },
 });
 
