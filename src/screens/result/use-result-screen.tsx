@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { isApiError, useValidateAndRegisterMutation } from '@/api/scanner-api';
+import { DIRECTION_SCAN } from '@/constants/scan-directions';
 import { useAppSelector } from '@/libs/redux';
 import { ActionLabel } from './action-label';
 import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
@@ -18,7 +19,10 @@ import { trackEvent } from '@/libs/tracking';
 
 export const useResultScreen = () => {
   const router = useRouter();
-  const { scannedCode } = useLocalSearchParams();
+  const { scannedCode, direction } = useLocalSearchParams<{
+    scannedCode: string;
+    direction: DIRECTION_SCAN;
+  }>();
   const { selectedEvent, verifyOnly } = useAppSelector((state) => state.config);
 
   const { isOnline } = useNetwork();
@@ -56,6 +60,7 @@ export const useResultScreen = () => {
         await validateAndRegister({
           eventCode: selectedEvent!,
           qrCode: scannedCode as string,
+          direction: direction ?? 'check_in',
         });
       } catch (error) {
         logError(error);

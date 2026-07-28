@@ -100,4 +100,12 @@ export const readErrors = [
     action: 'No permitir ingreso',
     icon: <NotValidTicket />,
   },
+  {
+    code: 'ACCTRL-020',
+    key: 'QR_CHECKOUT_NOT_ALLOWED',
+    title: 'Este código QR es solo de ingreso',
+    message: 'Revisá que estés en el modo de escaneo correcto. ',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
 ];

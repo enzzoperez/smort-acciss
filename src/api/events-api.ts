@@ -9,6 +9,23 @@ interface ResGetEvents {
   }[];
 }
 
+export interface ResConfigEventQr {
+  code: string;
+  qrMode: string;
+  eventSeed: string;
+  alias: string;
+  refreshInterval: number;
+  serverTime: string;
+  sections?: {
+    checkOutEnabled: boolean;
+    code: string;
+  }[];
+}
+
+interface ReqGetEventQrConfig {
+  eventCode: string;
+}
+
 export const eventApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
     getEvents: builder.query<ResGetEvents, void>({
@@ -17,7 +34,18 @@ export const eventApi = rootApi.injectEndpoints({
         method: 'get',
       }),
     }),
+
+    getEventQrConfig: builder.mutation<ResConfigEventQr[], ReqGetEventQrConfig>({
+      query: ({ eventCode }) => ({
+        url: `/access-control/qr-config/${eventCode}`,
+        method: 'get',
+        headers: {
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+          'Authorization ': null,
+        },
+      }),
+    }),
   }),
 });
 
-export const { useGetEventsQuery } = eventApi;
+export const { useGetEventsQuery, useGetEventQrConfigMutation } = eventApi;
