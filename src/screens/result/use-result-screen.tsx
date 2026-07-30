@@ -19,8 +19,13 @@ import { trackEvent } from '@/libs/tracking';
 
 export const useResultScreen = () => {
   const router = useRouter();
-  const { scannedCode, direction } = useLocalSearchParams<{ scannedCode: string; direction: DIRECTION_SCAN }>();
-  const { selectedEvent, verifyOnly } = useAppSelector((state) => state.config);
+  const { scannedCode, direction } = useLocalSearchParams<{
+    scannedCode: string;
+    direction: DIRECTION_SCAN;
+  }>();
+  const { selectedEvent, verifyOnly, selectedEventConfig } = useAppSelector(
+    (state) => state.config,
+  );
 
   const { isOnline } = useNetwork();
   const onlineSnapshotRef = useRef(isOnline);
@@ -53,11 +58,14 @@ export const useResultScreen = () => {
         return;
       }
       try {
+        const zoneId =
+          selectedEventConfig?.sections.length === 1 ? selectedEventConfig.sections[0] : undefined;
         await sync();
         await validateAndRegister({
           eventCode: selectedEvent!,
           qrCode: scannedCode as string,
           direction: direction ?? 'check_in',
+          zoneId,
         });
       } catch (error) {
         logError(error);

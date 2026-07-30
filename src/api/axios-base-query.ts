@@ -64,7 +64,8 @@ export const axiosBaseQuery =
     const refreshToken = state.auth?.refreshToken;
 
     // Proactive refresh: if token expires within 1 hour, refresh before the request
-    if (accessToken && refreshToken && isTokenExpiringSoon(accessToken) && !isRefreshing) {
+    // Skipped in dev: short-lived dev tokens would trigger this on every request
+    if (!__DEV__ && accessToken && refreshToken && isTokenExpiringSoon(accessToken) && !isRefreshing) {
       if (isTokenExpired(accessToken)) {
         // Token already expired — refresh won't work, logout immediately
         logoutUser(dispatch);
