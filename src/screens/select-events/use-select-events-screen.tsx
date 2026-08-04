@@ -27,6 +27,7 @@ import { reportError as logError } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
 import { useIsFocused } from '@react-navigation/native';
+import { logMessage } from '@/libs/crashlytics';
 
 function getValidEventIds(event: EventData): string[] {
   if (event.type === 'ALIAS') {
@@ -79,6 +80,7 @@ export function useSelectEventsScreen() {
   const [itemSelected, setItemSelected] = useState<EventData | null>(null);
   const [hasTicketsDownloaded, setHasTicketsDownloaded] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const lastProcessedEventCode = useRef<string | null>(null);
 
   const isDisabledButton =
@@ -104,6 +106,7 @@ export function useSelectEventsScreen() {
   };
 
   const closeSession = async () => {
+    setIsLoggingOut(true);
     const synced = await sync();
     if (!synced) {
       Alert.alert(
@@ -112,8 +115,12 @@ export function useSelectEventsScreen() {
       );
       return;
     }
-    trackEvent(TrackingEvents.LOGOUT_SUCCESS);
-    logout({ accountId: userData?.accountId });
+    try {
+      await logout({ accountId: userData?.accountId }).unwrap();
+    } catch (error) {
+      logMessage('Logout request failed, proceeding with local logout');
+      logError(error);
+    }
     dispatch(setLogout());
     dispatch(resetUserData());
     dispatch(setSelectedEvent(null));
@@ -122,6 +129,7 @@ export function useSelectEventsScreen() {
       resetAllEventSync(db);
       clearAllData(db);
     }
+    trackEvent(TrackingEvents.LOGOUT_SUCCESS);
   };
 
   const onRefresh = async () => {
@@ -317,5 +325,6 @@ export function useSelectEventsScreen() {
     handleDownload,
     onRefresh,
     closeSession,
+    isLoggingOut,
   };
 }

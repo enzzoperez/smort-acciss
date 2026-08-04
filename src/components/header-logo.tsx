@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import CloseSession from '@/assets/svg/close-session.svg';
 import HeaderLogo from '@/assets/svg/logo-header.svg';
 import Download from '@/assets/svg/download.svg';
@@ -13,9 +13,15 @@ interface HeaderProps {
   onRightPress?: () => void;
   onDownload?: () => void;
   hasSelectedEvent?: boolean;
+  isLoggingOut?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRightPress, onDownload, hasSelectedEvent }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onRightPress,
+  onDownload,
+  hasSelectedEvent,
+  isLoggingOut,
+}) => {
   const { isOnline } = useNetwork();
   return (
     <View style={styles.container}>
@@ -34,8 +40,11 @@ export const Header: React.FC<HeaderProps> = ({ onRightPress, onDownload, hasSel
           </PressableOpacity>
         )}
 
-        <PressableOpacity styleAnimated={styles.rightIcon} onPress={onRightPress}>
-          <CloseSession height={24} />
+        <PressableOpacity
+          styleAnimated={styles.rightIcon}
+          onPress={isLoggingOut ? undefined : onRightPress}
+        >
+          {isLoggingOut ? <ActivityIndicator size="small" /> : <CloseSession />}
         </PressableOpacity>
       </View>
     </View>

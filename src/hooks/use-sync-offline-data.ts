@@ -3,6 +3,7 @@ import { useSyncOfflineDataMutation } from '@/api/scanner-api';
 import { useAppSelector } from '@/libs/redux';
 import { clearOfflineQueue, getOfflineQrList } from '@/db/utils';
 import { useDb } from './use-db';
+import { logMessage } from '@/libs/crashlytics';
 
 export const useSyncOfflineData = () => {
   const [triggerSync, { isLoading, isError, error }] = useSyncOfflineDataMutation();
@@ -22,13 +23,21 @@ export const useSyncOfflineData = () => {
           return true;
         }
 
+        logMessage(
+          `[offline-sync] pending tickets: ${JSON.stringify({
+            eventCode: selectedEvent as string,
+            qrCodes: pendingList,
+            timestamp: new Date().toISOString(),
+          })}`,
+        );
+
         await triggerSync({ eventCode: selectedEvent as string, qrCodes: pendingList }).unwrap();
 
         await clearOfflineQueue(db);
         return true;
       }
     } catch (err) {
-      console.error('Falló la sincronización offline:', err);
+      logMessage(`[offline-sync] error: ${JSON.stringify(err)}`);
       return false;
     }
   }, [triggerSync, selectedEvent, db, ready]);

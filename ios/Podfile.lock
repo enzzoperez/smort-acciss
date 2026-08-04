@@ -392,7 +392,7 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - NitroModules (0.36.1):
+  - NitroModules (0.36.5):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1817,7 +1817,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-skia (2.7.0):
+  - react-native-skia (2.10.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2453,7 +2453,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.5.1):
+  - RNWorklets (0.7.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2475,9 +2475,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/worklets (= 0.5.1)
+    - RNWorklets/worklets (= 0.7.4)
     - Yoga
-  - RNWorklets/worklets (0.5.1):
+  - RNWorklets/worklets (0.7.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2499,9 +2499,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/worklets/apple (= 0.5.1)
+    - RNWorklets/worklets/apple (= 0.7.4)
     - Yoga
-  - RNWorklets/worklets/apple (0.5.1):
+  - RNWorklets/worklets/apple (0.7.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2925,7 +2925,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: 766ace00c6b10d8148408f329d10c4f051931850
   hermes-engine: 35c763d57c9832d0eef764316ca1c4d043581394
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  NitroModules: 4d19ff59969b2c67a19175fb17b66917af6708e0
+  NitroModules: cea4512d24ff3b88b6eef8804783ef8246f94eb0
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
   QuickCrypto: af5772620d9059c3b6265c62b8c255c7bb303c87
@@ -2966,7 +2966,7 @@ SPEC CHECKSUMS:
   react-native-netinfo: f852c868bf5175e46165c7e4db48a204a95c3800
   react-native-quick-base64: 6568199bb2ac8e72ecdfdc73a230fbc5c1d3aac4
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
-  react-native-skia: 5235dd66d91d88fe707bba7e2bbd5492a7a41c49
+  react-native-skia: 80d4fb0e78073e5b2cbdfdac90c5300d75716a6e
   React-NativeModulesApple: a9464983ccc0f66f45e93558671f60fc7536e438
   React-oscompat: 73db7dbc80edef36a9d6ed3c6c4e1724ead4236d
   React-perflogger: 123272debf907cc423962adafcf4513320e43757
@@ -3007,7 +3007,7 @@ SPEC CHECKSUMS:
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845
   RNSVG: 1b2772436cb0cebfae91616c4fdd99feeef5ee6d
   RNVectorIcons: 4351544f100d4f12cac156a7c13399e60bab3e26
-  RNWorklets: 76fce72926e28e304afb44f0da23b2d24f2c1fa0
+  RNWorklets: eb8d899de8701d58c6a634b8468ce2a6db3113b2
   Yoga: 051f086b5ccf465ff2ed38a2cf5a558ae01aaaa1
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 

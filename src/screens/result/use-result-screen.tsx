@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { isApiError, useValidateAndRegisterMutation } from '@/api/scanner-api';
 import { useAppSelector, useAppDispatch } from '@/libs/redux';
+import { DIRECTION_SCAN } from '@/constants/scan-directions';
 import { ActionLabel } from './action-label';
 import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
 
@@ -13,7 +14,7 @@ import { getReadErrorByCode, ReasonErrorResult } from '@/utils/get-error-result'
 import { useNetwork } from '@/providers/network-provider';
 import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { insertTicketScan } from '@/db/repositories/valid-tickets.repository';
-import { getTicketByQr , countTickets } from '@/db/repositories/tickets.repository';
+import { getTicketByQr, countTickets } from '@/db/repositories/tickets.repository';
 import { useDb } from '@/hooks/use-db';
 import * as crypto from 'expo-crypto';
 import { validateQrOfflineFlow } from './utils/offline-validator';
@@ -23,11 +24,15 @@ import { setTotalAssigned } from '@/store/slices';
 import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
+import { formatDateWithOffset } from '@/utils/dates-utils';
 
 export const useResultScreen = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { scannedCode } = useLocalSearchParams();
+  const { scannedCode, direction } = useLocalSearchParams<{
+    scannedCode: string;
+    direction: DIRECTION_SCAN;
+  }>();
   const { selectedEvent, verifyOnly, configEventQr, serverOffset, selectedEventConfig } =
     useAppSelector((state) => state.config);
   const { userData } = useAppSelector((state) => state.user);
@@ -86,6 +91,21 @@ export const useResultScreen = () => {
       // OFFLINE
       // ====================
       if (!online) {
+        if (direction === 'check_out') {
+          if (!verifyOnly) {
+            await insertTicketScan(db, {
+              id: crypto.randomUUID(),
+              qr: scannedCode as string,
+              eventId: selectedEvent!,
+              scannedAt: formatDateWithOffset(new Date()),
+              syncStatus: 'pending',
+            });
+          }
+
+          setLocalResult({ type: 'error', reason: 'NETWORK_ERROR' });
+          return;
+        }
+
         const result = await validateQrOfflineFlow({
           db,
           qr: scannedCode as string,
@@ -107,6 +127,7 @@ export const useResultScreen = () => {
         await validateAndRegister({
           eventCode: selectedEvent!,
           qrCode: scannedCode as string,
+          direction: direction ?? 'check_in',
         });
         await sync();
       } catch (error) {
@@ -174,7 +195,7 @@ export const useResultScreen = () => {
         message: verifyOnly
           ? 'El código QR es válido para este sector/puerta.'
           : 'El código QR es válido para este sector/puerta. Este ticket no podrá reutilizarse.',
-        actionLabel: <ActionLabel type="success" />,
+        actionLabel: <ActionLabel action="Permitir el ingreso" />,
       };
     }
 
@@ -189,7 +210,7 @@ export const useResultScreen = () => {
         mainIcon: offlineError?.icon,
         title: offlineError?.title,
         message: offlineError?.message,
-        actionLabel: <ActionLabel type="error" />,
+        actionLabel: <ActionLabel action={offlineError?.action ?? 'No permitir ingreso'} />,
       };
     }
 
@@ -200,7 +221,7 @@ export const useResultScreen = () => {
         message: verifyOnly
           ? 'El código QR es válido para este sector/puerta.'
           : 'El código QR es válido para este sector/puerta. Este ticket no podrá reutilizarse.',
-        actionLabel: <ActionLabel type="success" />,
+        actionLabel: <ActionLabel action="Permitir el ingreso" />,
       };
     }
 
@@ -209,7 +230,7 @@ export const useResultScreen = () => {
         mainIcon: errorItem?.icon,
         title: errorItem?.title,
         message: errorItem?.message,
-        actionLabel: <ActionLabel type="error" />,
+        actionLabel: <ActionLabel action={errorItem.action} />,
       };
     }
 
@@ -217,7 +238,7 @@ export const useResultScreen = () => {
       mainIcon: <NotValidTicket />,
       title: 'Error desconocido',
       message: 'Ha ocurrido un error inesperado.',
-      actionLabel: <ActionLabel type="error" />,
+      actionLabel: <ActionLabel action="No permitir ingreso" />,
     };
   }, [localResult, isSuccessRequest, errorItem, verifyOnly]);
 

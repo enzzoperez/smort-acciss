@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/libs/redux';
-import { setLastSyncDate } from '@/store/slices';
+import { setLastSyncDate, setScanDirection } from '@/store/slices';
 import { useNetwork } from '@/providers/network-provider';
 import { useDb } from '@/hooks/use-db';
 import { countScannedTicketsByEvent } from '@/db/repositories/valid-tickets.repository';
@@ -33,9 +33,14 @@ export function useCameraScreen() {
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const { db } = useDb();
-  const { selectedEventConfig, totalAssigned, selectedEvent, lastSyncDate } = useAppSelector(
-    (state) => state.config,
-  );
+  const {
+    selectedEventConfig,
+    totalAssigned,
+    selectedEvent,
+    lastSyncDate,
+    configEventQr,
+    direction,
+  } = useAppSelector((state) => state.config);
   const { userData } = useAppSelector((state) => state.user);
 
   const qrLock = useRef(false);
@@ -44,8 +49,9 @@ export function useCameraScreen() {
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [myScans, setMyScans] = useState(0);
   const [totalPending, setTotalPending] = useState<number | null>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
   const [infoSheetHeight, setInfoSheetHeight] = useState(0);
+  const [cameraHeight, setCameraHeight] = useState(0);
+  const [cameraWidth, setCameraWidth] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,15 +69,13 @@ export function useCameraScreen() {
     }, [db, selectedEventConfig, isOnline, totalAssigned]),
   );
 
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        qrLock.current = false;
-      }
-      appState.current = nextAppState;
-    });
-    return () => subscription.remove();
-  }, []);
+  const showDirectionSelector =
+    configEventQr?.some((config) => config.sections?.some((section) => section.checkOutEnabled)) ??
+    false;
+
+  const handlePressCheckin = () => dispatch(setScanDirection('check_in'));
+
+  const handlePressCheckout = () => dispatch(setScanDirection('check_out'));
 
   const handleDownload = async () => {
     if (!selectedEvent || !db || !userData?.accountId) return;
@@ -90,7 +94,7 @@ export function useCameraScreen() {
       if (data && !qrLock.current) {
         qrLock.current = true;
         setTimeout(() => {
-          router.replace({ pathname: '/scan-result', params: { scannedCode: data } });
+          router.replace({ pathname: '/scan-result', params: { scannedCode: data, direction } });
         }, 500);
       }
     } catch (error) {
@@ -115,13 +119,27 @@ export function useCameraScreen() {
   };
   const { name: eventName, date: eventDateTime } = getEventNameAndDate();
 
+  useEffect(() => {
+    if (!showDirectionSelector) {
+      dispatch(setScanDirection('check_in'));
+    }
+  }, [showDirectionSelector]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        qrLock.current = false;
+      }
+      appState.current = nextAppState;
+    });
+    return () => subscription.remove();
+  }, []);
+
   return {
     torchEnabled,
     myScans,
     totalPending,
     totalAssigned,
-    headerHeight,
-    setHeaderHeight,
     infoSheetHeight,
     setInfoSheetHeight,
     isOnline,
@@ -132,5 +150,13 @@ export function useCameraScreen() {
     handleScannedCode,
     handleToggleTorch,
     handleBack,
+    showDirectionSelector,
+    direction,
+    handlePressCheckin,
+    handlePressCheckout,
+    cameraHeight,
+    cameraWidth,
+    setCameraHeight,
+    setCameraWidth,
   };
 }

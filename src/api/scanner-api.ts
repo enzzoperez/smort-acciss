@@ -1,3 +1,4 @@
+import { DIRECTION_SCAN } from '@/constants/scan-directions';
 import { rootApi } from './root-api';
 
 export interface ApiErrorItem {
@@ -22,9 +23,10 @@ export function isApiError(error: unknown): error is { status: number; data: Api
   );
 }
 
-interface ReqValidateOnly {
+interface ReqScanQr {
   eventCode: string;
   qrCode?: string;
+  direction: DIRECTION_SCAN;
 }
 
 interface ReqSyncOfflineData {
@@ -38,9 +40,9 @@ interface ReqSyncOfflineData {
 
 export const scannerApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
-    validateAndRegister: builder.mutation<unknown, ReqValidateOnly>({
-      query: ({ eventCode, qrCode }) => ({
-        url: `/access-control/${eventCode}/scan`,
+    validateAndRegister: builder.mutation<unknown, ReqScanQr>({
+      query: ({ eventCode, qrCode, direction }) => ({
+        url: `/access-control/${eventCode}/scan?direction=${direction}`,
         method: 'post',
         data: { qrCode },
       }),

@@ -1,6 +1,9 @@
 import { EventData, ResConfigEventQr } from '@/api/events-api';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { DIRECTION_SCAN } from '@/constants/scan-directions';
+
 interface ConfigSlice {
+  direction: DIRECTION_SCAN;
   selectedEvent: string | null;
   verifyOnly: boolean;
   configEventQr: ResConfigEventQr[] | null;
@@ -20,6 +23,7 @@ const initialState: ConfigSlice = {
   totalAssigned: null,
   availableEvents: [],
   lastSyncDate: null,
+  direction: 'check_in',
 };
 
 export const configSlice = createSlice({
@@ -57,6 +61,9 @@ export const configSlice = createSlice({
       state.lastSyncDate = action.payload;
     },
 
+    setScanDirection: (state, action: PayloadAction<DIRECTION_SCAN>) => {
+      state.direction = action.payload;
+    },
     setResetConfig: (state) => {
       state.selectedEvent = null;
       state.verifyOnly = true;
@@ -66,6 +73,7 @@ export const configSlice = createSlice({
       state.totalAssigned = null;
       state.availableEvents = [];
       state.lastSyncDate = null;
+      state.direction = 'check_in';
     },
   },
 });
@@ -80,4 +88,5 @@ export const {
   setTotalAssigned,
   setAvailableEvents,
   setLastSyncDate,
+  setScanDirection,
 } = configSlice.actions;

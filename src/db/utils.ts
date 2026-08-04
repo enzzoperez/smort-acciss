@@ -19,7 +19,6 @@ import {
   getEventSync,
   createEventSync,
   markInitialSyncDone,
-  updateLastSyncDate,
 } from '@/db/repositories/events-sync.repository';
 
 import { formatDateGMTMinus3, isOlderThan30Minutes } from '@/utils/dates-utils';

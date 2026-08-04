@@ -5,6 +5,7 @@ export const theme = {
     primaryLight: '#86E1B3',
     primaryLighter: '#C7F1DC',
     grayText: '#4B5563',
+    blue: '#2563EB',
 
     // Neutrals
     black: '#000000',

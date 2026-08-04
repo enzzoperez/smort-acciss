@@ -39,6 +39,7 @@ const SelectEventsScreen = () => {
     handleDownload,
     onRefresh,
     closeSession,
+    isLoggingOut,
   } = useSelectEventsScreen();
 
   if (isLoading || isFetching) {
@@ -78,6 +79,7 @@ const SelectEventsScreen = () => {
         onRightPress={closeSession}
         onDownload={handleDownload}
         hasSelectedEvent={!!selectedEvent}
+        isLoggingOut={isLoggingOut}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}
