@@ -3,20 +3,22 @@ import { View, StyleSheet } from 'react-native';
 import CheckCircle from '@/assets/svg/check-circle.svg';
 import WifiOff from '@/assets/svg/wifi-off.svg';
 import { ThemedText } from './themed-text';
+import { formatSyncTime } from '@/utils/dates-utils';
 
 type Props = {
   isOnline: boolean;
-  icon?: React.ReactNode;
+  lastSyncDate?: string | null;
 };
 
-export const ConnectionStatusBanner = ({ isOnline, icon }: Props) => {
+export const ConnectionStatusBanner = ({ isOnline, lastSyncDate }: Props) => {
   const containerStyle = isOnline ? styles.onlineContainer : styles.offlineContainer;
 
-  const title = isOnline ? 'Conexión establecida.' : 'Sin conexión.';
+  const title = isOnline ? 'Tickets sincronizados en la base local.' : 'Sin conexión.';
 
+  const formattedDate = lastSyncDate ? formatSyncTime(lastSyncDate) : '-';
   const subtitle = isOnline
-    ? 'Se realizará la sincronización automática.'
-    : 'Los datos se guardarán localmente y se sincronizarán cuando la conexión se restablezca.';
+    ? `Última actualización: ${formattedDate}`
+    : `Usando datos de la base local. Última actualización: ${formattedDate}`;
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -32,11 +34,9 @@ export const ConnectionStatusBanner = ({ isOnline, icon }: Props) => {
           {title}
         </ThemedText>
 
-        {subtitle && (
-          <ThemedText style={[styles.subtitle, isOnline ? styles.onlineText : styles.offlineText]}>
-            {subtitle}
-          </ThemedText>
-        )}
+        <ThemedText style={[styles.subtitle, isOnline ? styles.onlineText : styles.offlineText]}>
+          {subtitle}
+        </ThemedText>
       </View>
     </View>
   );

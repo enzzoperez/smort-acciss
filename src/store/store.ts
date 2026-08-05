@@ -30,6 +30,10 @@ const createAuthStorage = (): Storage => ({
         sanitizeKey + '_persist',
         JSON.stringify({ version: -1, rehydrated: true }),
       );
+    } else {
+      SecureStore.deleteItemAsync(sanitizeKey + '_accessToken');
+      SecureStore.deleteItemAsync(sanitizeKey + '_refreshToken');
+      SecureStore.deleteItemAsync(sanitizeKey + '_persist');
     }
     return Promise.resolve(true);
   },

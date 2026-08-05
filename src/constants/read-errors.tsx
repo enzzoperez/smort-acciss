@@ -24,6 +24,14 @@ export const readErrors = [
     icon: <NotValidTicket />,
   },
   {
+    code: 'ACCTRL-006',
+    key: 'QR_INACTIVE',
+    title: 'Ticket inactivo',
+    message: 'Este ticket fue desactivado y no permite el ingreso.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
     code: 'ACCTRL-002',
     key: 'QR_EVENT_MISMATCH',
     title: 'Ticket de otro evento',
@@ -97,6 +105,15 @@ export const readErrors = [
     title: 'Alias del evento inválido',
     message:
       'El alias del evento en el código QR no es válido. Por favor, verifica el ticket o escanea nuevamente.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
+    code: 'ACCTRL-019',
+    key: 'QR_DYNAMIC_FORTMAT_ERROR',
+    title: 'Formato de QR dinámico inválido',
+    message:
+      'El código QR dinámico tiene un formato inválido. Verifica el ticket o escanea nuevamente.',
     action: 'No permitir ingreso',
     icon: <NotValidTicket />,
   },

@@ -34,6 +34,7 @@ interface ReqSyncOfflineData {
   qrCodes: {
     qrCode: string;
     timeScan: string;
+    errorCode?: string;
   }[];
 }
 
