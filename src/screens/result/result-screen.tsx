@@ -61,12 +61,6 @@ const ResultScreen = () => {
 
         {getScreenElements().actionLabel}
 
-        {getScreenElements().key && (
-          <ThemedText type="default" style={styles.codeError}>
-            Code: {getScreenElements().key}
-          </ThemedText>
-        )}
-
         {infoUsedData && (
           <View style={styles.infoSection}>
             <View>

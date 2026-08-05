@@ -28,8 +28,6 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  const isPermissionGranted = Boolean(permission?.granted);
-
   const handleLoginRequest = async () => {
     try {
       const data = await login({
@@ -62,10 +60,11 @@ const LoginScreen = () => {
   );
 
   useEffect(() => {
-    if (!isPermissionGranted) {
+    if (permission === null) return;
+    if (!permission.granted && permission.canAskAgain) {
       requestPermission();
     }
-  }, [isPermissionGranted]);
+  }, [permission]);
 
   return (
     <Layer>

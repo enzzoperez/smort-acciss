@@ -92,8 +92,8 @@ android {
         applicationId 'com.itti.tuti.smartaccess'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 17
-        versionName "1.0.18"
+        versionCode 25
+        versionName "1.1.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -105,6 +105,18 @@ android {
             keyPassword 'android'
         }
     }
+    flavorDimensions "env"
+    productFlavors {
+        development {
+            dimension "env"
+            applicationId "com.itti.tuti.smartaccess.dev"
+        }
+        production {
+            dimension "env"
+            applicationId "com.itti.tuti.smartaccess"
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug

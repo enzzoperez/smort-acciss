@@ -42,3 +42,9 @@ yarn-error.*
 # firebase
 /google-services.json
 /GoogleService-Info.plist
+
+#claude
+CLAUDE.md
+
+#vscode
+.vscode/

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion } from '@/utils/device-utils';
@@ -12,136 +12,35 @@ import {
   View,
 } from 'react-native';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
-import { useLogoutMutation } from '@/api/auth-api';
-import { useAppDispatch, useAppSelector } from '@/libs/redux';
-import {
-  resetUserData,
-  setAvailableEvents,
-  setConfigEventQr,
-  setLogout,
-  setResetConfig,
-  setScanDirection,
-  setSelectedEvent,
-  setSelectedEventConfig,
-  setVerifyOnly,
-} from '@/store/slices';
-import { useRouter } from 'expo-router';
 import Layer from '@/components/layer';
 import { Dropdown } from 'react-native-element-dropdown';
-import { useGetEventQrConfigMutation, useGetEventsQuery } from '@/api/events-api';
 import { Header } from '@/components/header-logo';
-import { useNetwork } from '@/providers/network-provider';
-import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
-import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
-import { TrackingEvents } from '@/constants/tracking-events';
-import { trackEvent } from '@/libs/tracking';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
+import { useSelectEventsScreen } from './use-select-events-screen';
 
 const SECTIONS_PREVIEW = 5;
 
 const SelectEventsScreen = () => {
   const [showAllSections, setShowAllSections] = useState(false);
-  const router = useRouter();
-  const { sync } = useSyncOfflineData();
-  const { userData } = useAppSelector((state) => state.user);
-  const { selectedEvent, availableEvents } = useAppSelector((state) => state.config);
-  const dispatch = useAppDispatch();
-  const { isOnline } = useNetwork();
-  const [logout] = useLogoutMutation();
-  const [getQrConfig] = useGetEventQrConfigMutation();
   const {
-    data: dataEvents,
+    dataEvents,
+    availableEvents,
+    selectedEvent,
+    itemSelected,
+    lastSyncDate,
+    isOnline,
     isLoading,
     isFetching,
     isError,
-    refetch,
-  } = useGetEventsQuery(undefined, { skip: !isOnline, refetchOnMountOrArgChange: isOnline });
-
-  const [itemSelected, setItemSelected] = useState<{
-    eventCode: string;
-    eventName: string;
-    mode: string;
-    sections: string[];
-  } | null>(null);
-
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const closeSession = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout({ accountId: userData?.accountId }).unwrap();
-    } catch (error) {
-      logMessage('Logout request failed, proceeding with local logout');
-      logError(error);
-    }
-    dispatch(setLogout());
-    dispatch(resetUserData());
-    dispatch(setResetConfig());
-    trackEvent(TrackingEvents.LOGOUT_SUCCESS);
-  };
-
-  const saveQrConfig = async (eventCode: string) => {
-    try {
-      const data = await getQrConfig({ eventCode }).unwrap();
-      if (data?.length) {
-        dispatch(setConfigEventQr(data));
-      }
-    } catch (error) {
-      logError(error as Error);
-    }
-  };
-
-  const onRefresh = () => {
-    if (isOnline) {
-      refetch();
-    }
-  };
-
-  const eventsList = dataEvents?.config ?? availableEvents;
-
-  useEffect(() => {
-    if (dataEvents?.config && dataEvents.config.length > 0) {
-      dispatch(setAvailableEvents(dataEvents.config));
-    }
-  }, [dataEvents]);
-
-  useEffect(() => {
-    if (selectedEvent && eventsList.length > 0) {
-      const selected = eventsList.find((event) => event.eventCode === selectedEvent);
-      setItemSelected(selected || null);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (itemSelected) {
-      const selected = eventsList.find((event) => event.eventCode === itemSelected.eventCode);
-      if (selected) {
-        setItemSelected(selected);
-        dispatch(setSelectedEvent(selected.eventCode));
-        dispatch(setVerifyOnly(selected.mode === 'CHECK'));
-        dispatch(setSelectedEventConfig(selected));
-      }
-    }
-  }, [itemSelected, dataEvents]);
-
-  useEffect(() => {
-    try {
-      if (eventsList.length === 1 && !selectedEvent) {
-        setItemSelected(eventsList[0]);
-        dispatch(setSelectedEvent(eventsList[0].eventCode));
-        dispatch(setVerifyOnly(eventsList[0].mode === 'CHECK'));
-        dispatch(setSelectedEventConfig(eventsList[0]));
-      }
-    } catch (error) {
-      logError(error as Error);
-    }
-  }, [dataEvents]);
-
-  useEffect(() => {
-    if (isOnline && selectedEvent) {
-      sync();
-    }
-  }, [isOnline, selectedEvent]);
+    isSyncing,
+    isDisabledButton,
+    onChangeSelectedEvent,
+    handleScanButton,
+    handleDownload,
+    onRefresh,
+    closeSession,
+    isLoggingOut,
+  } = useSelectEventsScreen();
 
   if (isLoading || isFetching) {
     return (
@@ -176,7 +75,12 @@ const SelectEventsScreen = () => {
     <Layer>
       <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
 
-      <Header onRightPress={closeSession} isLoggingOut={isLoggingOut} />
+      <Header
+        onRightPress={closeSession}
+        onDownload={handleDownload}
+        hasSelectedEvent={!!selectedEvent}
+        isLoggingOut={isLoggingOut}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -185,12 +89,14 @@ const SelectEventsScreen = () => {
         }
       >
         <View style={styles.contentWrapper}>
-          {!isOnline && <ConnectionStatusBanner isOnline={false} />}
+          {!!selectedEvent && (
+            <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
+          )}
           <ThemedText type="title" style={styles.title}>
             Control de accesos en:
           </ThemedText>
 
-          {eventsList.length > 0 && (
+          {(dataEvents?.config || availableEvents.length > 0) && (
             <View style={styles.eventsWrapper}>
               <View style={styles.section}>
                 <ThemedText type="subtitle" style={styles.sectionLabel}>
@@ -201,22 +107,14 @@ const SelectEventsScreen = () => {
                   placeholderStyle={styles.placeholderStyle}
                   selectedTextStyle={styles.selectedTextStyle}
                   iconStyle={styles.iconStyle}
-                  data={eventsList}
+                  data={dataEvents?.config ?? availableEvents}
                   maxHeight={300}
                   labelField="eventName"
                   valueField="eventCode"
                   placeholder="Elegir evento"
                   searchPlaceholder="Buscar..."
                   value={selectedEvent}
-                  onChange={(item) => {
-                    trackEvent(TrackingEvents.EVENT_SELECTED, { event_code: item.eventCode });
-                    setItemSelected(item);
-                    setShowAllSections(false);
-                    dispatch(setScanDirection('check_in'));
-                    if (isOnline) {
-                      saveQrConfig(item.eventCode);
-                    }
-                  }}
+                  onChange={onChangeSelectedEvent}
                 />
               </View>
 
@@ -281,13 +179,11 @@ const SelectEventsScreen = () => {
 
       <View style={styles.buttons}>
         <UiButton
-          disabled={!selectedEvent}
+          disabled={isDisabledButton}
+          loading={isSyncing}
           variant="tertiary"
           text="Escanear"
-          onPress={() => {
-            trackEvent(TrackingEvents.SCAN_BUTTON_PRESSED);
-            router.push('/camera');
-          }}
+          onPress={handleScanButton}
         />
         <ThemedText type="subtitle" style={styles.versionText}>
           {appVersion}
@@ -315,7 +211,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    color: 'black',
     marginTop: 12,
     marginBottom: 8,
   },

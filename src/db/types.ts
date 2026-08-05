@@ -1,11 +1,22 @@
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { tickets } from './schema';
-import { drizzle } from 'drizzle-orm/expo-sqlite';
+import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
+import { noValidTickets, tickets, ticketScan, eventsSync } from './schema';
+import type * as schema from './schema';
 
-export type Ticket = InferSelectModel<typeof tickets>;
-export type NewTicket = InferInsertModel<typeof tickets>;
+export type TicketDb = typeof tickets.$inferSelect;
+export type NewTicketDb = typeof tickets.$inferInsert;
 
-export type Db = ReturnType<typeof drizzle>;
+export type TicketScanDb = typeof ticketScan.$inferSelect;
+export type NewTicketScanDb = typeof ticketScan.$inferInsert;
+
+export type NoValidTicketDb = typeof noValidTickets.$inferSelect;
+export type NewNoValidTicketDb = typeof noValidTickets.$inferInsert;
+
+export type EventSyncDb = typeof eventsSync.$inferSelect;
+export type NewEventSyncDb = typeof eventsSync.$inferInsert;
+
+export type Db = ExpoSQLiteDatabase<typeof schema>;
+
+export type RedeemType = 'SINGLE' | 'MULTI';
 
 export type TicketApi = {
   event: string;
@@ -22,6 +33,8 @@ export type TicketApi = {
   section?: string;
   seat?: string;
   cart?: string;
+  successfulReads: number;
+  active: boolean;
 };
 
 export type ApiResponse = {
@@ -29,5 +42,6 @@ export type ApiResponse = {
   pageable: {
     pageNumber: number;
     totalPages: number;
+    totalElements: number;
   };
 };

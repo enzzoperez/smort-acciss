@@ -1,7 +1,8 @@
 import crashlytics from '@react-native-firebase/crashlytics';
 
 export const logError = (error: unknown) => {
-  crashlytics().recordError(error as Error);
+  const err = error instanceof Error ? error : new Error(String(error));
+  crashlytics().recordError(err);
 };
 
 export const setAttributes = (attributes: { [key: string]: string }) => {

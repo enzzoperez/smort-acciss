@@ -24,16 +24,6 @@ export async function saveQrOffline(qr: string) {
   }
 }
 
-export async function getOfflineQrList() {
-  try {
-    const existing = await AsyncStorage.getItem(KEY);
-    return existing ? JSON.parse(existing) : [];
-  } catch (error) {
-    console.error('Error leyendo QRs offline', error);
-    return [];
-  }
-}
-
 export async function clearOfflineQueue() {
   try {
     await AsyncStorage.removeItem(KEY);

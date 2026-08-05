@@ -3,28 +3,24 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
 interface ActionLabelProps {
-  type: 'success' | 'error';
+  action: string;
 }
 
-export const ActionLabel: React.FC<ActionLabelProps> = ({ type }) => {
-  const isSuccess = type === 'success';
+export const ActionLabel: React.FC<ActionLabelProps> = ({ action }) => {
+  const isAllow = !action.toLowerCase().startsWith('no permitir');
 
   const colors = {
-    icon: isSuccess ? '#2F7D32' : '#C62828',
+    icon: isAllow ? '#2F7D32' : '#C62828',
     text: '#111',
-    buttonBg: isSuccess ? 'rgba(40, 129, 46, 0.1)' : 'rgba(210, 21, 17, 0.1)',
-    buttonText: isSuccess ? '#28812E' : '#D21511',
-  };
-
-  const text = {
-    title: isSuccess ? 'Permitir el ingreso' : 'No permitir el ingreso',
+    buttonBg: isAllow ? 'rgba(40, 129, 46, 0.1)' : 'rgba(210, 21, 17, 0.1)',
+    buttonText: isAllow ? '#28812E' : '#D21511',
   };
 
   return (
     <View style={styles.container}>
       <View style={[styles.button, { backgroundColor: colors.buttonBg }]}>
         <ThemedText type="subtitle" style={[styles.buttonText, { color: colors.buttonText }]}>
-          {text.title}
+          {action}
         </ThemedText>
       </View>
     </View>
