@@ -1,5 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { version } from './package.json';
+
+const UPDATES_URL = 'https://u.expo.dev/280698c6-1aef-4499-9d65-7bcae8874e56';
 
 export default ({ config }) => {
   // ---------- ANDROID ----------
@@ -26,12 +29,13 @@ export default ({ config }) => {
 
     name: 'tuti-smart-access',
     slug: 'tuti-smart-access',
-    version: '1.0.0',
+    version,
     orientation: 'portrait',
     icon: './src/assets/images/icon.png',
     scheme: 'tutiqrreader',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
+    platforms: ['ios', 'android'],
 
     ios: {
       supportsTablet: false,
@@ -75,9 +79,7 @@ export default ({ config }) => {
       ],
     ],
 
-    runtimeVersion: {
-      policy: 'appVersion',
-    },
+    runtimeVersion: version,
 
     experiments: {
       typedRoutes: true,
@@ -88,6 +90,12 @@ export default ({ config }) => {
       eas: {
         projectId: '280698c6-1aef-4499-9d65-7bcae8874e56',
       },
+    },
+
+    updates: {
+      url: UPDATES_URL,
+      fallbackToCacheTimeout: 0,
+      checkAutomatically: 'ON_LOAD',
     },
 
     owner: 'itti-platform',

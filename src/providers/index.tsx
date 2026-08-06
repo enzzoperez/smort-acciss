@@ -4,6 +4,7 @@ import { AuthProvider } from './auth-provider';
 import { UiProvider } from './ui-provider';
 import { StoreProvider } from './store-provider';
 import { NetworkProvider } from './network-provider';
+import { UpdatesProvider } from './updates-provider';
 
 interface ICustomProviders {
   children: React.ReactNode;
@@ -14,9 +15,11 @@ export const CustomProviders: React.FC<ICustomProviders> = ({ children }) => {
     <StoreProvider>
       <UiProvider>
         <NetworkProvider>
-          <AuthProvider>
-            <SafeAreaProvider>{children}</SafeAreaProvider>
-          </AuthProvider>
+          <UpdatesProvider>
+            <AuthProvider>
+              <SafeAreaProvider>{children}</SafeAreaProvider>
+            </AuthProvider>
+          </UpdatesProvider>
         </NetworkProvider>
       </UiProvider>
     </StoreProvider>
