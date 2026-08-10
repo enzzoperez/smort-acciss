@@ -19,6 +19,9 @@
     "bump-patch": "npm version patch --no-git-tag-version && fastlane bump",
     "bump-minor": "npm version minor --no-git-tag-version && fastlane bump",
     "bump-major": "npm version major --no-git-tag-version && fastlane bump",
+    "update:development": "cp .env.development .env.local && eas update --channel development --environment development",
+    "update:preview": "cp .env.production .env.local && eas update --channel preview --environment production",
+    "update:production": "cp .env.production .env.local && eas update --channel production --environment production",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -34,6 +37,7 @@
     "@reduxjs/toolkit": "^2.9.2",
     "@shopify/react-native-skia": "^2.4.14",
     "axios": "^1.13.1",
+    "babel-preset-expo": "~54.0.10",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "expo": "54.0.9",
@@ -48,6 +52,7 @@
     "expo-splash-screen": "~31.0.10",
     "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.8",
+    "expo-updates": "~29.0.19",
     "expo-web-browser": "~15.0.7",
     "i18next": "^25.5.3",
     "react": "19.1.0",

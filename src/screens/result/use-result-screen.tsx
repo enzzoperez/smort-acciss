@@ -124,10 +124,14 @@ export const useResultScreen = () => {
       // ONLINE
       // ====================
       try {
+        const zoneId =
+          selectedEventConfig?.sections.length === 1 ? selectedEventConfig.sections[0] : undefined;
+        await sync();
         await validateAndRegister({
           eventCode: selectedEvent!,
           qrCode: scannedCode as string,
           direction: direction ?? 'check_in',
+          zoneId,
         });
         await sync();
       } catch (error) {
@@ -241,6 +245,12 @@ export const useResultScreen = () => {
       actionLabel: <ActionLabel action="No permitir ingreso" />,
     };
   }, [localResult, isSuccessRequest, errorItem, verifyOnly]);
+
+  useEffect(() => {
+    if (isSuccessRequest) {
+      trackEvent(TrackingEvents.SCAN_RESULT_RECEIVED);
+    }
+  }, [isSuccessRequest]);
 
   useEffect(() => {
     if (isSuccessRequest) {
