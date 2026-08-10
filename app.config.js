@@ -82,9 +82,7 @@ export default ({ config }) => {
       ],
     ],
 
-    runtimeVersion: {
-      policy: 'appVersion',
-    },
+    runtimeVersion: '1.0.0',
 
     experiments: {
       typedRoutes: true,
