@@ -27,6 +27,7 @@ interface ReqScanQr {
   eventCode: string;
   qrCode?: string;
   direction: DIRECTION_SCAN;
+  zoneId?: string;
 }
 
 interface ReqSyncOfflineData {
@@ -41,8 +42,8 @@ interface ReqSyncOfflineData {
 export const scannerApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
     validateAndRegister: builder.mutation<unknown, ReqScanQr>({
-      query: ({ eventCode, qrCode, direction }) => ({
-        url: `/access-control/${eventCode}/scan?direction=${direction}`,
+      query: ({ eventCode, qrCode, direction, zoneId }) => ({
+        url: `/access-control/${eventCode}/scan?direction=${direction}${zoneId ? `&zoneId=${zoneId}` : ''}`,
         method: 'post',
         data: { qrCode },
       }),

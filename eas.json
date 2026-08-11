@@ -11,6 +11,7 @@
       "android": {
         "gradleCommand": ":app:assembleDevelopmentRelease"
       },
+      "channel": "development",
       "env": {
         "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
         "GOOGLE_SERVICE_INFO_PLIST": "@GOOGLE_SERVICE_INFO_PLIST",
@@ -24,6 +25,7 @@
       "android": {
         "gradleCommand": ":app:assembleProductionRelease"
       },
+      "channel": "preview",
       "env": {
         "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
         "GOOGLE_SERVICE_INFO_PLIST": "@GOOGLE_SERVICE_INFO_PLIST"
@@ -35,6 +37,7 @@
       "android": {
         "gradleCommand": ":app:assembleProductionRelease"
       },
+      "channel": "production",
       "env": {
         "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON",
         "GOOGLE_SERVICE_INFO_PLIST": "@GOOGLE_SERVICE_INFO_PLIST"
