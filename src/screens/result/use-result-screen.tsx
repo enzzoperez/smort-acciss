@@ -126,7 +126,7 @@ export const useResultScreen = () => {
       try {
         const zoneId =
           selectedEventConfig?.sections.length === 1 ? selectedEventConfig.sections[0] : undefined;
-        await sync();
+
         await validateAndRegister({
           eventCode: selectedEvent!,
           qrCode: scannedCode as string,
