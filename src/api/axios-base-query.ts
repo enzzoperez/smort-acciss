@@ -44,6 +44,39 @@ function logoutUser(dispatch: (action: unknown) => void) {
   dispatch(setResetConfig());
 }
 
+/**
+ * Proactive token refresh for code that calls axios directly (outside RTK Query),
+ * e.g. the paginated ticket sync in db/utils.ts. Mirrors the check above so
+ * long-running paginated requests can refresh mid-sync instead of failing with 401.
+ */
+export async function ensureValidAccessToken(
+  baseUrl: string,
+  getState: () => RootState,
+  dispatch: (action: unknown) => void,
+): Promise<string | null> {
+  const state = getState();
+  const accessToken = state.auth?.accessToken;
+  const refreshToken = state.auth?.refreshToken;
+
+  if (!accessToken) return null;
+
+  // Skipped in dev: short-lived dev tokens would trigger this on every request
+  if (__DEV__ || !refreshToken || !isTokenExpiringSoon(accessToken) || isRefreshing) {
+    return accessToken;
+  }
+
+  if (isTokenExpired(accessToken)) {
+    logoutUser(dispatch);
+    return null;
+  }
+
+  const newToken = await tryRefreshToken(baseUrl, accessToken, refreshToken, dispatch);
+  if (!newToken) {
+    logMessage('Proactive refresh failed, continuing with current valid token');
+  }
+  return newToken ?? accessToken;
+}
+
 export const axiosBaseQuery =
   (
     { baseUrl }: { baseUrl: string } = { baseUrl: '' },

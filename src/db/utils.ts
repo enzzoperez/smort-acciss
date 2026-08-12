@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ensureValidAccessToken } from '@/api/axios-base-query';
 import { migrations } from './migrations';
 import { ApiResponse, Db, TicketApi, TicketDb } from './types';
 import type { SQLiteDatabase } from 'expo-sqlite';
@@ -22,6 +23,8 @@ import {
 } from '@/db/repositories/events-sync.repository';
 
 import { formatDateGMTMinus3, isOlderThan30Minutes } from '@/utils/dates-utils';
+
+const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL ?? '';
 
 export async function runMigrations(sqlite: SQLiteDatabase) {
   for (const sql of migrations) {
@@ -58,23 +61,23 @@ export async function hasTickets(db: Db): Promise<boolean> {
 }
 
 export async function initialSyncTickets(eventId: string, db: Db) {
-  const accessToken = store?.getState()?.auth?.accessToken;
-
-  if (!accessToken) {
-    Alert.alert(
-      'Error',
-      'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
-    );
-    return;
-  }
-
   let page = 0;
   let totalPages = 1;
 
   try {
     while (page < totalPages) {
+      const accessToken = await ensureValidAccessToken(BASE_URL, store.getState, store.dispatch);
+
+      if (!accessToken) {
+        Alert.alert(
+          'Error',
+          'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
+        );
+        return;
+      }
+
       const { data } = await axios.get<ApiResponse>(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
+        `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
         {
           params: {
             page: page,
@@ -122,22 +125,23 @@ export async function incrementalSyncTickets({
   db: Db;
   fromDate?: string | null;
 }) {
-  const accessToken = store?.getState()?.auth?.accessToken;
-  if (!accessToken) {
-    Alert.alert(
-      'Error',
-      'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
-    );
-    return;
-  }
-
   let page = 0;
   let totalPages = 1;
 
   try {
     while (page < totalPages) {
+      const accessToken = await ensureValidAccessToken(BASE_URL, store.getState, store.dispatch);
+
+      if (!accessToken) {
+        Alert.alert(
+          'Error',
+          'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
+        );
+        return;
+      }
+
       const { data } = await axios.get<ApiResponse>(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
+        `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
         {
           params: {
             size: 500,
