@@ -33,10 +33,19 @@ export const useResultScreen = () => {
     scannedCode: string;
     direction: DIRECTION_SCAN;
   }>();
-  const { selectedEvent, verifyOnly, configEventQr, serverOffset, selectedEventConfig } =
-    useAppSelector((state) => state.config);
+  const {
+    scanAccess,
+    selectedEvent,
+    verifyOnly,
+    configEventQr,
+    serverOffset,
+    selectedEventConfig,
+  } = useAppSelector((state) => state.config);
   const { userData } = useAppSelector((state) => state.user);
   const { db } = useDb();
+  const code = scanAccess?.config.code ?? '';
+  const operatorDocument = scanAccess?.operatorDocument ?? '';
+  const observation = scanAccess?.observation ?? '';
   const validEventIds: string[] =
     selectedEventConfig?.type === 'ALIAS'
       ? (selectedEventConfig.item?.map((i) => i.eventCode) ?? [])
@@ -128,8 +137,10 @@ export const useResultScreen = () => {
           selectedEventConfig?.sections.length === 1 ? selectedEventConfig.sections[0] : undefined;
 
         await validateAndRegister({
-          eventCode: selectedEvent!,
+          code,
           qrCode: scannedCode as string,
+          operatorDocument,
+          observation,
           direction: direction ?? 'check_in',
           zoneId,
         });
