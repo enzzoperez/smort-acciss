@@ -1,43 +1,43 @@
 import { useEffect, useState } from 'react';
 import { useCameraPermissions } from 'expo-camera';
-import { useLoginMutation } from '@/api/auth-api';
-import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
-import { useAppDispatch } from '@/libs/redux';
+import { ECredentialType } from '@/types/user';
+import { useGetEventQrConfigByCodeMutation } from '@/api/events-api';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
-import { TrackingEvents } from '@/constants/tracking-events';
-import { trackEvent, setTrackingUserId } from '@/libs/tracking';
+import { useRouter } from 'expo-router';
+import { useAppDispatch } from '@/libs/redux';
+import { setScanAccess } from '@/store/slices';
 
 export function useLoginScreen() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const [permission, requestPermission] = useCameraPermissions();
-  const [login, { isLoading }] = useLoginMutation();
+
+  const [documentType, setDocumentType] = useState<ECredentialType>(ECredentialType.CI);
+  const [documentValue, setDocumentValue] = useState('');
+  const [observation, setObservation] = useState('');
+  const [code, setCode] = useState('');
+  const [getEventQrConfigByCode, { isLoading }] = useGetEventQrConfigByCodeMutation();
   const { apiErrorHandler } = useApiErrorHandler();
 
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
+  const handleCodeChange = (value: string) => {
+    setCode(value.replace(/[^a-zA-Z0-9-]/g, ''));
+  };
 
   const handleLoginRequest = async () => {
     try {
-      const data = await login({
-        accountCredentialType: 'PHONE_NUMBER',
-        accountCredentialValue: phoneNumber,
-        password: password,
-      }).unwrap();
-
-      const { tokens, ...userWithoutTokens } = data;
-
-      dispatch(setAccessToken(tokens.accessToken));
-      dispatch(setRefreshToken(tokens.refreshToken));
-      dispatch(setUserData(userWithoutTokens));
-      setTrackingUserId(phoneNumber);
-      trackEvent(TrackingEvents.LOGIN_SUCCESS);
+      const config = await getEventQrConfigByCode(code).unwrap();
+      dispatch(
+        setScanAccess({
+          config,
+          operatorDocument: documentValue,
+          observation,
+        }),
+      );
+      router.replace('/select-events');
     } catch (error) {
       apiErrorHandler(error);
     }
   };
-
-  const togglePasswordVisible = () => setPasswordVisible((prev) => !prev);
 
   useEffect(() => {
     if (permission === null) return;
@@ -48,12 +48,14 @@ export function useLoginScreen() {
 
   return {
     isLoading,
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
-    passwordVisible,
-    togglePasswordVisible,
+    documentType,
+    setDocumentType,
+    documentValue,
+    setDocumentValue,
+    observation,
+    setObservation,
+    code,
+    handleCodeChange,
     handleLoginRequest,
   };
 }

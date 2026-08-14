@@ -35,6 +35,27 @@ interface ReqGetEventQrConfig {
   eventCode: string;
 }
 
+export interface ConfigByCodePin {
+  id: string;
+  code: string;
+  label: string;
+  enabled: boolean;
+  issuedTicketsSyncEnabled: boolean;
+  mode: string;
+  items: {
+    eventCode: string;
+    eventName: string;
+    eventDate: string;
+    source: string;
+    sections: {
+      code: string;
+      checkOutEnabled: boolean;
+    }[];
+  }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const eventApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
     getEvents: builder.query<ResGetEvents, void>({
@@ -54,7 +75,21 @@ export const eventApi = rootApi.injectEndpoints({
         },
       }),
     }),
+
+    getEventQrConfigByCode: builder.mutation<ConfigByCodePin, string>({
+      query: (codePin) => ({
+        url: `/access-control/scan-access/resolve`,
+        method: 'post',
+        data: {
+          code: codePin,
+        },
+        headers: {
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+        },
+      }),
+    }),
   }),
 });
 
-export const { useGetEventsQuery, useGetEventQrConfigMutation } = eventApi;
+export const { useGetEventsQuery, useGetEventQrConfigMutation, useGetEventQrConfigByCodeMutation } =
+  eventApi;

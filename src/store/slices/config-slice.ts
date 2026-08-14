@@ -1,8 +1,13 @@
-import { EventData, ResConfigEventQr } from '@/api/events-api';
+import { ConfigByCodePin, EventData, ResConfigEventQr } from '@/api/events-api';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { DIRECTION_SCAN } from '@/constants/scan-directions';
 
 interface ConfigSlice {
+  scanAccess: {
+    config: ConfigByCodePin;
+    operatorDocument: string;
+    observation: string;
+  } | null;
   direction: DIRECTION_SCAN;
   selectedEvent: string | null;
   verifyOnly: boolean;
@@ -15,6 +20,7 @@ interface ConfigSlice {
 }
 
 const initialState: ConfigSlice = {
+  scanAccess: null,
   selectedEvent: null,
   verifyOnly: true,
   configEventQr: null,
@@ -30,6 +36,16 @@ export const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
+    setScanAccess: (
+      state,
+      action: PayloadAction<{
+        config: ConfigByCodePin;
+        operatorDocument: string;
+        observation: string;
+      }>,
+    ) => {
+      state.scanAccess = action.payload;
+    },
     setSelectedEvent: (state, action: PayloadAction<string | null>) => {
       state.selectedEvent = action.payload;
     },
@@ -65,6 +81,7 @@ export const configSlice = createSlice({
       state.direction = action.payload;
     },
     setResetConfig: (state) => {
+      state.scanAccess = null;
       state.selectedEvent = null;
       state.verifyOnly = true;
       state.configEventQr = null;
@@ -79,6 +96,7 @@ export const configSlice = createSlice({
 });
 
 export const {
+  setScanAccess,
   setSelectedEvent,
   setVerifyOnly,
   setResetConfig,

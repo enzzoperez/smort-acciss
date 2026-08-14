@@ -1,3 +1,5 @@
+import { ECredentialType } from './user';
+
 export interface IErrorApiResponse {
   id: string;
   code: string;
@@ -28,7 +30,7 @@ export interface IBillingDataForm {
 }
 
 export interface IReqLogin {
-  accountCredentialType: 'PHONE_NUMBER';
+  accountCredentialType: 'PHONE_NUMBER' | ECredentialType;
   accountCredentialValue: string;
   password: string;
 }
