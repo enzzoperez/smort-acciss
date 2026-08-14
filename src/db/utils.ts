@@ -1,11 +1,9 @@
 import axios from 'axios';
-import { ensureValidAccessToken } from '@/api/axios-base-query';
 import { migrations } from './migrations';
 import { ApiResponse, Db, TicketApi, TicketDb } from './types';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { noValidTickets, tickets, ticketScan } from './schema';
-import { store } from '@/store/store';
 import {
   getAllPendingScannedTickets,
   markValidTicketAsSynced,
@@ -66,25 +64,12 @@ export async function initialSyncTickets(eventId: string, db: Db) {
 
   try {
     while (page < totalPages) {
-      const accessToken = await ensureValidAccessToken(BASE_URL, store.getState, store.dispatch);
-
-      if (!accessToken) {
-        Alert.alert(
-          'Error',
-          'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
-        );
-        return;
-      }
-
       const { data } = await axios.get<ApiResponse>(
         `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
         {
           params: {
             page: page,
             size: 500,
-          },
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
           },
         },
       );
@@ -130,16 +115,6 @@ export async function incrementalSyncTickets({
 
   try {
     while (page < totalPages) {
-      const accessToken = await ensureValidAccessToken(BASE_URL, store.getState, store.dispatch);
-
-      if (!accessToken) {
-        Alert.alert(
-          'Error',
-          'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
-        );
-        return;
-      }
-
       const { data } = await axios.get<ApiResponse>(
         `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
         {
@@ -147,9 +122,6 @@ export async function incrementalSyncTickets({
             size: 500,
             page: page,
             fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
-          },
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
           },
         },
       );

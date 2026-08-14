@@ -1,6 +1,5 @@
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from './auth-provider';
 import { UiProvider } from './ui-provider';
 import { StoreProvider } from './store-provider';
 import { NetworkProvider } from './network-provider';
@@ -18,9 +17,7 @@ export const CustomProviders: React.FC<ICustomProviders> = ({ children }) => {
         <NetworkProvider>
           <UpdatesProvider>
             <UiProvider>
-              <AuthProvider>
-                <SafeAreaProvider>{children}</SafeAreaProvider>
-              </AuthProvider>
+              <SafeAreaProvider>{children}</SafeAreaProvider>
             </UiProvider>
           </UpdatesProvider>
         </NetworkProvider>
