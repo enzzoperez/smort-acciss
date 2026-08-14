@@ -2,7 +2,14 @@ import React from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion, isIos } from '@/utils/device-utils';
-import { KeyboardAvoidingView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import DocumentIdInput from '@/components/document-id-input';
 import MainLogo from '@/assets/svg/main-logo.svg';
@@ -22,6 +29,18 @@ const LoginScreen = () => {
     handleCodeChange,
     handleLoginRequest,
   } = useLoginScreen();
+
+  if (isLoading) {
+    return (
+      <Layer>
+        <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+          <ThemedText>Cargando configuracion</ThemedText>
+        </View>
+      </Layer>
+    );
+  }
 
   const Buttons = () => (
     <View style={{ marginTop: 16 }}>
@@ -109,6 +128,12 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
   avoidingStyle: {
     flex: 1,
   },
