@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import { useNetwork } from '@/providers/network-provider';
 import { useGetEventQrConfigByCodeMutation, useGetEventQrConfigMutation } from '@/api/events-api';
-import { setConfigEventQr, setScanAccess, setServerOffset } from '@/store/slices';
+import { setConfigEventQr, setResetConfig, setScanAccess, setServerOffset } from '@/store/slices';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 
 const SECTIONS_PREVIEW = 5;
 
 export function useSelectEventsScreen() {
+  const router = useRouter();
   const { isOnline } = useNetwork();
   const { scanAccess, lastSyncDate } = useAppSelector((state) => state.config);
   const dispatch = useAppDispatch();
@@ -103,6 +106,20 @@ export function useSelectEventsScreen() {
     }
   };
 
+  const handleLogout = () => {
+    Alert.alert('Cerrar sesión', '¿Seguro que querés cerrar sesión?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Cerrar sesión',
+        style: 'destructive',
+        onPress: () => {
+          dispatch(setResetConfig());
+          router.replace('/');
+        },
+      },
+    ]);
+  };
+
   return {
     config,
     operatorDocument,
@@ -118,5 +135,6 @@ export function useSelectEventsScreen() {
     hiddenSections: sections.length - SECTIONS_PREVIEW,
     toggleShowAllSections: () => setShowAllSections((value) => !value),
     onRefresh,
+    handleLogout,
   };
 }

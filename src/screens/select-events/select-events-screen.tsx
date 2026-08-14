@@ -30,6 +30,7 @@ const SelectEventsScreen = () => {
     toggleShowAllSections,
     isLoadingConfiguration,
     onRefresh,
+    handleLogout,
   } = useSelectEventsScreen();
 
   if (!config) {
@@ -57,7 +58,7 @@ const SelectEventsScreen = () => {
   return (
     <Layer>
       <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
-      <Header issuedTicketsSyncEnabled={issuedTicketsSyncEnabled} />
+      <Header issuedTicketsSyncEnabled={issuedTicketsSyncEnabled} onRightPress={handleLogout} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
