@@ -106,6 +106,8 @@ export function useSelectEventsScreen() {
     }
   };
 
+  const handleScanQr = () => router.push('/camera');
+
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Seguro que querés cerrar sesión?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -135,6 +137,7 @@ export function useSelectEventsScreen() {
     hiddenSections: sections.length - SECTIONS_PREVIEW,
     toggleShowAllSections: () => setShowAllSections((value) => !value),
     onRefresh,
+    handleScanQr,
     handleLogout,
   };
 }

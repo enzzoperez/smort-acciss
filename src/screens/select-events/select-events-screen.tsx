@@ -14,6 +14,7 @@ import { Feather, MaterialIcons } from '@expo/vector-icons';
 import Layer from '@/components/layer';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
 import { Header } from '@/components/header-logo';
+import { UiButton } from '@/components/ui-button';
 import { useSelectEventsScreen } from './use-select-events-screen';
 
 const SelectEventsScreen = () => {
@@ -30,6 +31,7 @@ const SelectEventsScreen = () => {
     toggleShowAllSections,
     isLoadingConfiguration,
     onRefresh,
+    handleScanQr,
     handleLogout,
   } = useSelectEventsScreen();
 
@@ -121,6 +123,7 @@ const SelectEventsScreen = () => {
         </View>
       </ScrollView>
       <View style={styles.buttons}>
+        <UiButton variant="primary" text="Escanear" onPress={handleScanQr} />
         <ThemedText type="subtitle" style={styles.versionText}>
           {appVersion}
         </ThemedText>
