@@ -1,7 +1,15 @@
 import React from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { appVersion } from '@/utils/device-utils';
-import { ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import Layer from '@/components/layer';
 import { ConnectionStatusBanner } from '@/components/connection-status-banner';
@@ -20,6 +28,8 @@ const SelectEventsScreen = () => {
     visibleSections,
     hiddenSections,
     toggleShowAllSections,
+    isLoadingConfiguration,
+    onRefresh,
   } = useSelectEventsScreen();
 
   if (!config) {
@@ -32,11 +42,29 @@ const SelectEventsScreen = () => {
     );
   }
 
+  if (isLoadingConfiguration) {
+    return (
+      <Layer>
+        <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+          <ThemedText>Cargando configuracion</ThemedText>
+        </View>
+      </Layer>
+    );
+  }
+
   return (
     <Layer>
       <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
       <Header issuedTicketsSyncEnabled={issuedTicketsSyncEnabled} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={isLoadingConfiguration} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.contentWrapper}>
           <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
           <ThemedText type="title" style={styles.title}>
@@ -60,9 +88,7 @@ const SelectEventsScreen = () => {
               </ThemedText>
               <View style={styles.readerModeBox}>
                 <ThemedText>
-                  {mode === 'CHECK'
-                    ? '→  Verificación de QR'
-                    : '→  Verificación y quemado de Qr'}
+                  {mode === 'CHECK' ? '→  Verificación de QR' : '→  Verificación y quemado de Qr'}
                 </ThemedText>
               </View>
             </View>
@@ -78,10 +104,7 @@ const SelectEventsScreen = () => {
                 </View>
               ))}
               {hiddenSections > 0 && (
-                <TouchableOpacity
-                  style={styles.showMoreButton}
-                  onPress={toggleShowAllSections}
-                >
+                <TouchableOpacity style={styles.showMoreButton} onPress={toggleShowAllSections}>
                   <ThemedText style={styles.showMoreText}>
                     {showAllSections ? 'Mostrar menos' : `Mostrar ${hiddenSections} más`}
                   </ThemedText>
