@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'UenoLogical-Book',
+    color: 'black',
     paddingLeft: 8,
   },
   line: {
