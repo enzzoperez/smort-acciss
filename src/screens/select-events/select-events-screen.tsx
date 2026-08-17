@@ -1,6 +1,8 @@
 import React from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { appVersion } from '@/utils/device-utils';
+import { formatEventShortDate } from '@/utils/dates-utils';
+import { theme } from '@/themes/theme';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -20,17 +22,16 @@ import { useSelectEventsScreen } from './use-select-events-screen';
 const SelectEventsScreen = () => {
   const {
     config,
-    items,
+    totalEvents,
+    totalAssignments,
+    eventsWithPreview,
     mode,
     issuedTicketsSyncEnabled,
     isOnline,
     lastSyncDate,
-    showAllSections,
-    visibleSections,
-    hiddenSections,
-    toggleShowAllSections,
     isLoadingConfiguration,
     onRefresh,
+    toggleEventSections,
     handleScanQr,
     handleLogout,
   } = useSelectEventsScreen();
@@ -68,57 +69,114 @@ const SelectEventsScreen = () => {
           <RefreshControl refreshing={isLoadingConfiguration} onRefresh={onRefresh} />
         }
       >
+        <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
+
         <View style={styles.contentWrapper}>
-          <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
-          <ThemedText type="title" style={styles.title}>
-            Control de accesos en:
+          <ThemedText type="title" style={styles.pageTitle}>
+            Control de accesos
           </ThemedText>
+
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryRow}>
+              <MaterialIcons name="badge" size={18} color="#333" />
+              <ThemedText type="title" style={styles.summaryCode}>
+                {config.label || config.code}
+              </ThemedText>
+            </View>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryRow}>
+              <Feather name="users" size={16} color="#666" />
+              <ThemedText style={styles.summaryText}>
+                {totalEvents} {totalEvents === 1 ? 'evento' : 'eventos'} · {totalAssignments}{' '}
+                {totalAssignments === 1 ? 'asignación' : 'asignaciones'}
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.methodChip}>
+            <MaterialIcons name="qr-code-scanner" size={20} color={theme.colors.grayText} />
+            <View>
+              <ThemedText style={styles.methodLabel}>Método de lectura</ThemedText>
+              <ThemedText type="title" style={styles.methodValue}>
+                {mode === 'CHECK' ? 'Verificación de QR' : 'Verificación y quemado de Qr'}
+              </ThemedText>
+            </View>
+          </View>
+
+          <ThemedText type="title" style={styles.sectionTitle}>
+            Eventos
+          </ThemedText>
+
           <View style={styles.eventsWrapper}>
-            <View style={styles.section}>
-              <ThemedText type="subtitle" style={styles.sectionLabel}>
-                Eventos
-              </ThemedText>
-              {items.map((event) => (
-                <View key={event.eventCode} style={styles.eventCard}>
-                  <ThemedText style={styles.eventCardText}>{event.eventName}</ThemedText>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.section}>
-              <ThemedText type="title" style={styles.title}>
-                Método de lectura:
-              </ThemedText>
-              <View style={styles.readerModeBox}>
-                <ThemedText>
-                  {mode === 'CHECK' ? '→  Verificación de QR' : '→  Verificación y quemado de Qr'}
+            {eventsWithPreview.map((event) => (
+              <View key={event.eventCode} style={styles.eventCard}>
+                <ThemedText type="title" style={styles.eventName}>
+                  {event.eventName}
                 </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.section}>
-              <ThemedText type="title" style={styles.title}>
-                Asignaciones
-              </ThemedText>
-              {visibleSections.map((section) => (
-                <View key={section} style={styles.sectionCard}>
-                  <MaterialIcons name="confirmation-number" size={16} color="#888" />
-                  <ThemedText style={styles.sectionCardText}>{section}</ThemedText>
-                </View>
-              ))}
-              {hiddenSections > 0 && (
-                <TouchableOpacity style={styles.showMoreButton} onPress={toggleShowAllSections}>
-                  <ThemedText style={styles.showMoreText}>
-                    {showAllSections ? 'Mostrar menos' : `Mostrar ${hiddenSections} más`}
+                <View style={styles.eventSubtitleRow}>
+                  <ThemedText style={styles.eventSubtitleText}>
+                    {formatEventShortDate(event.eventDate)}
                   </ThemedText>
-                  <Feather
-                    name={showAllSections ? 'chevron-up' : 'chevron-down'}
-                    size={14}
-                    color="#1976D2"
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
+                  <View style={styles.sourceBadge}>
+                    <ThemedText style={styles.sourceBadgeText}>{event.source}</ThemedText>
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <ThemedText style={styles.assignmentsLabel}>
+                  Asignaciones · {event.sections.length}
+                </ThemedText>
+
+                {event.visibleSections.map((section) => (
+                  <View key={section.code} style={styles.assignmentRow}>
+                    <View style={styles.assignmentLeft}>
+                      <MaterialIcons name="confirmation-number" size={16} color="#888" />
+                      <ThemedText style={styles.assignmentText} numberOfLines={2}>
+                        {section.code}
+                      </ThemedText>
+                    </View>
+                    <View
+                      style={[
+                        styles.assignmentPill,
+                        section.checkOutEnabled
+                          ? styles.assignmentPillBlue
+                          : styles.assignmentPillGreen,
+                      ]}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.assignmentPillText,
+                          section.checkOutEnabled
+                            ? styles.assignmentPillTextBlue
+                            : styles.assignmentPillTextGreen,
+                        ]}
+                      >
+                        {section.checkOutEnabled ? 'Entrada y salida' : 'Solo entrada'}
+                      </ThemedText>
+                    </View>
+                  </View>
+                ))}
+
+                {event.hiddenCount > 0 && (
+                  <TouchableOpacity
+                    style={styles.showMoreButton}
+                    onPress={() => toggleEventSections(event.eventCode)}
+                  >
+                    <ThemedText style={styles.showMoreText}>
+                      {event.isExpanded
+                        ? 'Mostrar menos'
+                        : `Mostrar ${event.hiddenCount} asignaciones más`}
+                    </ThemedText>
+                    <Feather
+                      name={event.isExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={14}
+                      color="#1976D2"
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>
@@ -141,50 +199,133 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-  },
   contentWrapper: {
     marginBottom: 16,
+    gap: 16,
   },
-  title: {
+  pageTitle: {
     fontSize: 28,
     marginTop: 12,
-    marginBottom: 8,
   },
-  eventsWrapper: {
-    gap: 24,
-  },
-  section: {
+  summaryCard: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     gap: 8,
   },
-  sectionLabel: {
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  summaryCode: {
     fontSize: 16,
   },
-  sectionCard: {
+  summaryDivider: {
+    height: 1,
+    backgroundColor: '#DCE1E8',
+  },
+  summaryText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  methodChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: theme.colors.gray100,
+    borderRadius: 14,
     paddingHorizontal: 14,
-    marginBottom: 8,
+    paddingVertical: 12,
   },
-  sectionCardText: {
-    fontSize: 13,
-    color: '#1a1a1a',
+  methodLabel: {
+    fontSize: 12,
+    color: theme.colors.grayText,
+  },
+  methodValue: {
+    fontSize: 15,
+    color: theme.colors.gray600,
+  },
+  sectionTitle: {
+    fontSize: 20,
+  },
+  eventsWrapper: {
+    gap: 12,
   },
   eventCard: {
     backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 12,
     paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 8,
   },
-  eventCardText: {
-    fontSize: 16,
+  eventName: {
+    fontSize: 17,
+  },
+  eventSubtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  eventSubtitleText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  sourceBadge: {
+    backgroundColor: '#E5E7EB',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  sourceBadgeText: {
+    fontSize: 11,
+    color: '#333',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#DCE1E8',
+  },
+  assignmentsLabel: {
+    fontSize: 13,
+    color: '#666',
+  },
+  assignmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  assignmentLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  assignmentText: {
+    fontSize: 13,
     color: '#1a1a1a',
+    flexShrink: 1,
+  },
+  assignmentPill: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+  },
+  assignmentPillText: {
+    fontSize: 11,
+  },
+  assignmentPillGreen: {
+    backgroundColor: theme.colors.success.background,
+  },
+  assignmentPillTextGreen: {
+    color: theme.colors.success.text,
+  },
+  assignmentPillBlue: {
+    backgroundColor: '#DCE8FB',
+  },
+  assignmentPillTextBlue: {
+    color: theme.colors.blue,
   },
   showMoreButton: {
     flexDirection: 'row',
@@ -195,12 +336,6 @@ const styles = StyleSheet.create({
   showMoreText: {
     fontSize: 13,
     color: '#1976D2',
-  },
-  readerModeBox: {
-    backgroundColor: '#00000008',
-    borderRadius: 16,
-    gap: 8,
-    padding: 20,
   },
   buttons: {
     gap: 16,

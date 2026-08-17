@@ -7,14 +7,14 @@ import { useGetEventQrConfigByCodeMutation, useGetEventQrConfigMutation } from '
 import { setConfigEventQr, setResetConfig, setScanAccess, setServerOffset } from '@/store/slices';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 
-const SECTIONS_PREVIEW = 5;
+const ASSIGNMENTS_PREVIEW = 4;
 
 export function useSelectEventsScreen() {
   const router = useRouter();
   const { isOnline } = useNetwork();
   const { scanAccess, lastSyncDate } = useAppSelector((state) => state.config);
   const dispatch = useAppDispatch();
-  const [showAllSections, setShowAllSections] = useState(false);
+  const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
   const [isLoadingConfiguration, setIsLoadingConfiguration] = useState(false);
   const [getEventQrConfig] = useGetEventQrConfigMutation();
   const [getEventQrConfigByCode] = useGetEventQrConfigByCodeMutation();
@@ -30,12 +30,27 @@ export function useSelectEventsScreen() {
     ? `${config.id}:${items.map((item) => item.eventCode).join(',')}`
     : null;
 
-  const sections = useMemo(
-    () => [...new Set(items.flatMap((event) => event.sections.map((section) => section.code)))],
+  const totalAssignments = useMemo(
+    () => items.reduce((total, event) => total + event.sections.length, 0),
     [items],
   );
 
-  const visibleSections = showAllSections ? sections : sections.slice(0, SECTIONS_PREVIEW);
+  const eventsWithPreview = useMemo(
+    () =>
+      items.map((event) => {
+        const isExpanded = !!expandedEvents[event.eventCode];
+        const hiddenCount = event.sections.length - ASSIGNMENTS_PREVIEW;
+        return {
+          ...event,
+          visibleSections: isExpanded
+            ? event.sections
+            : event.sections.slice(0, ASSIGNMENTS_PREVIEW),
+          hiddenCount: hiddenCount > 0 ? hiddenCount : 0,
+          isExpanded,
+        };
+      }),
+    [items, expandedEvents],
+  );
 
   const loadQrConfigs = useCallback(
     async (configItems: typeof items, clearCurrentConfig: boolean) => {
@@ -122,20 +137,22 @@ export function useSelectEventsScreen() {
     ]);
   };
 
+  const toggleEventSections = (eventCode: string) =>
+    setExpandedEvents((current) => ({ ...current, [eventCode]: !current[eventCode] }));
+
   return {
     config,
     operatorDocument,
     observation,
-    items,
+    totalEvents: items.length,
+    totalAssignments,
+    eventsWithPreview,
     mode,
     issuedTicketsSyncEnabled,
     isLoadingConfiguration,
     isOnline,
     lastSyncDate,
-    showAllSections,
-    visibleSections,
-    hiddenSections: sections.length - SECTIONS_PREVIEW,
-    toggleShowAllSections: () => setShowAllSections((value) => !value),
+    toggleEventSections,
     onRefresh,
     handleScanQr,
     handleLogout,
