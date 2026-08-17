@@ -4,12 +4,13 @@ import { ECredentialType } from '@/types/user';
 import { useGetEventQrConfigByCodeMutation } from '@/api/events-api';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import { useRouter } from 'expo-router';
-import { useAppDispatch } from '@/libs/redux';
+import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import { setScanAccess } from '@/store/slices';
 
 export function useLoginScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { scanAccess } = useAppSelector((state) => state.config);
   const [permission, requestPermission] = useCameraPermissions();
 
   const [documentType, setDocumentType] = useState<ECredentialType>(ECredentialType.CI);
@@ -45,6 +46,12 @@ export function useLoginScreen() {
       requestPermission();
     }
   }, [permission]);
+
+  useEffect(() => {
+    if (scanAccess) {
+      router.replace('/select-events');
+    }
+  }, [scanAccess]);
 
   return {
     isLoading,
