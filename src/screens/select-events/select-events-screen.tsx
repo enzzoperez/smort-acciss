@@ -303,17 +303,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   assignmentText: {
-    fontSize: 13,
-    color: '#1a1a1a',
+    fontSize: 12,
     flexShrink: 1,
   },
   assignmentPill: {
     borderRadius: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 2,
   },
   assignmentPillText: {
-    fontSize: 11,
+    fontSize: 9,
   },
   assignmentPillGreen: {
     backgroundColor: theme.colors.success.background,
