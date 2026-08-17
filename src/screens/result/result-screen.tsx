@@ -81,27 +81,6 @@ const ResultScreen = () => {
             </View>
           </View>
         )}
-
-        {infoUsedData && (
-          <View style={styles.infoSection}>
-            <View>
-              <ThemedText style={{ color: theme.colors.grayText }}>
-                Fecha y hora de escaneo:
-              </ThemedText>
-              <ThemedText type="title" style={styles.infoValue}>
-                {infoUsedData?.data?.lastScanDate
-                  ? formatDateAndHour(new Date(infoUsedData?.data?.lastScanDate))
-                  : '-'}
-              </ThemedText>
-            </View>
-            <View>
-              <ThemedText style={{ color: theme.colors.grayText }}>Operador:</ThemedText>
-              <ThemedText type="title" style={styles.infoValue}>
-                {infoUsedData?.data?.scannedBy || 'Desconocido'}
-              </ThemedText>
-            </View>
-          </View>
-        )}
       </View>
 
       <View style={styles.buttonsContainer}>
