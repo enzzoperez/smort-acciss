@@ -33,14 +33,8 @@ export function useCameraScreen() {
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const { db } = useDb();
-  const {
-    selectedEventConfig,
-    totalAssigned,
-    selectedEvent,
-    lastSyncDate,
-    configEventQr,
-    direction,
-  } = useAppSelector((state) => state.config);
+  const { scanAccess, selectedEventConfig, totalAssigned, selectedEvent, lastSyncDate, direction } =
+    useAppSelector((state) => state.config);
   const { userData } = useAppSelector((state) => state.user);
 
   const qrLock = useRef(false);
@@ -70,8 +64,9 @@ export function useCameraScreen() {
   );
 
   const showDirectionSelector =
-    configEventQr?.some((config) => config.sections?.some((section) => section.checkOutEnabled)) ??
-    false;
+    scanAccess?.config.items.some((event) =>
+      event.sections.some((section) => section.checkOutEnabled),
+    ) ?? false;
 
   const handlePressCheckin = () => dispatch(setScanDirection('check_in'));
 
@@ -110,14 +105,16 @@ export function useCameraScreen() {
 
   const handleBack = () => router.back();
 
-  const getEventNameAndDate = (): { name: string; date: string } => {
-    const match = selectedEventConfig?.eventName?.match(/^\((.+?)\)\s*(.+)$/);
-    return {
-      date: match?.[1] ?? 'Fecha no disponible',
-      name: match?.[2] ?? selectedEventConfig?.eventName ?? '',
-    };
-  };
-  const { name: eventName, date: eventDateTime } = getEventNameAndDate();
+  const items = scanAccess?.config.items ?? [];
+  const headerTitle =
+    items.length === 1
+      ? items[0].eventName
+      : scanAccess?.config.label || scanAccess?.config.code || '';
+  const readingModeLabel = scanAccess
+    ? scanAccess.config.mode === 'CHECK'
+      ? 'Verificación de QR'
+      : 'Verificación y quemado de Qr'
+    : '';
 
   useEffect(() => {
     if (!showDirectionSelector) {
@@ -144,8 +141,8 @@ export function useCameraScreen() {
     setInfoSheetHeight,
     isOnline,
     lastSyncDate,
-    eventName,
-    eventDateTime,
+    headerTitle,
+    readingModeLabel,
     handleDownload,
     handleScannedCode,
     handleToggleTorch,

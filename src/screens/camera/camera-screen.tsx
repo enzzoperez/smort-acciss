@@ -37,8 +37,8 @@ export default function CameraScreen() {
     totalAssigned,
     isOnline,
     lastSyncDate,
-    eventName,
-    eventDateTime,
+    headerTitle,
+    readingModeLabel,
     // handleDownload,
     handleScannedCode,
     handleToggleTorch,
@@ -68,10 +68,10 @@ export default function CameraScreen() {
           </TouchableOpacity>
           <View style={styles.headerLeft}>
             <ThemedText type="title" style={styles.headerTitle} numberOfLines={1}>
-              {eventName}
+              {headerTitle}
             </ThemedText>
-            {!!eventDateTime && (
-              <ThemedText style={styles.headerSubtitle}>{eventDateTime}</ThemedText>
+            {!!readingModeLabel && (
+              <ThemedText style={styles.headerSubtitle}>{readingModeLabel}</ThemedText>
             )}
           </View>
           <View style={styles.headerRight}>

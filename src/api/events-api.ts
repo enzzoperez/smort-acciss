@@ -7,10 +7,6 @@ export interface ResConfigEventQr {
   alias: string;
   refreshInterval: number;
   serverTime: string; // '2026-02-18T14:01:29.141Z';
-  sections?: {
-    checkOutEnabled: boolean;
-    code: string;
-  }[];
 }
 
 export interface EventData {
