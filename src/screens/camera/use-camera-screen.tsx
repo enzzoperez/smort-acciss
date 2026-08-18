@@ -2,13 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/libs/redux';
-import { setLastSyncDate, setScanDirection } from '@/store/slices';
+import { setScanDirection } from '@/store/slices';
 import { useNetwork } from '@/providers/network-provider';
 import { useDb } from '@/hooks/use-db';
 import { countScannedTicketsByEvent } from '@/db/repositories/valid-tickets.repository';
 import { countPendingTickets } from '@/db/repositories/tickets.repository';
-import { getEventSync } from '@/db/repositories/events-sync.repository';
-import { syncTicketsForEvent } from '@/db/utils';
 import { reportError as logError } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
@@ -33,9 +31,8 @@ export function useCameraScreen() {
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const { db } = useDb();
-  const { scanAccess, selectedEventConfig, totalAssigned, selectedEvent, lastSyncDate, direction } =
+  const { scanAccess, selectedEventConfig, totalAssigned, lastSyncDate, direction } =
     useAppSelector((state) => state.config);
-  const { userData } = useAppSelector((state) => state.user);
 
   const qrLock = useRef(false);
   const appState = useRef(AppState.currentState);
@@ -71,18 +68,6 @@ export function useCameraScreen() {
   const handlePressCheckin = () => dispatch(setScanDirection('check_in'));
 
   const handlePressCheckout = () => dispatch(setScanDirection('check_out'));
-
-  const handleDownload = async () => {
-    if (!selectedEvent || !db || !userData?.accountId) return;
-    await syncTicketsForEvent({
-      eventId: selectedEvent,
-      db,
-      isOnline,
-      accountId: userData.accountId,
-    });
-    const sync = await getEventSync(db, selectedEvent, userData.accountId);
-    dispatch(setLastSyncDate(sync?.lastSyncDate ?? null));
-  };
 
   const handleScannedCode = ({ data }: { data: string }) => {
     try {
@@ -143,7 +128,6 @@ export function useCameraScreen() {
     lastSyncDate,
     headerTitle,
     readingModeLabel,
-    handleDownload,
     handleScannedCode,
     handleToggleTorch,
     handleBack,

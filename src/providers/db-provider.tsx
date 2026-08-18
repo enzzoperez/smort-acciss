@@ -15,22 +15,39 @@ type Props = {
   children: ReactNode;
 };
 
-export function DbProvider({ children }: Props) {
-  const [db, setDb] = useState<Db | null>(null);
-  const [ready, setReady] = useState(false);
+// Cacheada a nivel de módulo: si DbProvider se vuelve a montar (Fast Refresh en dev),
+// reutiliza la misma conexión en vez de abrir una nueva y dejar la anterior huérfana
+// (eso es lo que produce el "NativeDatabase.prepareSync has been rejected").
+let cachedDb: Db | null = null;
+let initPromise: Promise<Db> | null = null;
 
-  useEffect(() => {
-    const init = async () => {
+function getDb(): Promise<Db> {
+  if (cachedDb) return Promise.resolve(cachedDb);
+
+  if (!initPromise) {
+    initPromise = (async () => {
       const sqlite = SQLite.openDatabaseSync('app_v3.db');
       const database = drizzle(sqlite) as Db;
 
       await runMigrations(sqlite);
 
+      cachedDb = database;
+      return database;
+    })();
+  }
+
+  return initPromise;
+}
+
+export function DbProvider({ children }: Props) {
+  const [db, setDb] = useState<Db | null>(cachedDb);
+  const [ready, setReady] = useState(!!cachedDb);
+
+  useEffect(() => {
+    getDb().then((database) => {
       setDb(database);
       setReady(true);
-    };
-
-    init();
+    });
   }, []);
 
   return <DbContext.Provider value={{ db, ready }}>{children}</DbContext.Provider>;

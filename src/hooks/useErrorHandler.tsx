@@ -9,6 +9,7 @@ export const useApiErrorHandler = () => {
       const { message } = (error as ApiError).data.errors[0];
       Alert.alert('Error', message);
     } else {
+      console.error('error en apiErrorHandler', error);
       Alert.alert('Error', 'Ocurrio un error, intenta nuevamente por favor.');
     }
   }, []);

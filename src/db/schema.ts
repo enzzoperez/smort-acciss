@@ -39,3 +39,9 @@ export const eventsSync = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.eventId, table.accountId] })],
 );
+
+export const accessSync = sqliteTable('access_sync', {
+  code: text('code').primaryKey(),
+  lastSyncDate: text('last_sync_date'),
+  initialSyncDone: integer('initial_sync_done').notNull().default(0),
+});

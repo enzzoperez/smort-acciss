@@ -4,14 +4,23 @@ import { useRouter } from 'expo-router';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import { useNetwork } from '@/providers/network-provider';
 import { useGetEventQrConfigByCodeMutation, useGetEventQrConfigMutation } from '@/api/events-api';
-import { setConfigEventQr, setResetConfig, setScanAccess, setServerOffset } from '@/store/slices';
+import {
+  setConfigEventQr,
+  setLastSyncDate,
+  setResetConfig,
+  setScanAccess,
+  setServerOffset,
+} from '@/store/slices';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
+import { useDb } from '@/hooks/use-db';
+import { clearAllData, syncIssuedTicketsForAccess } from '@/db/utils';
 
 const ASSIGNMENTS_PREVIEW = 4;
 
 export function useSelectEventsScreen() {
   const router = useRouter();
   const { isOnline } = useNetwork();
+  const { db } = useDb();
   const { scanAccess, lastSyncDate } = useAppSelector((state) => state.config);
   const dispatch = useAppDispatch();
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
@@ -80,7 +89,16 @@ export function useSelectEventsScreen() {
       try {
         loadedQrConfigKeyRef.current = qrConfigKey;
         setIsLoadingConfiguration(true);
-        await loadQrConfigs(items, true);
+        const [, syncedAt] = await Promise.all([
+          loadQrConfigs(items, true),
+          issuedTicketsSyncEnabled && config && db
+            ? syncIssuedTicketsForAccess({ code: config.code, db, isOnline })
+            : Promise.resolve(null),
+        ]);
+
+        if (syncedAt) {
+          dispatch(setLastSyncDate(syncedAt));
+        }
       } catch (error) {
         loadedQrConfigKeyRef.current = null;
         dispatch(setConfigEventQr([]));
@@ -91,7 +109,17 @@ export function useSelectEventsScreen() {
     };
 
     loadInitialQrConfigs();
-  }, [qrConfigKey, isOnline, items, loadQrConfigs, dispatch, apiErrorHandler]);
+  }, [
+    qrConfigKey,
+    isOnline,
+    items,
+    loadQrConfigs,
+    dispatch,
+    apiErrorHandler,
+    issuedTicketsSyncEnabled,
+    config,
+    db,
+  ]);
 
   const onRefresh = async () => {
     if (!config || !isOnline || isLoadingConfiguration) return;
@@ -100,7 +128,16 @@ export function useSelectEventsScreen() {
       setIsLoadingConfiguration(true);
       const refreshedConfig = await getEventQrConfigByCode(config.code).unwrap();
 
-      await loadQrConfigs(refreshedConfig.items, false);
+      const [, syncedAt] = await Promise.all([
+        loadQrConfigs(refreshedConfig.items, false),
+        refreshedConfig.issuedTicketsSyncEnabled && db
+          ? syncIssuedTicketsForAccess({ code: refreshedConfig.code, db, isOnline })
+          : Promise.resolve(null),
+      ]);
+
+      if (syncedAt) {
+        dispatch(setLastSyncDate(syncedAt));
+      }
 
       const refreshedQrConfigKey = `${refreshedConfig.id}:${refreshedConfig.items
         .map((item) => item.eventCode)
@@ -129,7 +166,10 @@ export function useSelectEventsScreen() {
       {
         text: 'Cerrar sesión',
         style: 'destructive',
-        onPress: () => {
+        onPress: async () => {
+          if (db) {
+            await clearAllData(db);
+          }
           dispatch(setResetConfig());
           router.replace('/');
         },

@@ -39,7 +39,6 @@ export default function CameraScreen() {
     lastSyncDate,
     headerTitle,
     readingModeLabel,
-    // handleDownload,
     handleScannedCode,
     handleToggleTorch,
     handleBack,

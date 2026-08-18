@@ -3,7 +3,7 @@ import { migrations } from './migrations';
 import { ApiResponse, Db, TicketApi, TicketDb } from './types';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { noValidTickets, tickets, ticketScan } from './schema';
+import { accessSync, eventsSync, noValidTickets, tickets, ticketScan } from './schema';
 import {
   getAllPendingScannedTickets,
   markValidTicketAsSynced,
@@ -15,10 +15,10 @@ import {
 import { Alert } from 'react-native';
 import { sql } from 'drizzle-orm';
 import {
-  getEventSync,
-  createEventSync,
-  markInitialSyncDone,
-} from '@/db/repositories/events-sync.repository';
+  getAccessSync,
+  createAccessSync,
+  markSyncDone,
+} from '@/db/repositories/access-sync.repository';
 
 import { formatDateGMTMinus3, isOlderThan30Minutes } from '@/utils/dates-utils';
 
@@ -55,49 +55,6 @@ export async function hasTickets(db: Db): Promise<boolean> {
       `Ocurrio un error al verificar los tickets: ${error || 'No se pudieron verificar los tickets'}`,
     );
     return false;
-  }
-}
-
-export async function initialSyncTickets(eventId: string, db: Db) {
-  let page = 0;
-  let totalPages = 1;
-
-  try {
-    while (page < totalPages) {
-      const { data } = await axios.get<ApiResponse>(
-        `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
-        {
-          params: {
-            page: page,
-            size: 500,
-          },
-        },
-      );
-
-      totalPages = data?.pageable?.totalPages ?? 1;
-
-      const mapped = mapTicketsApiToDb(data.content);
-
-      if (mapped.length > 0) {
-        await db
-          .insert(tickets)
-          .values(mapped)
-          .onConflictDoUpdate({
-            target: tickets.qr,
-            set: {
-              eventId: sql`excluded.event_id`,
-              section: sql`excluded.section`,
-              redeemType: sql`excluded.redeem_type`,
-              successfulReads: sql`excluded.successful_reads`,
-              active: sql`excluded.active`,
-            },
-          });
-      }
-
-      page++;
-    }
-  } catch (error) {
-    throw error;
   }
 }
 
@@ -178,65 +135,85 @@ export async function getOfflineQrList(db: Db) {
   }
 }
 
-export async function syncTicketsForEvent({
-  eventId,
+async function fetchIssuedTicketsByCode({
+  code,
+  db,
+  fromDate,
+}: {
+  code: string;
+  db: Db;
+  fromDate?: string | null;
+}) {
+  let page = 0;
+  let totalPages = 1;
+
+  while (page < totalPages) {
+    const { data } = await axios.post<ApiResponse>(
+      `${BASE_URL}/access-control/scan-access/issued`,
+      { code },
+      {
+        params: {
+          page,
+          size: 500,
+          includeInactive: true,
+          fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
+        },
+        headers: {
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+        },
+      },
+    );
+
+    totalPages = data?.pageable?.totalPages ?? 1;
+
+    const mapped = mapTicketsApiToDb(data.content);
+
+    if (mapped.length > 0) {
+      await db
+        .insert(tickets)
+        .values(mapped)
+        .onConflictDoUpdate({
+          target: tickets.qr,
+          set: {
+            eventId: sql`excluded.event_id`,
+            section: sql`excluded.section`,
+            redeemType: sql`excluded.redeem_type`,
+            successfulReads: sql`excluded.successful_reads`,
+            active: sql`excluded.active`,
+          },
+        });
+    }
+
+    page++;
+  }
+}
+
+export async function syncIssuedTicketsForAccess({
+  code,
   db,
   isOnline,
-  accountId,
 }: {
-  eventId: string;
+  code: string;
   db: Db;
   isOnline: boolean;
-  accountId: string;
-}) {
-  const syncingEvents = new Set<string>();
+}): Promise<string | null> {
+  if (!isOnline) return null;
 
-  if (syncingEvents.has(eventId)) {
-    return;
+  const sync = await getAccessSync(db, code);
+
+  if (!sync) {
+    await createAccessSync(db, code);
+    await fetchIssuedTicketsByCode({ code, db });
+  } else {
+    const isStale = !sync.lastSyncDate || isOlderThan30Minutes(new Date(sync.lastSyncDate));
+    await fetchIssuedTicketsByCode({
+      code,
+      db,
+      fromDate: isStale ? undefined : sync.lastSyncDate,
+    });
   }
 
-  syncingEvents.add(eventId);
-
-  try {
-    const eventSync = await getEventSync(db, eventId, accountId);
-
-    // EVENTO NUNCA DESCARGADO
-    if (!eventSync) {
-      if (!isOnline) {
-        Alert.alert(
-          'Sin conexión',
-          'Este evento nunca fue descargado. Conectate a internet para poder usarlo.',
-        );
-        return;
-      }
-
-      await createEventSync(db, eventId, accountId);
-      await initialSyncTickets(eventId, db);
-      await markInitialSyncDone(db, eventId, accountId);
-
-      return;
-    }
-
-    // EVENTO YA DESCARGADO
-    if (isOnline) {
-      const lastSync = eventSync.lastSyncDate ? new Date(eventSync.lastSyncDate) : null;
-      const isStale = !lastSync || isOlderThan30Minutes(lastSync);
-
-      await incrementalSyncTickets({
-        eventId,
-        db,
-        fromDate: isStale ? undefined : eventSync.lastSyncDate,
-      });
-      await markInitialSyncDone(db, eventId, accountId);
-    } else {
-      Alert.alert(
-        'Sin conexión',
-        'Estás usando los tickets descargados anteriormente. Los cambios recientes podrían no estar disponibles.',
-      );
-    }
-  } finally {
-    syncingEvents.delete(eventId);
-  }
+  return markSyncDone(db, code);
 }
 
 export async function clearOfflineQueue(db: Db) {
@@ -253,6 +230,8 @@ export const clearAllData = async (db: Db) => {
     await db.delete(tickets);
     await db.delete(ticketScan);
     await db.delete(noValidTickets);
+    await db.delete(accessSync);
+    await db.delete(eventsSync);
   } catch (error) {
     console.error('Error limpiando toda la data', error);
   }

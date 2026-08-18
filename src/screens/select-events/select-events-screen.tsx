@@ -61,7 +61,11 @@ const SelectEventsScreen = () => {
   return (
     <Layer>
       <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
-      <Header issuedTicketsSyncEnabled={issuedTicketsSyncEnabled} onRightPress={handleLogout} />
+      <Header
+        issuedTicketsSyncEnabled={issuedTicketsSyncEnabled}
+        onRightPress={handleLogout}
+        onDownload={onRefresh}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
