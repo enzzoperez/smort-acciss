@@ -10,10 +10,13 @@ import {
   setResetConfig,
   setScanAccess,
   setServerOffset,
+  setTotalAssigned,
 } from '@/store/slices';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import { useDb } from '@/hooks/use-db';
 import { clearAllData, syncIssuedTicketsForAccess } from '@/db/utils';
+import { countTickets } from '@/db/repositories/tickets.repository';
+import { getValidEventIds, getValidSections } from '@/utils/scan-access';
 
 const ASSIGNMENTS_PREVIEW = 4;
 
@@ -99,6 +102,14 @@ export function useSelectEventsScreen() {
         if (syncedAt) {
           dispatch(setLastSyncDate(syncedAt));
         }
+
+        if (db) {
+          dispatch(
+            setTotalAssigned(
+              await countTickets(db, getValidEventIds(items), getValidSections(items)),
+            ),
+          );
+        }
       } catch (error) {
         loadedQrConfigKeyRef.current = null;
         dispatch(setConfigEventQr([]));
@@ -137,6 +148,18 @@ export function useSelectEventsScreen() {
 
       if (syncedAt) {
         dispatch(setLastSyncDate(syncedAt));
+      }
+
+      if (db) {
+        dispatch(
+          setTotalAssigned(
+            await countTickets(
+              db,
+              getValidEventIds(refreshedConfig.items),
+              getValidSections(refreshedConfig.items),
+            ),
+          ),
+        );
       }
 
       const refreshedQrConfigKey = `${refreshedConfig.id}:${refreshedConfig.items

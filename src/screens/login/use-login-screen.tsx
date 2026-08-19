@@ -21,7 +21,7 @@ export function useLoginScreen() {
   const { apiErrorHandler } = useApiErrorHandler();
 
   const handleCodeChange = (value: string) => {
-    setCode(value.replace(/[^a-zA-Z0-9-]/g, ''));
+    setCode(value.toUpperCase().replace(/[^A-Z0-9-]/g, ''));
   };
 
   const handleLoginRequest = async () => {

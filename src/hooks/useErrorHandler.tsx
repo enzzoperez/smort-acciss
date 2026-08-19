@@ -10,7 +10,10 @@ export const useApiErrorHandler = () => {
       Alert.alert('Error', message);
     } else {
       console.error('error en apiErrorHandler', error);
-      Alert.alert('Error', 'Ocurrio un error, intenta nuevamente por favor.');
+      Alert.alert(
+        'Error',
+        `Ocurrio un error, intenta nuevamente por favor. ${error?.code ? `Code: ${error?.code}` : ''}`,
+      );
     }
   }, []);
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion, isIos } from '@/utils/device-utils';
@@ -15,6 +15,8 @@ import DocumentIdInput from '@/components/document-id-input';
 import MainLogo from '@/assets/svg/main-logo.svg';
 import Layer from '@/components/layer';
 import PoweredByItti from '@/assets/svg/powered-by-itti.svg';
+import { Feather } from '@expo/vector-icons';
+import PressableOpacity from '@/components/pressable-opacity';
 import { useLoginScreen } from './use-login-screen';
 
 const LoginScreen = () => {
@@ -29,6 +31,7 @@ const LoginScreen = () => {
     handleCodeChange,
     handleLoginRequest,
   } = useLoginScreen();
+  const [codeVisible, setCodeVisible] = useState(false);
 
   if (isLoading) {
     return (
@@ -98,18 +101,25 @@ const LoginScreen = () => {
                   onChangeText={setObservation}
                 />
               </View>
-              <View style={styles.field}>
+              <View style={[styles.field, { position: 'relative' }]}>
                 <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
-                  Codigo
+                  Pin
                 </ThemedText>
                 <TextInput
-                  placeholder="Codigo"
-                  style={styles.input}
+                  placeholder="Pin"
+                  style={[styles.input, { paddingRight: 40 }]}
                   placeholderTextColor="#7A7A7A"
                   autoCapitalize="characters"
+                  secureTextEntry={!codeVisible}
                   value={code}
                   onChangeText={handleCodeChange}
                 />
+                <PressableOpacity
+                  onPress={() => setCodeVisible((prev) => !prev)}
+                  style={styles.iconContainer}
+                >
+                  <Feather name={codeVisible ? 'eye-off' : 'eye'} size={20} color="#7A7A7A" />
+                </PressableOpacity>
               </View>
               <Buttons />
             </View>
@@ -159,6 +169,11 @@ const styles = StyleSheet.create({
     borderColor: '#DCE1E8',
     borderWidth: 1,
     fontSize: 16,
+  },
+  iconContainer: {
+    position: 'absolute',
+    right: 12,
+    top: 40,
   },
 });
 

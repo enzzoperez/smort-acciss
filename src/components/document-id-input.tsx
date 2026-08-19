@@ -68,7 +68,12 @@ const DocumentIdInput: React.FC<Props> = ({
               : null,
           ]}
         />
-        <TextInput style={styles.input} onChangeText={onChangeText} {...otherProps} />
+        <TextInput
+          style={styles.input}
+          onChangeText={onChangeText}
+          keyboardType="number-pad"
+          {...otherProps}
+        />
       </View>
       {!!errorMsg && <ThemedText style={styles.errorText}>{errorMsg}</ThemedText>}
     </View>
@@ -90,7 +95,7 @@ const styles = StyleSheet.create({
     width: 90,
   },
   selectedTextStyle: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: theme.typography.fonts.regular,
   },
   iconStyle: {
