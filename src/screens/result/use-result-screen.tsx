@@ -18,9 +18,9 @@ import { getTicketByQr, countTickets } from '@/db/repositories/tickets.repositor
 import { useDb } from '@/hooks/use-db';
 import * as crypto from 'expo-crypto';
 import { validateQrOfflineFlow } from './utils/offline-validator';
-import { incrementalSyncTickets } from '@/db/utils';
-import { getEventSync } from '@/db/repositories/events-sync.repository';
-import { setTotalAssigned } from '@/store/slices';
+import { syncIssuedTicketsForAccess } from '@/db/utils';
+import { getValidEventIds, getValidSections } from '@/utils/scan-access';
+import { setLastSyncDate, setTotalAssigned } from '@/store/slices';
 import { reportError as logError, reportMessage as logMessage } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
@@ -33,29 +33,17 @@ export const useResultScreen = () => {
     scannedCode: string;
     direction: DIRECTION_SCAN;
   }>();
-  const {
-    scanAccess,
-    selectedEvent,
-    verifyOnly,
-    configEventQr,
-    serverOffset,
-    selectedEventConfig,
-  } = useAppSelector((state) => state.config);
-  const { userData } = useAppSelector((state) => state.user);
+  const { scanAccess, configEventQr, serverOffset, selectedEventConfig } = useAppSelector(
+    (state) => state.config,
+  );
   const { db } = useDb();
   const code = scanAccess?.config.code ?? '';
   const operatorDocument = scanAccess?.operatorDocument ?? '';
   const observation = scanAccess?.observation ?? '';
-  const validEventIds: string[] =
-    selectedEventConfig?.type === 'ALIAS'
-      ? (selectedEventConfig.item?.map((i) => i.eventCode) ?? [])
-      : selectedEvent
-        ? [selectedEvent]
-        : [];
-  const validSections: string[] =
-    selectedEventConfig?.type === 'ALIAS'
-      ? [...new Set(selectedEventConfig.item?.flatMap((i) => i.sections) ?? [])]
-      : (selectedEventConfig?.sections ?? []);
+  const verifyOnly = scanAccess?.config.mode === 'CHECK';
+  const items = scanAccess?.config.items ?? [];
+  const validEventIds = getValidEventIds(items);
+  const validSections = getValidSections(items);
 
   const { isOnline } = useNetwork();
   const onlineSnapshotRef = useRef(isOnline);
@@ -102,10 +90,11 @@ export const useResultScreen = () => {
       if (!online) {
         if (direction === 'check_out') {
           if (!verifyOnly) {
+            const ticket = await getTicketByQr(db, scannedCode as string);
             await insertTicketScan(db, {
               id: crypto.randomUUID(),
               qr: scannedCode as string,
-              eventId: selectedEvent!,
+              eventId: ticket?.eventId ?? '',
               scannedAt: formatDateWithOffset(new Date()),
               syncStatus: 'pending',
             });
@@ -148,9 +137,9 @@ export const useResultScreen = () => {
       } catch (error) {
         logError(error);
       } finally {
-        for (const id of validEventIds) {
-          const eventSync = await getEventSync(db, id, userData?.accountId ?? '');
-          await incrementalSyncTickets({ eventId: id, db, fromDate: eventSync?.lastSyncDate });
+        const syncedAt = await syncIssuedTicketsForAccess({ code, db, isOnline: true });
+        if (syncedAt) {
+          dispatch(setLastSyncDate(syncedAt));
         }
         dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
       }
@@ -165,7 +154,7 @@ export const useResultScreen = () => {
         insertTicketScan(db, {
           id: crypto.randomUUID(),
           qr: scannedCode as string,
-          eventId: ticket?.eventId ?? selectedEvent!,
+          eventId: ticket?.eventId ?? validEventIds[0] ?? '',
           scannedAt: new Date().toISOString(),
           syncStatus: 'synced',
         });
@@ -174,7 +163,7 @@ export const useResultScreen = () => {
   }, [isSuccessRequest]);
 
   const syncIfOnline = async () => {
-    if (!isOnline || !db || !userData?.accountId || validEventIds.length === 0) return;
+    if (!isOnline || !db || !code) return;
     const synced = await sync();
     if (!synced) {
       Alert.alert(
@@ -183,9 +172,9 @@ export const useResultScreen = () => {
       );
       return;
     }
-    for (const id of validEventIds) {
-      const eventSync = await getEventSync(db, id, userData.accountId);
-      await incrementalSyncTickets({ eventId: id, db, fromDate: eventSync?.lastSyncDate });
+    const syncedAt = await syncIssuedTicketsForAccess({ code, db, isOnline });
+    if (syncedAt) {
+      dispatch(setLastSyncDate(syncedAt));
     }
     dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
   };

@@ -3,7 +3,7 @@ import { migrations } from './migrations';
 import { ApiResponse, Db, TicketApi, TicketDb } from './types';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { accessSync, eventsSync, noValidTickets, tickets, ticketScan } from './schema';
+import { accessSync, noValidTickets, tickets, ticketScan } from './schema';
 import {
   getAllPendingScannedTickets,
   markValidTicketAsSynced,
@@ -23,6 +23,7 @@ import {
 import { formatDateGMTMinus3, isOlderThan30Minutes } from '@/utils/dates-utils';
 
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL ?? '';
+const SIZE_PAGE = 1000;
 
 export async function runMigrations(sqlite: SQLiteDatabase) {
   for (const sql of migrations) {
@@ -55,59 +56,6 @@ export async function hasTickets(db: Db): Promise<boolean> {
       `Ocurrio un error al verificar los tickets: ${error || 'No se pudieron verificar los tickets'}`,
     );
     return false;
-  }
-}
-
-export async function incrementalSyncTickets({
-  eventId,
-  db,
-  fromDate,
-}: {
-  eventId: string;
-  db: Db;
-  fromDate?: string | null;
-}) {
-  let page = 0;
-  let totalPages = 1;
-
-  try {
-    while (page < totalPages) {
-      const { data } = await axios.get<ApiResponse>(
-        `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
-        {
-          params: {
-            size: 500,
-            page: page,
-            fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
-          },
-        },
-      );
-
-      totalPages = data?.pageable?.totalPages ?? 1;
-
-      const mapped = mapTicketsApiToDb(data.content);
-
-      if (mapped.length > 0) {
-        await db
-          .insert(tickets)
-          .values(mapped)
-          .onConflictDoUpdate({
-            target: tickets.qr,
-            set: {
-              eventId: sql`excluded.event_id`,
-              section: sql`excluded.section`,
-              redeemType: sql`excluded.redeem_type`,
-              successfulReads: sql`excluded.successful_reads`,
-              active: sql`excluded.active`,
-            },
-          });
-      }
-
-      page++;
-    }
-  } catch (error) {
-    console.error('Incremental sync failed', error);
-    throw error;
   }
 }
 
@@ -154,7 +102,7 @@ async function fetchIssuedTicketsByCode({
       {
         params: {
           page,
-          size: 500,
+          size: SIZE_PAGE,
           includeInactive: true,
           fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
         },
@@ -231,7 +179,6 @@ export const clearAllData = async (db: Db) => {
     await db.delete(ticketScan);
     await db.delete(noValidTickets);
     await db.delete(accessSync);
-    await db.delete(eventsSync);
   } catch (error) {
     console.error('Error limpiando toda la data', error);
   }

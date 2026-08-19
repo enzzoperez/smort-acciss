@@ -10,29 +10,17 @@ import { countPendingTickets } from '@/db/repositories/tickets.repository';
 import { reportError as logError } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
-import { EventData } from '@/api/events-api';
-
-function getValidEventIds(event: EventData): string[] {
-  if (event.type === 'ALIAS') {
-    return event.item?.map((i) => i.eventCode) ?? [];
-  }
-  return [event.eventCode];
-}
-
-function getValidSections(event: EventData): string[] {
-  if (event.type === 'ALIAS') {
-    return [...new Set(event.item?.flatMap((i) => i.sections) ?? [])];
-  }
-  return event.sections ?? [];
-}
+import { getValidEventIds, getValidSections } from '@/utils/scan-access';
 
 export function useCameraScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const { db } = useDb();
-  const { scanAccess, selectedEventConfig, totalAssigned, lastSyncDate, direction } =
-    useAppSelector((state) => state.config);
+  const { scanAccess, totalAssigned, lastSyncDate, direction } = useAppSelector(
+    (state) => state.config,
+  );
+  const items = scanAccess?.config.items ?? [];
 
   const qrLock = useRef(false);
   const appState = useRef(AppState.currentState);
@@ -46,9 +34,9 @@ export function useCameraScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!db || !selectedEventConfig) return;
-      const validIds = getValidEventIds(selectedEventConfig);
-      const sections = getValidSections(selectedEventConfig);
+      if (!db || items.length === 0) return;
+      const validIds = getValidEventIds(items);
+      const sections = getValidSections(items);
       countScannedTicketsByEvent(db, validIds).then(async (scanCount) => {
         setMyScans(scanCount);
         if (isOnline) {
@@ -57,13 +45,12 @@ export function useCameraScreen() {
           setTotalPending(totalAssigned != null ? totalAssigned - scanCount : null);
         }
       });
-    }, [db, selectedEventConfig, isOnline, totalAssigned]),
+    }, [db, items, isOnline, totalAssigned]),
   );
 
-  const showDirectionSelector =
-    scanAccess?.config.items.some((event) =>
-      event.sections.some((section) => section.checkOutEnabled),
-    ) ?? false;
+  const showDirectionSelector = items.some((event) =>
+    event.sections.some((section) => section.checkOutEnabled),
+  );
 
   const handlePressCheckin = () => dispatch(setScanDirection('check_in'));
 
@@ -90,7 +77,6 @@ export function useCameraScreen() {
 
   const handleBack = () => router.back();
 
-  const items = scanAccess?.config.items ?? [];
   const headerTitle =
     items.length === 1
       ? items[0].eventName
