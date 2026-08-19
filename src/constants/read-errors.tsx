@@ -125,4 +125,12 @@ export const readErrors = [
     action: 'No permitir ingreso',
     icon: <NotValidTicket />,
   },
+  {
+    code: 'ACCTRL-030',
+    key: 'PIN_DISABLED',
+    title: 'Pin desactivado',
+    message: 'El pin de acceso ha sido desactivado. Por favor, contacta a tu supervisor.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
 ];
