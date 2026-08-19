@@ -84,11 +84,11 @@ export async function getOfflineQrList(db: Db) {
 }
 
 async function fetchIssuedTicketsByCode({
-  code,
+  pin,
   db,
   fromDate,
 }: {
-  code: string;
+  pin: string;
   db: Db;
   fromDate?: string | null;
 }) {
@@ -98,7 +98,7 @@ async function fetchIssuedTicketsByCode({
   while (page < totalPages) {
     const { data } = await axios.post<ApiResponse>(
       `${BASE_URL}/access-control/scan-access/issued`,
-      { code },
+      { pin },
       {
         params: {
           page,
@@ -137,31 +137,31 @@ async function fetchIssuedTicketsByCode({
 }
 
 export async function syncIssuedTicketsForAccess({
-  code,
+  pin,
   db,
   isOnline,
 }: {
-  code: string;
+  pin: string;
   db: Db;
   isOnline: boolean;
 }): Promise<string | null> {
   if (!isOnline) return null;
 
-  const sync = await getAccessSync(db, code);
+  const sync = await getAccessSync(db, pin);
 
   if (!sync) {
-    await createAccessSync(db, code);
-    await fetchIssuedTicketsByCode({ code, db });
+    await createAccessSync(db, pin);
+    await fetchIssuedTicketsByCode({ pin, db });
   } else {
     const isStale = !sync.lastSyncDate || isOlderThan30Minutes(new Date(sync.lastSyncDate));
     await fetchIssuedTicketsByCode({
-      code,
+      pin,
       db,
       fromDate: isStale ? undefined : sync.lastSyncDate,
     });
   }
 
-  return markSyncDone(db, code);
+  return markSyncDone(db, pin);
 }
 
 export async function clearOfflineQueue(db: Db) {

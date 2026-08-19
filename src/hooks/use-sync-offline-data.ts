@@ -25,14 +25,14 @@ export const useSyncOfflineData = () => {
 
         logMessage(
           `[offline-sync] pending tickets: ${JSON.stringify({
-            pin: scanAccess.config.code,
+            pin: scanAccess.config.pin,
             qrCodes: pendingList,
             timestamp: new Date().toISOString(),
           })}`,
         );
 
         await triggerSync({
-          pin: scanAccess.config.code,
+          pin: scanAccess.config.pin,
           observation: scanAccess.observation,
           operatorDocument: scanAccess.operatorDocument,
           qrCodes: pendingList,

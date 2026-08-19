@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS no_valid_tickets (
 -- ACCESS SYNC (descarga de tickets por codePin)
 -- ======================================
 CREATE TABLE IF NOT EXISTS access_sync (
-  code TEXT PRIMARY KEY NOT NULL,
+  pin TEXT PRIMARY KEY NOT NULL,
   last_sync_date TEXT,
   initial_sync_done INTEGER NOT NULL DEFAULT 0
 );

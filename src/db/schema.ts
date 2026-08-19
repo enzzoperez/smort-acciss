@@ -30,7 +30,7 @@ export const noValidTickets = sqliteTable('no_valid_tickets', {
 });
 
 export const accessSync = sqliteTable('access_sync', {
-  code: text('code').primaryKey(),
+  pin: text('pin').primaryKey(),
   lastSyncDate: text('last_sync_date'),
   initialSyncDone: integer('initial_sync_done').notNull().default(0),
 });

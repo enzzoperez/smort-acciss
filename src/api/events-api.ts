@@ -33,7 +33,7 @@ interface ReqGetEventQrConfig {
 
 export interface ConfigByCodePin {
   id: string;
-  code: string;
+  pin: string;
   label: string;
   enabled: boolean;
   issuedTicketsSyncEnabled: boolean;
@@ -77,7 +77,7 @@ export const eventApi = rootApi.injectEndpoints({
         url: `/access-control/scan-access/resolve`,
         method: 'post',
         data: {
-          code: codePin,
+          pin: codePin,
         },
         headers: {
           'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',

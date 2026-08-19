@@ -24,7 +24,7 @@ export function isApiError(error: unknown): error is { status: number; data: Api
 }
 
 interface ReqScanQr {
-  code: string;
+  pin: string;
   qrCode?: string;
   operatorDocument: string;
   observation: string;
@@ -46,10 +46,10 @@ interface ReqSyncOfflineData {
 export const scannerApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
     validateAndRegister: builder.mutation<unknown, ReqScanQr>({
-      query: ({ code, qrCode, operatorDocument, observation, direction, zoneId }) => ({
+      query: ({ pin, qrCode, operatorDocument, observation, direction, zoneId }) => ({
         url: `/access-control/scan-access/scan?direction=${direction}${zoneId ? `&zoneId=${zoneId}` : ''}`,
         method: 'post',
-        data: { code, qrCode, operatorDocument, observation },
+        data: { pin, qrCode, operatorDocument, observation },
         headers: {
           'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
         },

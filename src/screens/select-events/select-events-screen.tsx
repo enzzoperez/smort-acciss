@@ -84,7 +84,7 @@ const SelectEventsScreen = () => {
             <View style={styles.summaryRow}>
               <MaterialIcons name="badge" size={18} color="#333" />
               <ThemedText type="title" style={styles.summaryCode}>
-                {config.label || config.code}
+                {config.label || ''}
               </ThemedText>
             </View>
             <View style={styles.summaryDivider} />

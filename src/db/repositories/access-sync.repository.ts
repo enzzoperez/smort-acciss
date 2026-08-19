@@ -2,21 +2,21 @@ import { eq } from 'drizzle-orm';
 import { accessSync } from '../schema';
 import { Db } from '../types';
 
-export async function getAccessSync(db: Db, code: string) {
-  const result = await db.select().from(accessSync).where(eq(accessSync.code, code)).limit(1);
+export async function getAccessSync(db: Db, pin: string) {
+  const result = await db.select().from(accessSync).where(eq(accessSync.pin, pin)).limit(1);
 
   return result[0] ?? null;
 }
 
-export async function createAccessSync(db: Db, code: string) {
+export async function createAccessSync(db: Db, pin: string) {
   await db.insert(accessSync).values({
-    code,
+    pin,
     initialSyncDone: 0,
     lastSyncDate: null,
   });
 }
 
-export async function markSyncDone(db: Db, code: string) {
+export async function markSyncDone(db: Db, pin: string) {
   const lastSyncDate = new Date().toISOString();
 
   await db
@@ -25,7 +25,7 @@ export async function markSyncDone(db: Db, code: string) {
       initialSyncDone: 1,
       lastSyncDate,
     })
-    .where(eq(accessSync.code, code));
+    .where(eq(accessSync.pin, pin));
 
   return lastSyncDate;
 }

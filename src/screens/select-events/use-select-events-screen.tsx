@@ -92,7 +92,7 @@ export function useSelectEventsScreen() {
         const [, syncedAt] = await Promise.all([
           loadQrConfigs(items, true),
           issuedTicketsSyncEnabled && config && db
-            ? syncIssuedTicketsForAccess({ code: config.code, db, isOnline })
+            ? syncIssuedTicketsForAccess({ pin: config.pin, db, isOnline })
             : Promise.resolve(null),
         ]);
 
@@ -126,12 +126,12 @@ export function useSelectEventsScreen() {
 
     try {
       setIsLoadingConfiguration(true);
-      const refreshedConfig = await getEventQrConfigByCode(config.code).unwrap();
+      const refreshedConfig = await getEventQrConfigByCode(config.pin).unwrap();
 
       const [, syncedAt] = await Promise.all([
         loadQrConfigs(refreshedConfig.items, false),
         refreshedConfig.issuedTicketsSyncEnabled && db
-          ? syncIssuedTicketsForAccess({ code: refreshedConfig.code, db, isOnline })
+          ? syncIssuedTicketsForAccess({ pin: refreshedConfig.pin, db, isOnline })
           : Promise.resolve(null),
       ]);
 

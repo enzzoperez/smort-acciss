@@ -77,10 +77,7 @@ export function useCameraScreen() {
 
   const handleBack = () => router.back();
 
-  const headerTitle =
-    items.length === 1
-      ? items[0].eventName
-      : scanAccess?.config.label || scanAccess?.config.code || '';
+  const headerTitle = items.length === 1 ? items[0].eventName : scanAccess?.config.label || '';
   const readingModeLabel = scanAccess
     ? scanAccess.config.mode === 'CHECK'
       ? 'Verificación de QR'

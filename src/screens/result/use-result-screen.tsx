@@ -37,7 +37,7 @@ export const useResultScreen = () => {
     (state) => state.config,
   );
   const { db } = useDb();
-  const code = scanAccess?.config.code ?? '';
+  const pin = scanAccess?.config.pin ?? '';
   const operatorDocument = scanAccess?.operatorDocument ?? '';
   const observation = scanAccess?.observation ?? '';
   const verifyOnly = scanAccess?.config.mode === 'CHECK';
@@ -126,7 +126,7 @@ export const useResultScreen = () => {
           selectedEventConfig?.sections.length === 1 ? selectedEventConfig.sections[0] : undefined;
 
         await validateAndRegister({
-          code,
+          pin,
           qrCode: scannedCode as string,
           operatorDocument,
           observation,
@@ -137,7 +137,7 @@ export const useResultScreen = () => {
       } catch (error) {
         logError(error);
       } finally {
-        const syncedAt = await syncIssuedTicketsForAccess({ code, db, isOnline: true });
+        const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline: true });
         if (syncedAt) {
           dispatch(setLastSyncDate(syncedAt));
         }
@@ -163,7 +163,7 @@ export const useResultScreen = () => {
   }, [isSuccessRequest]);
 
   const syncIfOnline = async () => {
-    if (!isOnline || !db || !code) return;
+    if (!isOnline || !db || !pin) return;
     const synced = await sync();
     if (!synced) {
       Alert.alert(
@@ -172,7 +172,7 @@ export const useResultScreen = () => {
       );
       return;
     }
-    const syncedAt = await syncIssuedTicketsForAccess({ code, db, isOnline });
+    const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline });
     if (syncedAt) {
       dispatch(setLastSyncDate(syncedAt));
     }
