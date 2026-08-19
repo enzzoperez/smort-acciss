@@ -7,12 +7,12 @@ import { logMessage } from '@/libs/crashlytics';
 
 export const useSyncOfflineData = () => {
   const [triggerSync, { isLoading, isError, error }] = useSyncOfflineDataMutation();
-  const { selectedEvent } = useAppSelector((state) => state.config);
+  const { scanAccess } = useAppSelector((state) => state.config);
   const { db, ready } = useDb();
 
   const sync = useCallback(async (): Promise<boolean | undefined> => {
     try {
-      if (!ready || !db) {
+      if (!ready || !db || !scanAccess) {
         return false;
       }
 
@@ -25,13 +25,18 @@ export const useSyncOfflineData = () => {
 
         logMessage(
           `[offline-sync] pending tickets: ${JSON.stringify({
-            eventCode: selectedEvent as string,
+            pin: scanAccess.config.code,
             qrCodes: pendingList,
             timestamp: new Date().toISOString(),
           })}`,
         );
 
-        await triggerSync({ eventCode: selectedEvent as string, qrCodes: pendingList }).unwrap();
+        await triggerSync({
+          pin: scanAccess.config.code,
+          observation: scanAccess.observation,
+          operatorDocument: scanAccess.operatorDocument,
+          qrCodes: pendingList,
+        }).unwrap();
 
         await clearOfflineQueue(db);
         return true;
@@ -40,7 +45,7 @@ export const useSyncOfflineData = () => {
       logMessage(`[offline-sync] error: ${JSON.stringify(err)}`);
       return false;
     }
-  }, [triggerSync, selectedEvent, db, ready]);
+  }, [triggerSync, scanAccess, db, ready]);
 
   return {
     sync,

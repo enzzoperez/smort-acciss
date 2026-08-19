@@ -9,7 +9,6 @@ interface ConfigSlice {
     observation: string;
   } | null;
   direction: DIRECTION_SCAN;
-  selectedEvent: string | null;
   verifyOnly: boolean;
   configEventQr: ResConfigEventQr[] | null;
   serverOffset: number;
@@ -21,7 +20,6 @@ interface ConfigSlice {
 
 const initialState: ConfigSlice = {
   scanAccess: null,
-  selectedEvent: null,
   verifyOnly: true,
   configEventQr: null,
   serverOffset: 0,
@@ -45,9 +43,6 @@ export const configSlice = createSlice({
       }>,
     ) => {
       state.scanAccess = action.payload;
-    },
-    setSelectedEvent: (state, action: PayloadAction<string | null>) => {
-      state.selectedEvent = action.payload;
     },
     setVerifyOnly: (state, action: PayloadAction<boolean>) => {
       state.verifyOnly = action.payload;
@@ -82,7 +77,6 @@ export const configSlice = createSlice({
     },
     setResetConfig: (state) => {
       state.scanAccess = null;
-      state.selectedEvent = null;
       state.verifyOnly = true;
       state.configEventQr = null;
       state.serverOffset = 0;
@@ -97,7 +91,6 @@ export const configSlice = createSlice({
 
 export const {
   setScanAccess,
-  setSelectedEvent,
   setVerifyOnly,
   setResetConfig,
   setConfigEventQr,

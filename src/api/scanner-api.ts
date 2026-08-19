@@ -33,7 +33,9 @@ interface ReqScanQr {
 }
 
 interface ReqSyncOfflineData {
-  eventCode: string;
+  pin: string;
+  observation: string;
+  operatorDocument: string;
   qrCodes: {
     qrCode: string;
     timeScan: string;
@@ -55,10 +57,13 @@ export const scannerApi = rootApi.injectEndpoints({
     }),
 
     syncOfflineData: builder.mutation<unknown, ReqSyncOfflineData>({
-      query: ({ eventCode, qrCodes }) => ({
-        url: `/access-control/${eventCode}/scan/off-line`,
+      query: ({ pin, observation, operatorDocument, qrCodes }) => ({
+        url: `/access-control/scan-access/scan/off-line`,
         method: 'post',
-        data: { qrCodes },
+        data: { pin, observation, operatorDocument, qrCodes },
+        headers: {
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+        },
       }),
     }),
   }),
