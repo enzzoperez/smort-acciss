@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppDispatch, useAppSelector } from '@/libs/redux';
 import { useNetwork } from '@/providers/network-provider';
 import { useGetEventQrConfigByCodeMutation, useGetEventQrConfigMutation } from '@/api/events-api';
@@ -14,7 +14,7 @@ import {
 } from '@/store/slices';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import { useDb } from '@/hooks/use-db';
-import { clearAllData, syncIssuedTicketsForAccess } from '@/db/utils';
+import { clearAllData, getOfflineQrList, syncIssuedTicketsForAccess } from '@/db/utils';
 import { countTickets } from '@/db/repositories/tickets.repository';
 import { getValidEventIds, getValidSections } from '@/utils/scan-access';
 
@@ -32,6 +32,8 @@ export function useSelectEventsScreen() {
   const [getEventQrConfigByCode] = useGetEventQrConfigByCodeMutation();
   const { apiErrorHandler } = useApiErrorHandler();
   const loadedQrConfigKeyRef = useRef<string | null>(null);
+  const isFetchingConfigRef = useRef(false);
+  const hasFocusedOnceRef = useRef(false);
   const config = scanAccess?.config ?? null;
   const operatorDocument = scanAccess?.operatorDocument ?? null;
   const observation = scanAccess?.observation ?? null;
@@ -132,11 +134,11 @@ export function useSelectEventsScreen() {
     db,
   ]);
 
-  const onRefresh = async () => {
-    if (!config || !isOnline || isLoadingConfiguration) return;
+  const refreshConfig = useCallback(async () => {
+    if (!config || !isOnline || isFetchingConfigRef.current) return;
 
+    isFetchingConfigRef.current = true;
     try {
-      setIsLoadingConfiguration(true);
       const refreshedConfig = await getEventQrConfigByCode(config.pin).unwrap();
 
       const [, syncedAt] = await Promise.all([
@@ -177,13 +179,54 @@ export function useSelectEventsScreen() {
     } catch (error) {
       apiErrorHandler(error);
     } finally {
-      setIsLoadingConfiguration(false);
+      isFetchingConfigRef.current = false;
     }
+  }, [
+    config,
+    isOnline,
+    db,
+    loadQrConfigs,
+    dispatch,
+    operatorDocument,
+    observation,
+    apiErrorHandler,
+    getEventQrConfigByCode,
+  ]);
+
+  const onRefresh = async () => {
+    if (!config || !isOnline || isLoadingConfiguration) return;
+    setIsLoadingConfiguration(true);
+    await refreshConfig();
+    setIsLoadingConfiguration(false);
   };
+
+  // Al volver a esta pantalla desde otra (camara, resultado), refrescamos la config
+  // en silencio para reflejar cambios hechos del lado del servidor. El mount inicial
+  // ya se cubre con el efecto de arriba, por eso se salta el primer focus.
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocusedOnceRef.current) {
+        hasFocusedOnceRef.current = true;
+        return;
+      }
+      refreshConfig();
+    }, [refreshConfig]),
+  );
 
   const handleScanQr = () => router.push('/camera');
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (db) {
+      const pendingTickets = await getOfflineQrList(db);
+      if (pendingTickets.length > 0) {
+        Alert.alert(
+          'No se puede cerrar sesión',
+          'Hay tickets escaneados pendientes de sincronizar. Conectate a internet y esperá a que se sincronicen antes de cerrar sesión.',
+        );
+        return;
+      }
+    }
+
     Alert.alert('Cerrar sesión', '¿Seguro que querés cerrar sesión?', [
       { text: 'Cancelar', style: 'cancel' },
       {
