@@ -1,6 +1,7 @@
 import { ActivityIndicator, PressableProps, StyleSheet } from 'react-native';
 import PressableOpacity from './pressable-opacity';
 import { ThemedText } from './themed-text';
+import { theme } from '@/themes/theme';
 
 interface ButtonsProps extends PressableProps {
   onPress: () => void;
@@ -42,14 +43,14 @@ export const UiButton = ({
 
   return (
     <PressableOpacity
-      style={[getStyle(), isDisabled && { backgroundColor: 'gray' }]}
+      style={[getStyle(), isDisabled && styles.buttonDisabled]}
       onPress={isDisabled ? null : onPress}
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color="white" />
+        <ActivityIndicator color={theme.colors.gray400} />
       ) : (
-        <ThemedText style={getTextStyle()}>{text}</ThemedText>
+        <ThemedText style={[getTextStyle(), isDisabled && styles.textDisabled]}>{text}</ThemedText>
       )}
     </PressableOpacity>
   );
@@ -90,5 +91,13 @@ const styles = StyleSheet.create({
   buttonTertiaryText: {
     color: 'white',
     fontSize: 20,
+  },
+  buttonDisabled: {
+    backgroundColor: theme.colors.gray100,
+    borderColor: theme.colors.gray200,
+    borderWidth: 1,
+  },
+  textDisabled: {
+    color: theme.colors.gray400,
   },
 });
