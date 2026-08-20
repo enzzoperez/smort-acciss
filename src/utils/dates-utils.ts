@@ -6,7 +6,7 @@ export const formatDateAndHour = (date: Date) => {
 };
 
 export const formatDateWithOffset = (date: Date) => {
-  return format(date, "yyyy-MM-dd'T'HH:mm:ssXXX");
+  return format(date, "yyyy-MM-dd'T'HH:mm:ss");
 };
 
 export const formatDateGMTMinus3 = (date: Date | string): string => {

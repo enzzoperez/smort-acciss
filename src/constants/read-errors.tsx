@@ -15,6 +15,15 @@ export const readErrors = [
     icon: <NotValidTicket />,
   },
   {
+    code: 'ACCTRL-001-OFFLINE',
+    key: 'QR_NOT_FOUND_OFFLINE',
+    title: 'Ticket no encontrado',
+    message:
+      'El código QR no coincide con ningún ticket disponible en este dispositivo. Podría ser inválido o pertenecer a un evento no asignado. Revisar el ticket o escanear nuevamente.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
     code: 'ACCTRL-005',
     key: 'QR_NOT_VALID',
     title: 'Ticket no válido',

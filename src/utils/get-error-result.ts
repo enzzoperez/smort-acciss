@@ -3,6 +3,7 @@ import { reportError as logError } from '@/utils/error-logger';
 
 export type ReasonErrorResult =
   | 'QR_NOT_FOUND'
+  | 'QR_NOT_FOUND_OFFLINE'
   | 'QR_HAS_USED'
   | 'QR_NOT_VALID'
   | 'QR_INACTIVE'

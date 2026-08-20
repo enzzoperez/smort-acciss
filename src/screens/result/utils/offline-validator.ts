@@ -37,11 +37,11 @@ export async function validateQrOfflineFlow({
   // ======================================
   // 🔐 QR DINÁMICO
   // ======================================
-  if (configEventQr?.[0]?.qrMode === 'DYNAMIC' && qr.startsWith('DQR:')) {
+  if (qr.startsWith('DQR:')) {
     const qrAlias = qr.substring(4).split(':')[0];
 
     // Find the config whose alias matches the QR alias
-    const matchingConfig = configEventQr.find((c) => c.alias === qrAlias);
+    const matchingConfig = configEventQr?.find((c) => c.alias === qrAlias);
 
     if (!matchingConfig) {
       if (!verifyOnly) {
@@ -117,7 +117,7 @@ export async function validateQrOfflineFlow({
       });
     }
 
-    return { type: 'error', reason: 'QR_NOT_FOUND' };
+    return { type: 'error', reason: 'QR_NOT_FOUND_OFFLINE' };
   }
 
   const ticket = ticketResult[0];
