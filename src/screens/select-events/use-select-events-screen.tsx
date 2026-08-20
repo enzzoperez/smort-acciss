@@ -200,6 +200,16 @@ export function useSelectEventsScreen() {
     setIsLoadingConfiguration(false);
   };
 
+  // refreshConfig cambia de identidad en cada render exitoso (dispatchea un config
+  // nuevo), y useFocusEffect vuelve a disparar su callback apenas detecta que cambió
+  // de referencia mientras la pantalla sigue enfocada. Por eso guardamos la última
+  // versión en un ref y le pasamos a useFocusEffect un callback con deps estables,
+  // para que solo reaccione a eventos de foco reales.
+  const refreshConfigRef = useRef(refreshConfig);
+  useEffect(() => {
+    refreshConfigRef.current = refreshConfig;
+  }, [refreshConfig]);
+
   // Al volver a esta pantalla desde otra (camara, resultado), refrescamos la config
   // en silencio para reflejar cambios hechos del lado del servidor. El mount inicial
   // ya se cubre con el efecto de arriba, por eso se salta el primer focus.
@@ -209,8 +219,8 @@ export function useSelectEventsScreen() {
         hasFocusedOnceRef.current = true;
         return;
       }
-      refreshConfig();
-    }, [refreshConfig]),
+      refreshConfigRef.current();
+    }, []),
   );
 
   const handleScanQr = () => router.push('/camera');
