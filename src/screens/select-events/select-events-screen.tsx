@@ -102,7 +102,7 @@ const SelectEventsScreen = () => {
             <View>
               <ThemedText style={styles.methodLabel}>Método de lectura</ThemedText>
               <ThemedText type="title" style={styles.methodValue}>
-                {mode === 'CHECK' ? 'Verificación de QR' : 'Verificación y quemado de Qr'}
+                {mode === 'CHECK' ? 'Verificación de QR' : 'Quema de QR'}
               </ThemedText>
             </View>
           </View>

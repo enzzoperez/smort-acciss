@@ -61,7 +61,7 @@ export function useCameraScreen() {
       if (data && !qrLock.current) {
         qrLock.current = true;
         setTimeout(() => {
-          router.replace({ pathname: '/scan-result', params: { scannedCode: data, direction } });
+          router.push({ pathname: '/scan-result', params: { scannedCode: data, direction } });
         }, 500);
       }
     } catch (error) {
