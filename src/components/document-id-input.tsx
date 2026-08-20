@@ -1,15 +1,16 @@
 import React from 'react';
 import { View, TextInput, TextInputProps, StyleSheet } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
+// import { Dropdown } from 'react-native-element-dropdown';
 import { ThemedText } from './themed-text';
 import { ECredentialType } from '@/types/user';
 import { theme } from '@/themes/theme';
 
-const DOCUMENT_TYPE_OPTIONS = [
-  { label: 'Cédula', value: ECredentialType.CI },
-  { label: 'DNI', value: ECredentialType.DNI },
-  { label: 'Pasaporte', value: ECredentialType.PASSPORT },
-];
+// Opciones del selector de tipo de documento, deshabilitado por ahora (ver DocumentIdInput)
+// const DOCUMENT_TYPE_OPTIONS = [
+//   { label: 'Cédula', value: ECredentialType.CI },
+//   { label: 'DNI', value: ECredentialType.DNI },
+//   { label: 'Pasaporte', value: ECredentialType.PASSPORT },
+// ];
 
 type Props = {
   label?: string;
@@ -46,7 +47,8 @@ const DocumentIdInput: React.FC<Props> = ({
             : null,
         ]}
       >
-        <Dropdown
+        {/* Selector de tipo de documento deshabilitado: se usa siempre ECredentialType.CI por defecto */}
+        {/* <Dropdown
           style={styles.dropdown}
           selectedTextStyle={styles.selectedTextStyle}
           itemTextStyle={{ fontSize: 12, fontFamily: theme.typography.fonts.regular }}
@@ -67,7 +69,7 @@ const DocumentIdInput: React.FC<Props> = ({
                 }
               : null,
           ]}
-        />
+        /> */}
         <TextInput
           style={styles.input}
           onChangeText={onChangeText}

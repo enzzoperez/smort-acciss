@@ -91,10 +91,10 @@ const LoginScreen = () => {
 
               <View style={styles.field}>
                 <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
-                  Observacion
+                  Observacion (opcional)
                 </ThemedText>
                 <TextInput
-                  placeholder="Observacion"
+                  placeholder="Observacion (opcional)"
                   style={styles.input}
                   placeholderTextColor="#7A7A7A"
                   value={observation}
