@@ -58,6 +58,7 @@ export const useResultScreen = () => {
   >(null);
 
   const { sync } = useSyncOfflineData();
+  const [isGoingHome, setIsGoingHome] = useState(false);
 
   const [
     validateAndRegister,
@@ -72,95 +73,6 @@ export const useResultScreen = () => {
   });
 
   const infoUsedData = errorItem?.code === 'ACCTRL-004' ? errorParsed : null;
-
-  useEffect(() => {
-    const processQr = async () => {
-      if (!scannedCode || !db) {
-        logError('No se recibió un código QR para procesar o la base de datos no está lista');
-        return;
-      }
-
-      const online = onlineSnapshotRef.current;
-
-      setLocalResult(null);
-
-      // ====================
-      // OFFLINE
-      // ====================
-      if (!online) {
-        if (direction === 'check_out') {
-          if (!verifyOnly) {
-            const ticket = await getTicketByQr(db, scannedCode as string);
-            await insertTicketScan(db, {
-              id: crypto.randomUUID(),
-              qr: scannedCode as string,
-              eventId: ticket?.eventId ?? '',
-              scannedAt: formatDateWithOffset(new Date()),
-              syncStatus: 'pending',
-            });
-          }
-
-          setLocalResult({ type: 'error', reason: 'NETWORK_ERROR' });
-          return;
-        }
-
-        const result = await validateQrOfflineFlow({
-          db,
-          qr: scannedCode as string,
-          validEventIds,
-          serverOffset,
-          configEventQr,
-          allowedSections: validSections.length > 0 ? validSections : null,
-          verifyOnly,
-        });
-
-        setLocalResult(result);
-        return;
-      }
-
-      // ====================
-      // ONLINE
-      // ====================
-      try {
-        const zoneId =
-          selectedEventConfig?.sections.length === 1 ? selectedEventConfig.sections[0] : undefined;
-
-        await validateAndRegister({
-          pin,
-          qrCode: scannedCode as string,
-          operatorDocument,
-          observation,
-          direction: direction ?? 'check_in',
-          zoneId,
-        });
-        await sync();
-      } catch (error) {
-        logError(error);
-      } finally {
-        const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline: true });
-        if (syncedAt) {
-          dispatch(setLastSyncDate(syncedAt));
-        }
-        dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
-      }
-    };
-
-    processQr();
-  }, [scannedCode, db]);
-
-  useEffect(() => {
-    if (isSuccessRequest && db) {
-      getTicketByQr(db, scannedCode as string).then((ticket) => {
-        insertTicketScan(db, {
-          id: crypto.randomUUID(),
-          qr: scannedCode as string,
-          eventId: ticket?.eventId ?? validEventIds[0] ?? '',
-          scannedAt: new Date().toISOString(),
-          syncStatus: 'synced',
-        });
-      });
-    }
-  }, [isSuccessRequest]);
 
   const syncIfOnline = async () => {
     if (!isOnline || !db || !pin) return;
@@ -181,12 +93,12 @@ export const useResultScreen = () => {
 
   const handleScanQr = async () => {
     trackEvent(TrackingEvents.SCAN_AGAIN_PRESSED);
-    await syncIfOnline();
     router.replace('/camera');
   };
 
   const handleGoHome = async () => {
     trackEvent(TrackingEvents.GO_HOME_PRESSED);
+    setIsGoingHome(true);
     await syncIfOnline();
     router.replace('/select-events');
   };
@@ -280,9 +192,99 @@ export const useResultScreen = () => {
     }
   }, [errorRequest]);
 
+  useEffect(() => {
+    const processQr = async () => {
+      if (!scannedCode || !db) {
+        logError('No se recibió un código QR para procesar o la base de datos no está lista');
+        return;
+      }
+
+      const online = onlineSnapshotRef.current;
+
+      setLocalResult(null);
+
+      // ====================
+      // OFFLINE
+      // ====================
+      if (!online) {
+        if (direction === 'check_out') {
+          if (!verifyOnly) {
+            const ticket = await getTicketByQr(db, scannedCode as string);
+            await insertTicketScan(db, {
+              id: crypto.randomUUID(),
+              qr: scannedCode as string,
+              eventId: ticket?.eventId ?? '',
+              scannedAt: formatDateWithOffset(new Date()),
+              syncStatus: 'pending',
+            });
+          }
+
+          setLocalResult({ type: 'error', reason: 'NETWORK_ERROR' });
+          return;
+        }
+
+        const result = await validateQrOfflineFlow({
+          db,
+          qr: scannedCode as string,
+          validEventIds,
+          serverOffset,
+          configEventQr,
+          allowedSections: validSections.length > 0 ? validSections : null,
+          verifyOnly,
+        });
+
+        setLocalResult(result);
+        return;
+      }
+
+      // ====================
+      // ONLINE
+      // ====================
+      try {
+        const zoneId =
+          selectedEventConfig?.sections.length === 1 ? selectedEventConfig.sections[0] : undefined;
+
+        await validateAndRegister({
+          pin,
+          qrCode: scannedCode as string,
+          operatorDocument,
+          observation,
+          direction: direction ?? 'check_in',
+          zoneId,
+        });
+        await sync();
+      } catch (error) {
+        logError(error);
+      } finally {
+        const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline: true });
+        if (syncedAt) {
+          dispatch(setLastSyncDate(syncedAt));
+        }
+        dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
+      }
+    };
+
+    processQr();
+  }, [scannedCode, db]);
+
+  useEffect(() => {
+    if (isSuccessRequest && db) {
+      getTicketByQr(db, scannedCode as string).then((ticket) => {
+        insertTicketScan(db, {
+          id: crypto.randomUUID(),
+          qr: scannedCode as string,
+          eventId: ticket?.eventId ?? validEventIds[0] ?? '',
+          scannedAt: new Date().toISOString(),
+          syncStatus: 'synced',
+        });
+      });
+    }
+  }, [isSuccessRequest]);
+
   return {
     scannedCode,
     isLoadingRequest,
+    isGoingHome,
     handleScanQr,
     handleGoHome,
     getScreenElements,

@@ -15,6 +15,7 @@ const ResultScreen = () => {
     handleScanQr,
     scannedCode,
     isLoadingRequest,
+    isGoingHome,
   } = useResultScreen();
 
   if (!scannedCode) {
@@ -84,8 +85,18 @@ const ResultScreen = () => {
       </View>
 
       <View style={styles.buttonsContainer}>
-        <UiButton variant="tertiary" text="Escanear otro código QR" onPress={handleScanQr} />
-        <UiButton variant="secondary" text="Ir al inicio" onPress={handleGoHome} />
+        <UiButton
+          variant="tertiary"
+          text="Escanear otro código QR"
+          onPress={handleScanQr}
+          disabled={isGoingHome}
+        />
+        <UiButton
+          variant="secondary"
+          text="Ir al inicio"
+          onPress={handleGoHome}
+          loading={isGoingHome}
+        />
       </View>
     </Layer>
   );
