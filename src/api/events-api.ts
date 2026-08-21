@@ -66,7 +66,7 @@ export const eventApi = rootApi.injectEndpoints({
         url: `/access-control/qr-config/${eventCode}`,
         method: 'get',
         headers: {
-          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY_CONFIG || '',
           'Authorization ': null,
         },
       }),
