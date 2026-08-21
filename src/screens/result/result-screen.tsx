@@ -80,6 +80,12 @@ const ResultScreen = () => {
                 {infoUsedData?.data?.scannedBy || 'Desconocido'}
               </ThemedText>
             </View>
+            <View>
+              <ThemedText style={{ color: theme.colors.grayText }}>Origen:</ThemedText>
+              <ThemedText type="title" style={styles.infoValue}>
+                {infoUsedData?.data?.lastScanSource || 'Desconocido'}
+              </ThemedText>
+            </View>
           </View>
         )}
       </View>
