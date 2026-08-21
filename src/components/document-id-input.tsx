@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, TextInput, TextInputProps, StyleSheet } from 'react-native';
+import { View, TextInputProps, StyleSheet } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
 // import { Dropdown } from 'react-native-element-dropdown';
 import { ThemedText } from './themed-text';
 import { ECredentialType } from '@/types/user';
@@ -74,6 +75,7 @@ const DocumentIdInput: React.FC<Props> = ({
           style={styles.input}
           onChangeText={onChangeText}
           keyboardType="number-pad"
+          placeholderTextColor="#7A7A7A"
           {...otherProps}
         />
       </View>
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'UenoLogical-Book',
+    fontFamily: 'UenoLogicalBook',
     color: 'black',
     paddingLeft: 8,
   },

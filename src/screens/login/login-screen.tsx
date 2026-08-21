@@ -89,18 +89,6 @@ const LoginScreen = () => {
                 label="Documento"
               />
 
-              <View style={styles.field}>
-                <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
-                  Observacion (opcional)
-                </ThemedText>
-                <TextInput
-                  placeholder="Observacion (opcional)"
-                  style={styles.input}
-                  placeholderTextColor="#7A7A7A"
-                  value={observation}
-                  onChangeText={setObservation}
-                />
-              </View>
               <View style={[styles.field, { position: 'relative' }]}>
                 <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
                   Pin
@@ -120,6 +108,19 @@ const LoginScreen = () => {
                 >
                   <Feather name={codeVisible ? 'eye-off' : 'eye'} size={20} color="#7A7A7A" />
                 </PressableOpacity>
+              </View>
+
+              <View style={styles.field}>
+                <ThemedText type="defaultSemiBold" style={{ fontSize: 14, marginTop: 12 }}>
+                  Observación (opcional)
+                </ThemedText>
+                <TextInput
+                  placeholder="Observación (opcional)"
+                  style={styles.input}
+                  placeholderTextColor="#7A7A7A"
+                  value={observation}
+                  onChangeText={setObservation}
+                />
               </View>
               <Buttons />
             </View>
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
-    gap: 16,
+    gap: 12,
     marginBottom: 48,
   },
   field: {
