@@ -68,10 +68,14 @@ export async function getOfflineQrList(db: Db) {
       ...validTickets.map((ticket) => ({
         qrCode: ticket.qr,
         timeScan: ticket.scannedAt,
+        mode: ticket.mode ?? 'SCAN',
+        direction: ticket.direction ?? 'check_in',
       })),
       ...noValidTickets.map((ticket) => ({
         qrCode: ticket.qr,
         timeScan: ticket.scannedAt,
+        mode: ticket.mode ?? 'SCAN',
+        direction: ticket.direction ?? 'check_in',
         errorCode: ticket.reason ?? undefined,
       })),
     ];

@@ -216,6 +216,8 @@ export const useResultScreen = () => {
               eventId: ticket?.eventId ?? '',
               scannedAt: formatDateWithOffset(new Date()),
               syncStatus: 'pending',
+              mode: 'SCAN',
+              direction,
             });
           }
 
@@ -231,6 +233,7 @@ export const useResultScreen = () => {
           configEventQr,
           allowedSections: validSections.length > 0 ? validSections : null,
           verifyOnly,
+          direction: direction ?? 'check_in',
         });
 
         setLocalResult(result);
@@ -276,6 +279,8 @@ export const useResultScreen = () => {
           eventId: ticket?.eventId ?? validEventIds[0] ?? '',
           scannedAt: new Date().toISOString(),
           syncStatus: 'synced',
+          mode: verifyOnly ? 'CHECK' : 'SCAN',
+          direction: direction ?? 'check_in',
         });
       });
     }

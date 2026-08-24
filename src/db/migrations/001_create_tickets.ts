@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS ticket_scan (
   qr TEXT NOT NULL,
   event_id TEXT NOT NULL DEFAULT '',
   scanned_at TEXT NOT NULL,
-  sync_status TEXT NOT NULL -- pending | synced | error
+  sync_status TEXT NOT NULL, -- pending | synced | error
+  mode TEXT, -- SCAN | CHECK
+  direction TEXT -- check_in | check_out
 );
 
 -- ======================================
@@ -32,7 +34,9 @@ CREATE TABLE IF NOT EXISTS no_valid_tickets (
   -- QR_HAS_USED | QR_NOT_FOUND | QR_EVENT_MISMATCH | 
   -- QR_SECTION_NOT_ALLOWED | QR_EXPIRED | 
   scanned_at TEXT NOT NULL,
-  sync_status TEXT NOT NULL -- pending | synced | error
+  sync_status TEXT NOT NULL, -- pending | synced | error
+  mode TEXT, -- SCAN | CHECK
+  direction TEXT -- check_in | check_out
 );
 
 -- ======================================

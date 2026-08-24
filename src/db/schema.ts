@@ -19,6 +19,8 @@ export const ticketScan = sqliteTable('ticket_scan', {
   eventId: text('event_id').notNull(),
   scannedAt: text('scanned_at').notNull(),
   syncStatus: text('sync_status').notNull(), // pending | synced | error
+  mode: text('mode'), // SCAN | CHECK
+  direction: text('direction'), // check_in | check_out
 });
 
 export const noValidTickets = sqliteTable('no_valid_tickets', {
@@ -27,6 +29,8 @@ export const noValidTickets = sqliteTable('no_valid_tickets', {
   reason: text('reason').notNull(), // QR_HAS_USED | NOT_FOUND | EVENT_MISMATCH | ZONE_MISMATCH | EXPIRED | INVALID_DYNAMIC
   scannedAt: text('scanned_at').notNull(),
   syncStatus: text('sync_status').notNull(), // pending | synced | error
+  mode: text('mode'), // SCAN | CHECK
+  direction: text('direction'), // check_in | check_out
 });
 
 export const accessSync = sqliteTable('access_sync', {

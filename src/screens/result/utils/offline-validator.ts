@@ -6,6 +6,7 @@ import { ResConfigEventQr } from '@/api/events-api';
 import * as crypto from 'expo-crypto';
 import { formatDateWithOffset } from '@/utils/dates-utils';
 import { ReasonErrorResult } from '@/utils/get-error-result';
+import { DIRECTION_SCAN } from '@/constants/scan-directions';
 
 type OfflineValidationResult =
   | { type: 'success' }
@@ -22,6 +23,7 @@ export async function validateQrOfflineFlow({
   serverOffset,
   allowedSections,
   verifyOnly,
+  direction,
 }: {
   db: any;
   qr: string;
@@ -30,8 +32,10 @@ export async function validateQrOfflineFlow({
   configEventQr: ResConfigEventQr[] | null;
   allowedSections: string[] | null;
   verifyOnly?: boolean;
+  direction: DIRECTION_SCAN;
 }): Promise<OfflineValidationResult> {
   const now = formatDateWithOffset(new Date());
+  const mode = verifyOnly ? 'CHECK' : 'SCAN';
   let finalQr = qr;
 
   // ======================================
@@ -51,6 +55,8 @@ export async function validateQrOfflineFlow({
           scannedAt: now,
           reason: 'QR_EVENT_MISMATCH',
           syncStatus: 'pending',
+          mode,
+          direction,
         });
       }
 
@@ -76,6 +82,8 @@ export async function validateQrOfflineFlow({
           scannedAt: now,
           reason: 'QR_EXPIRED',
           syncStatus: 'pending',
+          mode,
+          direction,
         });
 
         return { type: 'error', reason: 'QR_EXPIRED' };
@@ -90,6 +98,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_DYNAMIC_FORMAT_ERROR',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
 
       return { type: 'error', reason: 'QR_DYNAMIC_FORMAT_ERROR' };
@@ -114,6 +124,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_NOT_FOUND',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
@@ -133,6 +145,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_INACTIVE',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
@@ -150,6 +164,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_EVENT_MISMATCH',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
@@ -167,6 +183,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_ZONE_MISMATCH',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
@@ -194,6 +212,8 @@ export async function validateQrOfflineFlow({
           scannedAt: now,
           reason: 'QR_HAS_USED',
           syncStatus: 'pending',
+          mode,
+          direction,
         });
       }
 
@@ -212,6 +232,8 @@ export async function validateQrOfflineFlow({
       eventId: ticket.eventId,
       scannedAt: now,
       syncStatus: 'pending',
+      mode,
+      direction,
     });
   }
 
