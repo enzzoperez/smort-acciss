@@ -81,7 +81,7 @@ export function useCameraScreen() {
   const readingModeLabel = scanAccess
     ? scanAccess.config.mode === 'CHECK'
       ? 'Verificación de QR'
-      : 'Verificación y quemado de Qr'
+      : 'Quema de QR'
     : '';
 
   useEffect(() => {
