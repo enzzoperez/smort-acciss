@@ -237,20 +237,24 @@ export function useSelectEventsScreen() {
       }
     }
 
-    Alert.alert('Cerrar sesión', '¿Seguro que querés cerrar sesión?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Cerrar sesión',
-        style: 'destructive',
-        onPress: async () => {
-          if (db) {
-            await clearAllData(db);
-          }
-          dispatch(setResetConfig());
-          router.replace('/');
+    Alert.alert(
+      'Editar pin de configuración',
+      '¿Seguro desea editar el pin de configuración?, si lo hace se perderá la configuración actual y deberá ingresar nuevamente un pin.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Si, editar',
+          style: 'destructive',
+          onPress: async () => {
+            if (db) {
+              await clearAllData(db);
+            }
+            dispatch(setResetConfig());
+            router.replace('/');
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const toggleEventSections = (eventCode: string) =>
