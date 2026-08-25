@@ -73,7 +73,9 @@ export function useSelectEventsScreen() {
       }
 
       const responses = await Promise.all(
-        configItems.map(({ eventCode }) => getEventQrConfig({ eventCode }).unwrap()),
+        configItems
+          .filter(({ source }) => source !== 'SMARTPASS')
+          .map(({ eventCode }) => getEventQrConfig({ eventCode }).unwrap()),
       );
       const qrConfigs = responses.flat();
 
@@ -86,53 +88,6 @@ export function useSelectEventsScreen() {
     },
     [dispatch, getEventQrConfig],
   );
-
-  useEffect(() => {
-    if (!qrConfigKey || !isOnline || loadedQrConfigKeyRef.current === qrConfigKey) return;
-
-    const loadInitialQrConfigs = async () => {
-      try {
-        loadedQrConfigKeyRef.current = qrConfigKey;
-        setIsLoadingConfiguration(true);
-        const [, syncedAt] = await Promise.all([
-          loadQrConfigs(items, true),
-          issuedTicketsSyncEnabled && config && db
-            ? syncIssuedTicketsForAccess({ pin: config.pin, db, isOnline })
-            : Promise.resolve(null),
-        ]);
-
-        if (syncedAt) {
-          dispatch(setLastSyncDate(syncedAt));
-        }
-
-        if (db) {
-          dispatch(
-            setTotalAssigned(
-              await countTickets(db, getValidEventIds(items), getValidSections(items)),
-            ),
-          );
-        }
-      } catch (error) {
-        loadedQrConfigKeyRef.current = null;
-        dispatch(setConfigEventQr([]));
-        apiErrorHandler(error);
-      } finally {
-        setIsLoadingConfiguration(false);
-      }
-    };
-
-    loadInitialQrConfigs();
-  }, [
-    qrConfigKey,
-    isOnline,
-    items,
-    loadQrConfigs,
-    dispatch,
-    apiErrorHandler,
-    issuedTicketsSyncEnabled,
-    config,
-    db,
-  ]);
 
   const refreshConfig = useCallback(async () => {
     if (!config || !isOnline || isFetchingConfigRef.current) return;
@@ -200,30 +155,16 @@ export function useSelectEventsScreen() {
     setIsLoadingConfiguration(false);
   };
 
-  // refreshConfig cambia de identidad en cada render exitoso (dispatchea un config
-  // nuevo), y useFocusEffect vuelve a disparar su callback apenas detecta que cambió
-  // de referencia mientras la pantalla sigue enfocada. Por eso guardamos la última
-  // versión en un ref y le pasamos a useFocusEffect un callback con deps estables,
-  // para que solo reaccione a eventos de foco reales.
-  const refreshConfigRef = useRef(refreshConfig);
-  useEffect(() => {
-    refreshConfigRef.current = refreshConfig;
-  }, [refreshConfig]);
-
-  // Al volver a esta pantalla desde otra (camara, resultado), refrescamos la config
-  // en silencio para reflejar cambios hechos del lado del servidor. El mount inicial
-  // ya se cubre con el efecto de arriba, por eso se salta el primer focus.
-  useFocusEffect(
-    useCallback(() => {
-      if (!hasFocusedOnceRef.current) {
-        hasFocusedOnceRef.current = true;
-        return;
-      }
-      refreshConfigRef.current();
-    }, []),
-  );
-
-  const handleScanQr = () => router.push('/camera');
+  const handleScanQr = () => {
+    if (!isOnline && !issuedTicketsSyncEnabled) {
+      Alert.alert(
+        'No se puede escanear',
+        'La descarga de tickets no está habilitada, para poder escanear sin conexión por favor contacta al administrador para habilitarla.',
+      );
+      return;
+    }
+    router.push('/camera');
+  };
 
   const handleLogout = async () => {
     if (db) {
@@ -260,6 +201,80 @@ export function useSelectEventsScreen() {
   const toggleEventSections = (eventCode: string) =>
     setExpandedEvents((current) => ({ ...current, [eventCode]: !current[eventCode] }));
 
+  const isScanDisabled = useMemo(() => {
+    return isLoadingConfiguration || !config;
+  }, [isLoadingConfiguration, config]);
+
+  useEffect(() => {
+    if (!qrConfigKey || !isOnline || loadedQrConfigKeyRef.current === qrConfigKey) return;
+
+    const loadInitialQrConfigs = async () => {
+      try {
+        loadedQrConfigKeyRef.current = qrConfigKey;
+        setIsLoadingConfiguration(true);
+        const [, syncedAt] = await Promise.all([
+          loadQrConfigs(items, true),
+          issuedTicketsSyncEnabled && config && db
+            ? syncIssuedTicketsForAccess({ pin: config.pin, db, isOnline })
+            : Promise.resolve(null),
+        ]);
+
+        if (syncedAt) {
+          dispatch(setLastSyncDate(syncedAt));
+        }
+
+        if (db) {
+          dispatch(
+            setTotalAssigned(
+              await countTickets(db, getValidEventIds(items), getValidSections(items)),
+            ),
+          );
+        }
+      } catch (error) {
+        loadedQrConfigKeyRef.current = null;
+        dispatch(setConfigEventQr([]));
+        apiErrorHandler(error);
+      } finally {
+        setIsLoadingConfiguration(false);
+      }
+    };
+
+    loadInitialQrConfigs();
+  }, [
+    qrConfigKey,
+    isOnline,
+    items,
+    loadQrConfigs,
+    dispatch,
+    apiErrorHandler,
+    issuedTicketsSyncEnabled,
+    config,
+    db,
+  ]);
+
+  // Al volver a esta pantalla desde otra (camara, resultado), refrescamos la config
+  // en silencio para reflejar cambios hechos del lado del servidor. El mount inicial
+  // ya se cubre con el efecto de arriba, por eso se salta el primer focus.
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocusedOnceRef.current) {
+        hasFocusedOnceRef.current = true;
+        return;
+      }
+      refreshConfigRef.current();
+    }, []),
+  );
+
+  // refreshConfig cambia de identidad en cada render exitoso (dispatchea un config
+  // nuevo), y useFocusEffect vuelve a disparar su callback apenas detecta que cambió
+  // de referencia mientras la pantalla sigue enfocada. Por eso guardamos la última
+  // versión en un ref y le pasamos a useFocusEffect un callback con deps estables,
+  // para que solo reaccione a eventos de foco reales.
+  const refreshConfigRef = useRef(refreshConfig);
+  useEffect(() => {
+    refreshConfigRef.current = refreshConfig;
+  }, [refreshConfig]);
+
   return {
     config,
     operatorDocument,
@@ -276,5 +291,6 @@ export function useSelectEventsScreen() {
     onRefresh,
     handleScanQr,
     handleLogout,
+    isScanDisabled,
   };
 }

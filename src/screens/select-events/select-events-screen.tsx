@@ -34,6 +34,7 @@ const SelectEventsScreen = () => {
     toggleEventSections,
     handleScanQr,
     handleLogout,
+    isScanDisabled,
   } = useSelectEventsScreen();
 
   if (!config) {
@@ -73,7 +74,11 @@ const SelectEventsScreen = () => {
           <RefreshControl refreshing={isLoadingConfiguration} onRefresh={onRefresh} />
         }
       >
-        <ConnectionStatusBanner isOnline={isOnline} lastSyncDate={lastSyncDate} />
+        <ConnectionStatusBanner
+          isOnline={isOnline}
+          lastSyncDate={lastSyncDate}
+          issuedTicketsSyncEnabled={issuedTicketsSyncEnabled}
+        />
 
         <View style={styles.contentWrapper}>
           <ThemedText type="title" style={styles.pageTitle}>
@@ -185,7 +190,12 @@ const SelectEventsScreen = () => {
         </View>
       </ScrollView>
       <View style={styles.buttons}>
-        <UiButton variant="primary" text="Escanear" onPress={handleScanQr} />
+        <UiButton
+          variant="primary"
+          text="Escanear"
+          onPress={handleScanQr}
+          disabled={isScanDisabled}
+        />
         <ThemedText type="subtitle" style={styles.versionText}>
           {appVersion}
         </ThemedText>
