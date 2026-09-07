@@ -165,26 +165,6 @@ export const useResultScreen = () => {
   }, [isSuccessRequest]);
 
   useEffect(() => {
-    if (isSuccessRequest) {
-      trackEvent(TrackingEvents.SCAN_RESULT_RECEIVED);
-    }
-  }, [isSuccessRequest]);
-
-  useEffect(() => {
-    if (errorRequest) {
-      const errorCode = errorParsed?.code ?? 'UNKNOWN';
-      trackEvent(TrackingEvents.SCAN_RESULT_RECEIVED, { error_code: errorCode });
-      logMessage(`Error desconocido en validación de QR: ${JSON.stringify(errorRequest)}`);
-    }
-  }, [errorRequest]);
-
-  useEffect(() => {
-    if (isSuccessRequest) {
-      trackEvent(TrackingEvents.SCAN_RESULT_RECEIVED);
-    }
-  }, [isSuccessRequest]);
-
-  useEffect(() => {
     if (errorRequest) {
       const errorCode = errorParsed?.code ?? 'UNKNOWN';
       trackEvent(TrackingEvents.SCAN_RESULT_RECEIVED, { error_code: errorCode });
