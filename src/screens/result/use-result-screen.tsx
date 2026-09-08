@@ -41,6 +41,7 @@ export const useResultScreen = () => {
   const operatorDocument = scanAccess?.operatorDocument ?? '';
   const observation = scanAccess?.observation ?? '';
   const verifyOnly = scanAccess?.config.mode === 'CHECK';
+  const issuedTicketsSyncEnabled = scanAccess?.config.issuedTicketsSyncEnabled ?? false;
   const items = scanAccess?.config.items ?? [];
   const validEventIds = getValidEventIds(items);
   const validSections = getValidSections(items);
@@ -84,9 +85,15 @@ export const useResultScreen = () => {
       );
       return;
     }
-    const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline });
-    if (syncedAt) {
-      dispatch(setLastSyncDate(syncedAt));
+    if (issuedTicketsSyncEnabled) {
+      try {
+        const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline });
+        if (syncedAt) {
+          dispatch(setLastSyncDate(syncedAt));
+        }
+      } catch (error) {
+        logError(error);
+      }
     }
     dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
   };
@@ -239,9 +246,15 @@ export const useResultScreen = () => {
       } catch (error) {
         logError(error);
       } finally {
-        const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline: true });
-        if (syncedAt) {
-          dispatch(setLastSyncDate(syncedAt));
+        if (issuedTicketsSyncEnabled) {
+          try {
+            const syncedAt = await syncIssuedTicketsForAccess({ pin, db, isOnline: true });
+            if (syncedAt) {
+              dispatch(setLastSyncDate(syncedAt));
+            }
+          } catch (error) {
+            logError(error);
+          }
         }
         dispatch(setTotalAssigned(await countTickets(db, validEventIds, validSections)));
       }
