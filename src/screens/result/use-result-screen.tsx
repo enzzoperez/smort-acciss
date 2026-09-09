@@ -215,10 +215,9 @@ export const useResultScreen = () => {
         const result = await validateQrOfflineFlow({
           db,
           qr: scannedCode as string,
-          validEventIds,
+          items,
           serverOffset,
           configEventQr,
-          allowedSections: validSections.length > 0 ? validSections : null,
           verifyOnly,
           direction: direction ?? 'check_in',
         });

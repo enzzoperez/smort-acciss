@@ -2,7 +2,7 @@ import { inArray, sql } from 'drizzle-orm';
 import { tickets, noValidTickets, ticketScan } from '@/db/schema';
 import { decryptDynamicQR, calculateMyTimeSlot } from '../../../utils/qr-utils';
 import { logError } from '@/libs/crashlytics';
-import { ResConfigEventQr } from '@/api/events-api';
+import { ConfigByCodePin, ResConfigEventQr } from '@/api/events-api';
 import * as crypto from 'expo-crypto';
 import { formatDateWithOffset } from '@/utils/dates-utils';
 import { ReasonErrorResult } from '@/utils/get-error-result';
@@ -18,19 +18,17 @@ type OfflineValidationResult =
 export async function validateQrOfflineFlow({
   db,
   qr,
-  validEventIds,
+  items,
   configEventQr,
   serverOffset,
-  allowedSections,
   verifyOnly,
   direction,
 }: {
   db: any;
   qr: string;
-  validEventIds: string[];
+  items: ConfigByCodePin['items'];
   serverOffset: number;
   configEventQr: ResConfigEventQr[] | null;
-  allowedSections: string[] | null;
   verifyOnly?: boolean;
   direction: DIRECTION_SCAN;
 }): Promise<OfflineValidationResult> {
@@ -156,7 +154,9 @@ export async function validateQrOfflineFlow({
   // ======================================
   // 4️⃣ EVENT MATCH
   // ======================================
-  if (!validEventIds.includes(ticket.eventId)) {
+  const matchingItem = items.find((item) => item.eventCode === ticket.eventId);
+
+  if (!matchingItem) {
     if (!verifyOnly) {
       await db.insert(noValidTickets).values({
         id: crypto.randomUUID(),
@@ -173,9 +173,13 @@ export async function validateQrOfflineFlow({
   }
 
   // ======================================
-  // 5️⃣ VALIDACIÓN POR SECTOR
+  // 5️⃣ VALIDACIÓN POR SECTOR (dentro del evento del ticket)
   // ======================================
-  if (allowedSections && allowedSections.length > 0 && !allowedSections.includes(ticket.section)) {
+  const hasSectionAssigned = matchingItem.sections.some(
+    (section) => section.code === ticket.section,
+  );
+
+  if (matchingItem.sections.length > 0 && !hasSectionAssigned) {
     if (!verifyOnly) {
       await db.insert(noValidTickets).values({
         id: crypto.randomUUID(),
