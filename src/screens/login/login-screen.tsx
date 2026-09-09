@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion, isIos } from '@/utils/device-utils';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import DocumentIdInput from '@/components/document-id-input';
 import MainLogo from '@/assets/svg/main-logo.svg';
@@ -34,24 +27,13 @@ const LoginScreen = () => {
   } = useLoginScreen();
   const [codeVisible, setCodeVisible] = useState(false);
 
-  if (isLoading) {
-    return (
-      <Layer>
-        <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
-          <ThemedText>Cargando configuracion</ThemedText>
-        </View>
-      </Layer>
-    );
-  }
-
-  const isSubmitDisabled = isLoading || !documentValue.trim() || !code.trim();
+  const isSubmitDisabled = !documentValue.trim() || !code.trim();
 
   const Buttons = () => (
     <View style={{ marginTop: 16 }}>
       <UiButton
         disabled={isSubmitDisabled}
+        loading={isLoading}
         variant="primary"
         text="Ingresar"
         onPress={handleLoginRequest}
@@ -142,12 +124,6 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
   avoidingStyle: {
     flex: 1,
   },
