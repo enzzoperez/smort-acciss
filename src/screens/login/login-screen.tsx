@@ -24,6 +24,7 @@ const LoginScreen = () => {
     isLoading,
     documentType,
     setDocumentType,
+    documentValue,
     setDocumentValue,
     observation,
     setObservation,
@@ -45,10 +46,12 @@ const LoginScreen = () => {
     );
   }
 
+  const isSubmitDisabled = isLoading || !documentValue.trim() || !code.trim();
+
   const Buttons = () => (
     <View style={{ marginTop: 16 }}>
       <UiButton
-        disabled={isLoading}
+        disabled={isSubmitDisabled}
         variant="primary"
         text="Ingresar"
         onPress={handleLoginRequest}
