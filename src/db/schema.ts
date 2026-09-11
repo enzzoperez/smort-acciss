@@ -20,7 +20,7 @@ export const ticketScan = sqliteTable('ticket_scan', {
   scannedAt: text('scanned_at').notNull(),
   syncStatus: text('sync_status').notNull(), // pending | synced | error
   mode: text('mode'), // SCAN | CHECK
-  direction: text('direction'), // check_in | check_out
+  direction: text('direction'), // CHECK_IN | CHECK_OUT
 });
 
 export const noValidTickets = sqliteTable('no_valid_tickets', {
@@ -30,7 +30,7 @@ export const noValidTickets = sqliteTable('no_valid_tickets', {
   scannedAt: text('scanned_at').notNull(),
   syncStatus: text('sync_status').notNull(), // pending | synced | error
   mode: text('mode'), // SCAN | CHECK
-  direction: text('direction'), // check_in | check_out
+  direction: text('direction'), // CHECK_IN | CHECK_OUT
 });
 
 export const accessSync = sqliteTable('access_sync', {

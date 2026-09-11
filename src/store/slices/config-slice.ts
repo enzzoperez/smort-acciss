@@ -27,7 +27,7 @@ const initialState: ConfigSlice = {
   totalAssigned: null,
   availableEvents: [],
   lastSyncDate: null,
-  direction: 'check_in',
+  direction: 'CHECK_IN',
 };
 
 export const configSlice = createSlice({
@@ -84,7 +84,7 @@ export const configSlice = createSlice({
       state.totalAssigned = null;
       state.availableEvents = [];
       state.lastSyncDate = null;
-      state.direction = 'check_in';
+      state.direction = 'CHECK_IN';
     },
   },
 });

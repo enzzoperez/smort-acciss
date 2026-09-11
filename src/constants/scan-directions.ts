@@ -1,1 +1,1 @@
-export type DIRECTION_SCAN = 'check_out' | 'check_in';
+export type DIRECTION_SCAN = 'CHECK_OUT' | 'CHECK_IN';

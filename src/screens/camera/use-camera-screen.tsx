@@ -21,6 +21,7 @@ export function useCameraScreen() {
     (state) => state.config,
   );
   const items = scanAccess?.config.items ?? [];
+  const issuedTicketsSyncEnabled = scanAccess?.config.issuedTicketsSyncEnabled ?? false;
 
   const qrLock = useRef(false);
   const appState = useRef(AppState.currentState);
@@ -52,9 +53,9 @@ export function useCameraScreen() {
     event.sections.some((section) => section.checkOutEnabled),
   );
 
-  const handlePressCheckin = () => dispatch(setScanDirection('check_in'));
+  const handlePressCheckin = () => dispatch(setScanDirection('CHECK_IN'));
 
-  const handlePressCheckout = () => dispatch(setScanDirection('check_out'));
+  const handlePressCheckout = () => dispatch(setScanDirection('CHECK_OUT'));
 
   const handleScannedCode = ({ data }: { data: string }) => {
     try {
@@ -86,7 +87,7 @@ export function useCameraScreen() {
 
   useEffect(() => {
     if (!showDirectionSelector) {
-      dispatch(setScanDirection('check_in'));
+      dispatch(setScanDirection('CHECK_IN'));
     }
   }, [showDirectionSelector]);
 
@@ -105,6 +106,7 @@ export function useCameraScreen() {
     myScans,
     totalPending,
     totalAssigned,
+    issuedTicketsSyncEnabled,
     infoSheetHeight,
     setInfoSheetHeight,
     isOnline,

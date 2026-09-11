@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS ticket_scan (
   scanned_at TEXT NOT NULL,
   sync_status TEXT NOT NULL, -- pending | synced | error
   mode TEXT, -- SCAN | CHECK
-  direction TEXT -- check_in | check_out
+  direction TEXT -- CHECK_IN | CHECK_OUT
 );
 
 -- ======================================
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS no_valid_tickets (
   scanned_at TEXT NOT NULL,
   sync_status TEXT NOT NULL, -- pending | synced | error
   mode TEXT, -- SCAN | CHECK
-  direction TEXT -- check_in | check_out
+  direction TEXT -- CHECK_IN | CHECK_OUT
 );
 
 -- ======================================

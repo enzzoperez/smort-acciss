@@ -194,7 +194,7 @@ export const useResultScreen = () => {
       // OFFLINE
       // ====================
       if (!online) {
-        if (direction === 'check_out') {
+        if (direction === 'CHECK_OUT') {
           if (!verifyOnly) {
             const ticket = await getTicketByQr(db, scannedCode as string);
             await insertTicketScan(db, {
@@ -219,7 +219,7 @@ export const useResultScreen = () => {
           serverOffset,
           configEventQr,
           verifyOnly,
-          direction: direction ?? 'check_in',
+          direction: direction ?? 'CHECK_IN',
         });
 
         setLocalResult(result);
@@ -238,7 +238,7 @@ export const useResultScreen = () => {
           qrCode: scannedCode as string,
           operatorDocument,
           observation,
-          direction: direction ?? 'check_in',
+          direction: direction ?? 'CHECK_IN',
           zoneId,
         });
         await sync();
@@ -272,7 +272,7 @@ export const useResultScreen = () => {
           scannedAt: new Date().toISOString(),
           syncStatus: 'synced',
           mode: verifyOnly ? 'CHECK' : 'SCAN',
-          direction: direction ?? 'check_in',
+          direction: direction ?? 'CHECK_IN',
         });
       });
     }

@@ -35,6 +35,7 @@ export default function CameraScreen() {
     myScans,
     totalPending,
     totalAssigned,
+    issuedTicketsSyncEnabled,
     isOnline,
     lastSyncDate,
     headerTitle,
@@ -90,12 +91,12 @@ export default function CameraScreen() {
               <TouchableOpacity
                 style={[
                   styles.segmentButton,
-                  direction === 'check_in' && styles.segmentButtonActive,
+                  direction === 'CHECK_IN' && styles.segmentButtonActive,
                 ]}
                 onPress={handlePressCheckin}
               >
                 <ThemedText
-                  style={[styles.segmentText, direction === 'check_in' && styles.segmentTextActive]}
+                  style={[styles.segmentText, direction === 'CHECK_IN' && styles.segmentTextActive]}
                 >
                   Ingreso
                 </ThemedText>
@@ -103,14 +104,14 @@ export default function CameraScreen() {
               <TouchableOpacity
                 style={[
                   styles.segmentButton,
-                  direction === 'check_out' && styles.segmentButtonActive,
+                  direction === 'CHECK_OUT' && styles.segmentButtonActive,
                 ]}
                 onPress={handlePressCheckout}
               >
                 <ThemedText
                   style={[
                     styles.segmentText,
-                    direction === 'check_out' && styles.segmentTextActive,
+                    direction === 'CHECK_OUT' && styles.segmentTextActive,
                   ]}
                 >
                   Egreso
@@ -123,7 +124,7 @@ export default function CameraScreen() {
                 styles.infoBanner,
                 {
                   backgroundColor:
-                    direction === 'check_in' ? theme.colors.primary : theme.colors.blue,
+                    direction === 'CHECK_IN' ? theme.colors.primary : theme.colors.blue,
                 },
               ]}
             >
@@ -131,7 +132,7 @@ export default function CameraScreen() {
               <ThemedText style={styles.infoBannerText}>
                 Estás por registrar un{' '}
                 <ThemedText style={styles.infoBannerBold}>
-                  {direction === 'check_in' ? 'ingreso' : 'egreso'}
+                  {direction === 'CHECK_IN' ? 'ingreso' : 'egreso'}
                 </ThemedText>
               </ThemedText>
             </View>
@@ -179,13 +180,15 @@ export default function CameraScreen() {
         </View>
       </View>
 
-      <View style={infoSheetStyle}>
-        <View style={styles.infoSheetStats}>
-          <StatItem label="Total asignados" value={totalAssigned ?? '-'} />
-          <StatItem label="Total pendientes" value={totalPending ?? '-'} />
-          <StatItem label="Mis escaneos" value={myScans} />
+      {issuedTicketsSyncEnabled && (
+        <View style={infoSheetStyle}>
+          <View style={styles.infoSheetStats}>
+            <StatItem label="Total asignados" value={totalAssigned ?? '-'} />
+            <StatItem label="Total pendientes" value={totalPending ?? '-'} />
+            <StatItem label="Mis escaneos" value={myScans} />
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -194,7 +197,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    // paddingHorizontal: 16,
   },
   topSection: {
     backgroundColor: 'white',
