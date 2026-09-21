@@ -9,11 +9,14 @@ export async function getAccessSync(db: Db, pin: string) {
 }
 
 export async function createAccessSync(db: Db, pin: string) {
-  await db.insert(accessSync).values({
-    pin,
-    initialSyncDone: 0,
-    lastSyncDate: null,
-  });
+  await db
+    .insert(accessSync)
+    .values({
+      pin,
+      initialSyncDone: 0,
+      lastSyncDate: null,
+    })
+    .onConflictDoNothing();
 }
 
 export async function markSyncDone(db: Db, pin: string) {
