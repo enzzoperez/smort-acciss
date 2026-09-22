@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, ReactNode } from 'react';
 import * as SQLite from 'expo-sqlite';
 import { runMigrations } from '@/db/utils';
+import { getOrCreateDbEncryptionKey } from '@/db/db-key';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { Db } from '@/db/types';
 
@@ -26,7 +27,12 @@ function getDb(): Promise<Db> {
 
   if (!initPromise) {
     initPromise = (async () => {
-      const sqlite = SQLite.openDatabaseSync('app_v3.db');
+      const sqlite = SQLite.openDatabaseSync('app_v4_enc.db');
+
+      // Debe ser la primera operación sobre la conexión, antes de cualquier otra query
+      const encryptionKey = getOrCreateDbEncryptionKey();
+      await sqlite.execAsync(`PRAGMA key = '${encryptionKey}';`);
+
       const database = drizzle(sqlite) as Db;
 
       await runMigrations(sqlite);
