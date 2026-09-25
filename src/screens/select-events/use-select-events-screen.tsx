@@ -14,9 +14,10 @@ import {
 } from '@/store/slices';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import { useDb } from '@/hooks/use-db';
-import { clearAllData, getOfflineQrList, syncIssuedTicketsForAccess } from '@/db/utils';
+import { clearAllData, hasPendingOfflineTickets, syncIssuedTicketsForAccess } from '@/db/utils';
 import { countTickets } from '@/db/repositories/tickets.repository';
 import { getValidEventIds, getValidSections } from '@/utils/scan-access';
+import { isPinDisabledError } from '@/utils/api-errors';
 
 const ASSIGNMENTS_PREVIEW = 4;
 
@@ -132,21 +133,25 @@ export function useSelectEventsScreen() {
         }),
       );
     } catch (error) {
-      apiErrorHandler(error);
+      if (isPinDisabledError(error)) {
+        const pendingTickets = db ? await hasPendingOfflineTickets(db) : false;
+        if (pendingTickets) {
+          Alert.alert(
+            'No se pudo cerrar la sesión',
+            'El pin fue deshabilitado, pero hay tickets pendientes de sincronizar. Una vez sincronizados, se podra cerrar la sesión.',
+          );
+        } else {
+          dispatch(setResetConfig());
+          apiErrorHandler(error);
+          router.replace('/');
+        }
+      } else {
+        apiErrorHandler(error);
+      }
     } finally {
       isFetchingConfigRef.current = false;
     }
-  }, [
-    config,
-    isOnline,
-    db,
-    loadQrConfigs,
-    dispatch,
-    operatorDocument,
-    observation,
-    apiErrorHandler,
-    getEventQrConfigByCode,
-  ]);
+  }, [config, isOnline, db, operatorDocument, observation]);
 
   const onRefresh = async () => {
     if (!config || !isOnline || isLoadingConfiguration) return;
@@ -168,8 +173,8 @@ export function useSelectEventsScreen() {
 
   const handleLogout = async () => {
     if (db) {
-      const pendingTickets = await getOfflineQrList(db);
-      if (pendingTickets.length > 0) {
+      const pendingTickets = await hasPendingOfflineTickets(db);
+      if (pendingTickets) {
         Alert.alert(
           'No se puede cerrar sesión',
           'Hay tickets escaneados pendientes de sincronizar. Conectate a internet y esperá a que se sincronicen antes de cerrar sesión.',

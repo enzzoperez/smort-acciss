@@ -2,7 +2,14 @@ import React, { useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion, isIos } from '@/utils/device-utils';
-import { KeyboardAvoidingView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import DocumentIdInput from '@/components/document-id-input';
 import MainLogo from '@/assets/svg/main-logo.svg';
@@ -15,6 +22,7 @@ import { useLoginScreen } from './use-login-screen';
 const LoginScreen = () => {
   const {
     isLoading,
+    isCheckingSession,
     documentType,
     setDocumentType,
     documentValue,
@@ -26,6 +34,17 @@ const LoginScreen = () => {
     handleLoginRequest,
   } = useLoginScreen();
   const [codeVisible, setCodeVisible] = useState(false);
+
+  if (isCheckingSession) {
+    return (
+      <Layer>
+        <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+        </View>
+      </Layer>
+    );
+  }
 
   const isSubmitDisabled = !documentValue.trim() || !code.trim();
 
@@ -124,6 +143,11 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   avoidingStyle: {
     flex: 1,
   },

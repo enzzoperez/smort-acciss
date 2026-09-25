@@ -87,6 +87,11 @@ export async function getOfflineQrList(db: Db) {
   }
 }
 
+export async function hasPendingOfflineTickets(db: Db): Promise<boolean> {
+  const pendingTickets = await getOfflineQrList(db);
+  return pendingTickets.length > 0;
+}
+
 async function fetchIssuedTicketsByCode({
   pin,
   db,
