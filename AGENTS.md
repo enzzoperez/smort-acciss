@@ -13,6 +13,8 @@ Expo/React Native app (**tuti-smart-access**) for venue staff: PIN login loads s
 - Imports: use `@/` alias for `src/`.
 - Git commits: never add co-authored, generated-by, or other AI attribution trailers.
 - Secrets: never commit `.env*`, Firebase plist/json, or credentials.
+- **WIP=1:** one active task at a time; no drive-by refactors; completion needs evidence (`docs/work-rules.md`).
+- Feature status lives in [`docs/features.md`](docs/features.md) (behavior + verification + state); at most one `active`.
 
 ## Session Protocol
 
@@ -22,16 +24,17 @@ Expo/React Native app (**tuti-smart-access**) for venue staff: PIN login loads s
 
 ### Clock in
 
-1. Read [`PROGRESS.md`](PROGRESS.md) and [`DECISIONS.md`](DECISIONS.md)
+1. Read [`PROGRESS.md`](PROGRESS.md), [`DECISIONS.md`](DECISIONS.md), and [`docs/features.md`](docs/features.md) (note any `active` item)
 2. Run `npm run check` (report baseline honestly — see `docs/verification.md`)
-3. Continue from **Next Steps** in `PROGRESS.md` (or the user task if it overrides)
+3. Continue from user task, else `active` feature, else **Next Steps** in `PROGRESS.md`
 
 ### Clock out
 
 1. Update `PROGRESS.md` (state, completed, in progress, known issues, next steps)
-2. Append to `DECISIONS.md` if you made a durable design choice
-3. Run `npm run check` and note result in `PROGRESS.md` if relevant
-4. Leave the working tree understandable (prefer commits when the user asks)
+2. Update `docs/features.md` if a feature changed state / gained evidence
+3. Append to `DECISIONS.md` if you made a durable design choice
+4. Run `npm run check` and note result in `PROGRESS.md` if relevant
+5. Leave the working tree understandable (prefer commits when the user asks)
 
 ## Quick Start
 
@@ -62,6 +65,8 @@ DoD, smoke notes, known baseline: [`docs/verification.md`](docs/verification.md)
 | [`docs/architecture.md`](docs/architecture.md)               | Product flow / layers                |
 | [`docs/environment.md`](docs/environment.md)                 | Setup, env, run/build                |
 | [`docs/verification.md`](docs/verification.md)               | DoD, baseline, smoke                 |
+| [`docs/work-rules.md`](docs/work-rules.md)                   | WIP=1, completion evidence           |
+| [`docs/features.md`](docs/features.md)                       | Feature list (behavior/verify/state) |
 | [`src/api/ARCHITECTURE.md`](src/api/ARCHITECTURE.md)         | HTTP / RTK Query endpoints           |
 | [`src/db/CONSTRAINTS.md`](src/db/CONSTRAINTS.md)             | Schema, single migration, offline DB |
 | [`src/screens/ARCHITECTURE.md`](src/screens/ARCHITECTURE.md) | Routes / screen hooks                |

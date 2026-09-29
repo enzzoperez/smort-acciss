@@ -19,7 +19,7 @@ Short log of decisions that a future session must not reverse without reason. Fo
 - **Source of truth:** local `.env.development` / `.env.production`, or `process.env` / `APP_VARIANT` usages in code.
 - **See:** `docs/environment.md`
 
-## 2026-03-29 — `/select-events` is a config hub, not an event picker
+## 2026-03-29 — Feature list is the behavior source of truth
 
-- **Why:** PIN resolve returns the assignment; UI displays events/sections and optionally downloads tickets when `issuedTicketsSyncEnabled`.
-- **See:** `docs/architecture.md`, `src/screens/ARCHITECTURE.md`
+- **Why:** Unstructured “mostly done” notes cause rework and early victory. Each behavior needs verification + state.
+- **See:** `docs/features.md`
