@@ -39,15 +39,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-#claude
-CLAUDE.md
-
 #vscode
 .vscode/
 
 #firebase
 google-services.json
 GoogleService-Info.plist
-
-#agents
-CLAUDE.md
