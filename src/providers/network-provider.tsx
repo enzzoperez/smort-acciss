@@ -46,14 +46,23 @@ export const NetworkProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
+  // updateState (y el sync que llama) se recrean en cada render con los valores
+  // frescos de db/scanAccess, pero el listener/interval de abajo se registran una
+  // sola vez al montar. Guardamos la ultima version en un ref para que siempre
+  // llamen a la version actualizada en vez de quedar con la del primer render.
+  const updateStateRef = useRef(updateState);
+  useEffect(() => {
+    updateStateRef.current = updateState;
+  });
+
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(() => {
-      updateState();
+      updateStateRef.current();
     });
 
-    updateState();
+    updateStateRef.current();
 
-    const interval = setInterval(updateState, 4000);
+    const interval = setInterval(() => updateStateRef.current(), 4000);
 
     return () => {
       unsubscribe();

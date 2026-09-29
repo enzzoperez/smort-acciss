@@ -84,6 +84,23 @@ export default ({ config }) => {
           },
         },
       ],
+      [
+        'expo-sqlite',
+        {
+          useSQLCipher: true,
+        },
+      ],
+      [
+        'expo-build-properties',
+        {
+          android: {
+            // Evita el conflicto de libcrypto.so entre SQLCipher y react-native-quick-crypto
+            packagingOptions: {
+              pickFirst: ['**/libcrypto.so'],
+            },
+          },
+        },
+      ],
     ],
 
     runtimeVersion: version,

@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS ticket_scan (
   qr TEXT NOT NULL,
   event_id TEXT NOT NULL DEFAULT '',
   scanned_at TEXT NOT NULL,
-  sync_status TEXT NOT NULL -- pending | synced | error
+  sync_status TEXT NOT NULL, -- pending | synced | error
+  mode TEXT, -- SCAN | CHECK
+  direction TEXT -- CHECK_IN | CHECK_OUT
 );
 
 -- ======================================
@@ -32,18 +34,18 @@ CREATE TABLE IF NOT EXISTS no_valid_tickets (
   -- QR_HAS_USED | QR_NOT_FOUND | QR_EVENT_MISMATCH | 
   -- QR_SECTION_NOT_ALLOWED | QR_EXPIRED | 
   scanned_at TEXT NOT NULL,
-  sync_status TEXT NOT NULL -- pending | synced | error
+  sync_status TEXT NOT NULL, -- pending | synced | error
+  mode TEXT, -- SCAN | CHECK
+  direction TEXT -- CHECK_IN | CHECK_OUT
 );
 
 -- ======================================
--- EVENTS SYNC
+-- ACCESS SYNC (descarga de tickets por codePin)
 -- ======================================
-CREATE TABLE IF NOT EXISTS events_sync (
-  event_id TEXT NOT NULL,
-  account_id TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS access_sync (
+  pin TEXT PRIMARY KEY NOT NULL,
   last_sync_date TEXT,
-  initial_sync_done INTEGER NOT NULL DEFAULT 0,
-  PRIMARY KEY (event_id, account_id)
+  initial_sync_done INTEGER NOT NULL DEFAULT 0
 );
 
 -- ======================================

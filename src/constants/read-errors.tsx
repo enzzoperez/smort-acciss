@@ -15,6 +15,15 @@ export const readErrors = [
     icon: <NotValidTicket />,
   },
   {
+    code: 'ACCTRL-001-OFFLINE',
+    key: 'QR_NOT_FOUND_OFFLINE',
+    title: 'Ticket no encontrado',
+    message:
+      'El código QR no coincide con ningún ticket disponible en este dispositivo. Podría ser inválido o pertenecer a un evento no asignado. Revisar el ticket o escanear nuevamente.',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
     code: 'ACCTRL-005',
     key: 'QR_NOT_VALID',
     title: 'Ticket no válido',
@@ -122,6 +131,14 @@ export const readErrors = [
     key: 'QR_CHECKOUT_NOT_ALLOWED',
     title: 'Este código QR es solo de ingreso',
     message: 'Revisá que estés en el modo de escaneo correcto. ',
+    action: 'No permitir ingreso',
+    icon: <NotValidTicket />,
+  },
+  {
+    code: 'ACCTRL-030',
+    key: 'PIN_DISABLED',
+    title: 'Pin desactivado',
+    message: 'El pin de acceso ha sido desactivado. Por favor, contacta a tu supervisor.',
     action: 'No permitir ingreso',
     icon: <NotValidTicket />,
   },

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 
 export const tickets = sqliteTable(
   'tickets',
@@ -19,6 +19,8 @@ export const ticketScan = sqliteTable('ticket_scan', {
   eventId: text('event_id').notNull(),
   scannedAt: text('scanned_at').notNull(),
   syncStatus: text('sync_status').notNull(), // pending | synced | error
+  mode: text('mode'), // SCAN | CHECK
+  direction: text('direction'), // CHECK_IN | CHECK_OUT
 });
 
 export const noValidTickets = sqliteTable('no_valid_tickets', {
@@ -27,15 +29,12 @@ export const noValidTickets = sqliteTable('no_valid_tickets', {
   reason: text('reason').notNull(), // QR_HAS_USED | NOT_FOUND | EVENT_MISMATCH | ZONE_MISMATCH | EXPIRED | INVALID_DYNAMIC
   scannedAt: text('scanned_at').notNull(),
   syncStatus: text('sync_status').notNull(), // pending | synced | error
+  mode: text('mode'), // SCAN | CHECK
+  direction: text('direction'), // CHECK_IN | CHECK_OUT
 });
 
-export const eventsSync = sqliteTable(
-  'events_sync',
-  {
-    eventId: text('event_id').notNull(),
-    accountId: text('account_id').notNull(),
-    lastSyncDate: text('last_sync_date'),
-    initialSyncDone: integer('initial_sync_done').notNull().default(0),
-  },
-  (table) => [primaryKey({ columns: [table.eventId, table.accountId] })],
-);
+export const accessSync = sqliteTable('access_sync', {
+  pin: text('pin').primaryKey(),
+  lastSyncDate: text('last_sync_date'),
+  initialSyncDone: integer('initial_sync_done').notNull().default(0),
+});

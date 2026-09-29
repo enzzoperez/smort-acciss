@@ -1,70 +1,64 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { UiButton } from '@/components/ui-button';
 import { appVersion, isIos } from '@/utils/device-utils';
-import { KeyboardAvoidingView, ScrollView, StatusBar, StyleSheet, View } from 'react-native';
-import { useCameraPermissions } from 'expo-camera';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-import PhoneNumberInput from '@/components/phone-number-input';
-import { useLoginMutation } from '@/api/auth-api';
-import { setAccessToken, setRefreshToken, setUserData } from '@/store/slices';
-import { useAppDispatch } from '@/libs/redux';
-import { useApiErrorHandler } from '@/hooks/useErrorHandler';
-import { TrackingEvents } from '@/constants/tracking-events';
-import { trackEvent, setTrackingUserId } from '@/libs/tracking';
+import DocumentIdInput from '@/components/document-id-input';
 import MainLogo from '@/assets/svg/main-logo.svg';
 import Layer from '@/components/layer';
+import PoweredByItti from '@/assets/svg/powered-by-itti.svg';
 import { Feather } from '@expo/vector-icons';
 import PressableOpacity from '@/components/pressable-opacity';
-import PoweredByItti from '@/assets/svg/powered-by-itti.svg';
+import { useLoginScreen } from './use-login-screen';
 
 const LoginScreen = () => {
-  const dispatch = useAppDispatch();
-  const [permission, requestPermission] = useCameraPermissions();
-  const [login, { isLoading }] = useLoginMutation();
-  const { apiErrorHandler } = useApiErrorHandler();
+  const {
+    isLoading,
+    isCheckingSession,
+    documentType,
+    setDocumentType,
+    documentValue,
+    setDocumentValue,
+    observation,
+    setObservation,
+    code,
+    handleCodeChange,
+    handleLoginRequest,
+  } = useLoginScreen();
+  const [codeVisible, setCodeVisible] = useState(false);
 
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
+  if (isCheckingSession) {
+    return (
+      <Layer>
+        <StatusBar barStyle="dark-content" backgroundColor="white" translucent={false} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+        </View>
+      </Layer>
+    );
+  }
 
-  const handleLoginRequest = async () => {
-    try {
-      const data = await login({
-        accountCredentialType: 'PHONE_NUMBER',
-        accountCredentialValue: phoneNumber,
-        password: password,
-      }).unwrap();
-
-      const { tokens, ...userWithoutTokens } = data;
-
-      dispatch(setAccessToken(tokens.accessToken));
-      dispatch(setRefreshToken(tokens.refreshToken));
-      dispatch(setUserData(userWithoutTokens));
-      setTrackingUserId(phoneNumber);
-      trackEvent(TrackingEvents.LOGIN_SUCCESS);
-    } catch (error) {
-      apiErrorHandler(error);
-    }
-  };
+  const isSubmitDisabled = !documentValue.trim() || !code.trim();
 
   const Buttons = () => (
-    <View>
+    <View style={{ marginTop: 16 }}>
       <UiButton
-        disabled={isLoading}
+        disabled={isSubmitDisabled}
+        loading={isLoading}
         variant="primary"
         text="Ingresar"
         onPress={handleLoginRequest}
       />
     </View>
   );
-
-  useEffect(() => {
-    if (permission === null) return;
-    if (!permission.granted && permission.canAskAgain) {
-      requestPermission();
-    }
-  }, [permission]);
 
   return (
     <Layer>
@@ -91,29 +85,46 @@ const LoginScreen = () => {
               <ThemedText type="subtitle" style={{ fontSize: 22 }}>
                 Iniciar sesión
               </ThemedText>
-              <PhoneNumberInput
-                onChangeText={(text) => setPhoneNumber(text)}
-                placeholder="Número de teléfono"
-                label="Número de teléfono"
+              <DocumentIdInput
+                documentType={documentType}
+                onChangeDocumentType={setDocumentType}
+                onChangeText={(text) => setDocumentValue(text)}
+                placeholder="Número de documento"
+                label="Documento"
               />
 
-              <View style={{ position: 'relative', marginBottom: 16 }}>
+              <View style={[styles.field, { position: 'relative' }]}>
                 <ThemedText type="defaultSemiBold" style={{ fontSize: 14 }}>
-                  Contraseña
+                  Pin
                 </ThemedText>
                 <TextInput
-                  placeholder="Contraseña"
-                  secureTextEntry={!passwordVisible}
-                  style={styles.input}
+                  placeholder="Pin"
+                  style={[styles.input, { paddingRight: 40 }]}
                   placeholderTextColor="#7A7A7A"
-                  onChangeText={(text) => setPassword(text)}
+                  autoCapitalize="characters"
+                  secureTextEntry={!codeVisible}
+                  value={code}
+                  onChangeText={handleCodeChange}
                 />
                 <PressableOpacity
-                  onPress={() => setPasswordVisible((prev) => !prev)}
+                  onPress={() => setCodeVisible((prev) => !prev)}
                   style={styles.iconContainer}
                 >
-                  <Feather name={passwordVisible ? 'eye-off' : 'eye'} size={20} color="#7A7A7A" />
+                  <Feather name={codeVisible ? 'eye-off' : 'eye'} size={20} color="#7A7A7A" />
                 </PressableOpacity>
+              </View>
+
+              <View style={styles.field}>
+                <ThemedText type="defaultSemiBold" style={{ fontSize: 14, marginTop: 12 }}>
+                  Observación (opcional)
+                </ThemedText>
+                <TextInput
+                  placeholder="Observación (opcional)"
+                  style={styles.input}
+                  placeholderTextColor="#7A7A7A"
+                  value={observation}
+                  onChangeText={setObservation}
+                />
               </View>
               <Buttons />
             </View>
@@ -132,6 +143,11 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   avoidingStyle: {
     flex: 1,
   },
@@ -141,25 +157,27 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
-    gap: 16,
+    gap: 12,
     marginBottom: 48,
+  },
+  field: {
+    gap: 4,
   },
   input: {
     fontFamily: 'UenoLogicalBook',
     color: 'black',
-    height: 45,
+    height: 48,
     backgroundColor: '#FFFFFF',
     padding: 14,
     borderRadius: 10,
     borderColor: '#DCE1E8',
     borderWidth: 1,
     fontSize: 16,
-    paddingRight: 40,
   },
   iconContainer: {
     position: 'absolute',
     right: 12,
-    top: 32,
+    top: 40,
   },
 });
 

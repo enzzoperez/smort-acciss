@@ -15,6 +15,7 @@ const ResultScreen = () => {
     handleScanQr,
     scannedCode,
     isLoadingRequest,
+    isGoingHome,
   } = useResultScreen();
 
   if (!scannedCode) {
@@ -76,28 +77,7 @@ const ResultScreen = () => {
             <View>
               <ThemedText style={{ color: theme.colors.grayText }}>Operador:</ThemedText>
               <ThemedText type="title" style={styles.infoValue}>
-                {infoUsedData?.data?.scannedBy || 'Desconocido'}
-              </ThemedText>
-            </View>
-          </View>
-        )}
-
-        {infoUsedData && (
-          <View style={styles.infoSection}>
-            <View>
-              <ThemedText style={{ color: theme.colors.grayText }}>
-                Fecha y hora de escaneo:
-              </ThemedText>
-              <ThemedText type="title" style={styles.infoValue}>
-                {infoUsedData?.data?.lastScanDate
-                  ? formatDateAndHour(new Date(infoUsedData?.data?.lastScanDate))
-                  : '-'}
-              </ThemedText>
-            </View>
-            <View>
-              <ThemedText style={{ color: theme.colors.grayText }}>Operador:</ThemedText>
-              <ThemedText type="title" style={styles.infoValue}>
-                {infoUsedData?.data?.scannedBy || 'Desconocido'}
+                {infoUsedData?.data?.lastScanSource || 'Desconocido'}
               </ThemedText>
             </View>
           </View>
@@ -105,8 +85,18 @@ const ResultScreen = () => {
       </View>
 
       <View style={styles.buttonsContainer}>
-        <UiButton variant="tertiary" text="Escanear otro código QR" onPress={handleScanQr} />
-        <UiButton variant="secondary" text="Ir al inicio" onPress={handleGoHome} />
+        <UiButton
+          variant="tertiary"
+          text="Escanear otro código QR"
+          onPress={handleScanQr}
+          disabled={isGoingHome}
+        />
+        <UiButton
+          variant="secondary"
+          text="Ir al inicio"
+          onPress={handleGoHome}
+          loading={isGoingHome}
+        />
       </View>
     </Layer>
   );

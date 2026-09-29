@@ -1,11 +1,9 @@
 import axios from 'axios';
-import { ensureValidAccessToken } from '@/api/axios-base-query';
 import { migrations } from './migrations';
 import { ApiResponse, Db, TicketApi, TicketDb } from './types';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { noValidTickets, tickets, ticketScan } from './schema';
-import { store } from '@/store/store';
+import { accessSync, noValidTickets, tickets, ticketScan } from './schema';
 import {
   getAllPendingScannedTickets,
   markValidTicketAsSynced,
@@ -17,14 +15,15 @@ import {
 import { Alert } from 'react-native';
 import { sql } from 'drizzle-orm';
 import {
-  getEventSync,
-  createEventSync,
-  markInitialSyncDone,
-} from '@/db/repositories/events-sync.repository';
+  getAccessSync,
+  createAccessSync,
+  markSyncDone,
+} from '@/db/repositories/access-sync.repository';
 
 import { formatDateGMTMinus3, isOlderThan30Minutes } from '@/utils/dates-utils';
 
 const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL ?? '';
+const SIZE_PAGE = 1000;
 
 export async function runMigrations(sqlite: SQLiteDatabase) {
   for (const sql of migrations) {
@@ -60,128 +59,6 @@ export async function hasTickets(db: Db): Promise<boolean> {
   }
 }
 
-export async function initialSyncTickets(eventId: string, db: Db) {
-  let page = 0;
-  let totalPages = 1;
-
-  try {
-    while (page < totalPages) {
-      const accessToken = await ensureValidAccessToken(BASE_URL, store.getState, store.dispatch);
-
-      if (!accessToken) {
-        Alert.alert(
-          'Error',
-          'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
-        );
-        return;
-      }
-
-      const { data } = await axios.get<ApiResponse>(
-        `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
-        {
-          params: {
-            page: page,
-            size: 500,
-          },
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-
-      totalPages = data?.pageable?.totalPages ?? 1;
-
-      const mapped = mapTicketsApiToDb(data.content);
-
-      if (mapped.length > 0) {
-        await db
-          .insert(tickets)
-          .values(mapped)
-          .onConflictDoUpdate({
-            target: tickets.qr,
-            set: {
-              eventId: sql`excluded.event_id`,
-              section: sql`excluded.section`,
-              redeemType: sql`excluded.redeem_type`,
-              successfulReads: sql`excluded.successful_reads`,
-              active: sql`excluded.active`,
-            },
-          });
-      }
-
-      page++;
-    }
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function incrementalSyncTickets({
-  eventId,
-  db,
-  fromDate,
-}: {
-  eventId: string;
-  db: Db;
-  fromDate?: string | null;
-}) {
-  let page = 0;
-  let totalPages = 1;
-
-  try {
-    while (page < totalPages) {
-      const accessToken = await ensureValidAccessToken(BASE_URL, store.getState, store.dispatch);
-
-      if (!accessToken) {
-        Alert.alert(
-          'Error',
-          'No se pudo obtener el token de acceso. Por favor, inicia sesión nuevamente.',
-        );
-        return;
-      }
-
-      const { data } = await axios.get<ApiResponse>(
-        `${BASE_URL}/access-control/${eventId}/issued?includeInactive=true`,
-        {
-          params: {
-            size: 500,
-            page: page,
-            fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
-          },
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
-
-      totalPages = data?.pageable?.totalPages ?? 1;
-
-      const mapped = mapTicketsApiToDb(data.content);
-
-      if (mapped.length > 0) {
-        await db
-          .insert(tickets)
-          .values(mapped)
-          .onConflictDoUpdate({
-            target: tickets.qr,
-            set: {
-              eventId: sql`excluded.event_id`,
-              section: sql`excluded.section`,
-              redeemType: sql`excluded.redeem_type`,
-              successfulReads: sql`excluded.successful_reads`,
-              active: sql`excluded.active`,
-            },
-          });
-      }
-
-      page++;
-    }
-  } catch (error) {
-    console.error('Incremental sync failed', error);
-    throw error;
-  }
-}
-
 export async function getOfflineQrList(db: Db) {
   try {
     const validTickets = await getAllPendingScannedTickets(db);
@@ -191,10 +68,14 @@ export async function getOfflineQrList(db: Db) {
       ...validTickets.map((ticket) => ({
         qrCode: ticket.qr,
         timeScan: ticket.scannedAt,
+        mode: ticket.mode ?? 'SCAN',
+        direction: ticket.direction ?? 'CHECK_IN',
       })),
       ...noValidTickets.map((ticket) => ({
         qrCode: ticket.qr,
         timeScan: ticket.scannedAt,
+        mode: ticket.mode ?? 'SCAN',
+        direction: ticket.direction ?? 'CHECK_IN',
         errorCode: ticket.reason ?? undefined,
       })),
     ];
@@ -206,65 +87,90 @@ export async function getOfflineQrList(db: Db) {
   }
 }
 
-export async function syncTicketsForEvent({
-  eventId,
+export async function hasPendingOfflineTickets(db: Db): Promise<boolean> {
+  const pendingTickets = await getOfflineQrList(db);
+  return pendingTickets.length > 0;
+}
+
+async function fetchIssuedTicketsByCode({
+  pin,
+  db,
+  fromDate,
+}: {
+  pin: string;
+  db: Db;
+  fromDate?: string | null;
+}) {
+  let page = 0;
+  let totalPages = 1;
+
+  while (page < totalPages) {
+    const { data } = await axios.post<ApiResponse>(
+      `${BASE_URL}/access-control/scan-access/issued`,
+      { pin },
+      {
+        params: {
+          page,
+          size: SIZE_PAGE,
+          includeInactive: true,
+          fromDate: fromDate ? formatDateGMTMinus3(fromDate) : undefined,
+        },
+        headers: {
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+        },
+      },
+    );
+
+    totalPages = data?.pageable?.totalPages ?? 1;
+
+    const mapped = mapTicketsApiToDb(data.content);
+
+    if (mapped.length > 0) {
+      await db
+        .insert(tickets)
+        .values(mapped)
+        .onConflictDoUpdate({
+          target: tickets.qr,
+          set: {
+            eventId: sql`excluded.event_id`,
+            section: sql`excluded.section`,
+            redeemType: sql`excluded.redeem_type`,
+            successfulReads: sql`excluded.successful_reads`,
+            active: sql`excluded.active`,
+          },
+        });
+    }
+
+    page++;
+  }
+}
+
+export async function syncIssuedTicketsForAccess({
+  pin,
   db,
   isOnline,
-  accountId,
 }: {
-  eventId: string;
+  pin: string;
   db: Db;
   isOnline: boolean;
-  accountId: string;
-}) {
-  const syncingEvents = new Set<string>();
+}): Promise<string | null> {
+  if (!isOnline) return null;
 
-  if (syncingEvents.has(eventId)) {
-    return;
+  const sync = await getAccessSync(db, pin);
+
+  if (!sync) {
+    await createAccessSync(db, pin);
+    await fetchIssuedTicketsByCode({ pin, db });
+  } else {
+    const isStale = !sync.lastSyncDate || isOlderThan30Minutes(new Date(sync.lastSyncDate));
+    await fetchIssuedTicketsByCode({
+      pin,
+      db,
+      fromDate: isStale ? undefined : sync.lastSyncDate,
+    });
   }
 
-  syncingEvents.add(eventId);
-
-  try {
-    const eventSync = await getEventSync(db, eventId, accountId);
-
-    // EVENTO NUNCA DESCARGADO
-    if (!eventSync) {
-      if (!isOnline) {
-        Alert.alert(
-          'Sin conexión',
-          'Este evento nunca fue descargado. Conectate a internet para poder usarlo.',
-        );
-        return;
-      }
-
-      await createEventSync(db, eventId, accountId);
-      await initialSyncTickets(eventId, db);
-      await markInitialSyncDone(db, eventId, accountId);
-
-      return;
-    }
-
-    // EVENTO YA DESCARGADO
-    if (isOnline) {
-      const lastSync = eventSync.lastSyncDate ? new Date(eventSync.lastSyncDate) : null;
-      const isStale = !lastSync || isOlderThan30Minutes(lastSync);
-
-      await incrementalSyncTickets({
-        eventId,
-        db,
-        fromDate: isStale ? undefined : eventSync.lastSyncDate,
-      });
-      await markInitialSyncDone(db, eventId, accountId);
-    } else {
-      Alert.alert(
-        'Sin conexión',
-        'Estás usando los tickets descargados anteriormente. Los cambios recientes podrían no estar disponibles.',
-      );
-    }
-  } finally {
-    syncingEvents.delete(eventId);
-  }
+  return markSyncDone(db, pin);
 }
 
 export async function clearOfflineQueue(db: Db) {
@@ -281,6 +187,7 @@ export const clearAllData = async (db: Db) => {
     await db.delete(tickets);
     await db.delete(ticketScan);
     await db.delete(noValidTickets);
+    await db.delete(accessSync);
   } catch (error) {
     console.error('Error limpiando toda la data', error);
   }

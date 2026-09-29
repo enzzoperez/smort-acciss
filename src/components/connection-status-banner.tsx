@@ -8,17 +8,26 @@ import { formatSyncTime } from '@/utils/dates-utils';
 type Props = {
   isOnline: boolean;
   lastSyncDate?: string | null;
+  issuedTicketsSyncEnabled?: boolean;
 };
 
-export const ConnectionStatusBanner = ({ isOnline, lastSyncDate }: Props) => {
+export const ConnectionStatusBanner = ({
+  isOnline,
+  lastSyncDate,
+  issuedTicketsSyncEnabled = true,
+}: Props) => {
+  if (isOnline && !issuedTicketsSyncEnabled) return null;
+
   const containerStyle = isOnline ? styles.onlineContainer : styles.offlineContainer;
 
   const title = isOnline ? 'Tickets sincronizados en la base local.' : 'Sin conexión.';
 
   const formattedDate = lastSyncDate ? formatSyncTime(lastSyncDate) : '-';
-  const subtitle = isOnline
-    ? `Última actualización: ${formattedDate}`
-    : `Usando datos de la base local. Última actualización: ${formattedDate}`;
+  const subtitle = !issuedTicketsSyncEnabled
+    ? 'La descarga de tickets no está habilitada para este pin.'
+    : isOnline
+      ? `Última actualización: ${formattedDate}`
+      : `Usando datos de la base local. Última actualización: ${formattedDate}`;
 
   return (
     <View style={[styles.container, containerStyle]}>

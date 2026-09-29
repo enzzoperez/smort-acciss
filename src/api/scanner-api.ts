@@ -24,17 +24,23 @@ export function isApiError(error: unknown): error is { status: number; data: Api
 }
 
 interface ReqScanQr {
-  eventCode: string;
+  pin: string;
   qrCode?: string;
+  operatorDocument: string;
+  observation: string;
   direction: DIRECTION_SCAN;
   zoneId?: string;
 }
 
 interface ReqSyncOfflineData {
-  eventCode: string;
+  pin: string;
+  observation: string;
+  operatorDocument: string;
   qrCodes: {
     qrCode: string;
     timeScan: string;
+    mode: string;
+    direction: string;
     errorCode?: string;
   }[];
 }
@@ -42,18 +48,24 @@ interface ReqSyncOfflineData {
 export const scannerApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
     validateAndRegister: builder.mutation<unknown, ReqScanQr>({
-      query: ({ eventCode, qrCode, direction, zoneId }) => ({
-        url: `/access-control/${eventCode}/scan?direction=${direction}${zoneId ? `&zoneId=${zoneId}` : ''}`,
+      query: ({ pin, qrCode, operatorDocument, observation, direction, zoneId }) => ({
+        url: `/access-control/scan-access/scan?direction=${direction}${zoneId ? `&zoneId=${zoneId}` : ''}`,
         method: 'post',
-        data: { qrCode },
+        data: { pin, qrCode, operatorDocument, observation },
+        headers: {
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+        },
       }),
     }),
 
     syncOfflineData: builder.mutation<unknown, ReqSyncOfflineData>({
-      query: ({ eventCode, qrCodes }) => ({
-        url: `/access-control/${eventCode}/scan/off-line`,
+      query: ({ pin, observation, operatorDocument, qrCodes }) => ({
+        url: `/access-control/scan-access/scan/off-line`,
         method: 'post',
-        data: { qrCodes },
+        data: { pin, observation, operatorDocument, qrCodes },
+        headers: {
+          'X-Api-Key': process.env.EXPO_PUBLIC_API_KEY || '',
+        },
       }),
     }),
   }),

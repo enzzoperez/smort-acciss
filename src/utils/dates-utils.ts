@@ -1,11 +1,12 @@
 import { differenceInMinutes, format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export const formatDateAndHour = (date: Date) => {
   return format(date, "dd/MM/yyyy '-' HH:mm:ss");
 };
 
 export const formatDateWithOffset = (date: Date) => {
-  return format(date, "yyyy-MM-dd'T'HH:mm:ssXXX");
+  return format(date, "yyyy-MM-dd'T'HH:mm:ss");
 };
 
 export const formatDateGMTMinus3 = (date: Date | string): string => {
@@ -28,4 +29,8 @@ export const formatSyncTime = (date: Date | string): string => {
 
 export const isOlderThan30Minutes = (date: Date | string): boolean => {
   return differenceInMinutes(new Date(), new Date(date)) >= 30;
+};
+
+export const formatEventShortDate = (date: Date | string): string => {
+  return format(new Date(date), "d MMM '·' HH:mm", { locale: es }).toLowerCase();
 };

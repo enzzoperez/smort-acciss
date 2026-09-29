@@ -2,46 +2,26 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/libs/redux';
-import { setLastSyncDate, setScanDirection } from '@/store/slices';
+import { setScanDirection } from '@/store/slices';
 import { useNetwork } from '@/providers/network-provider';
 import { useDb } from '@/hooks/use-db';
 import { countScannedTicketsByEvent } from '@/db/repositories/valid-tickets.repository';
 import { countPendingTickets } from '@/db/repositories/tickets.repository';
-import { getEventSync } from '@/db/repositories/events-sync.repository';
-import { syncTicketsForEvent } from '@/db/utils';
 import { reportError as logError } from '@/utils/error-logger';
 import { TrackingEvents } from '@/constants/tracking-events';
 import { trackEvent } from '@/libs/tracking';
-import { EventData } from '@/api/events-api';
-
-function getValidEventIds(event: EventData): string[] {
-  if (event.type === 'ALIAS') {
-    return event.item?.map((i) => i.eventCode) ?? [];
-  }
-  return [event.eventCode];
-}
-
-function getValidSections(event: EventData): string[] {
-  if (event.type === 'ALIAS') {
-    return [...new Set(event.item?.flatMap((i) => i.sections) ?? [])];
-  }
-  return event.sections ?? [];
-}
+import { getValidEventIds, getValidSections } from '@/utils/scan-access';
 
 export function useCameraScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { isOnline } = useNetwork();
   const { db } = useDb();
-  const {
-    selectedEventConfig,
-    totalAssigned,
-    selectedEvent,
-    lastSyncDate,
-    configEventQr,
-    direction,
-  } = useAppSelector((state) => state.config);
-  const { userData } = useAppSelector((state) => state.user);
+  const { scanAccess, totalAssigned, lastSyncDate, direction } = useAppSelector(
+    (state) => state.config,
+  );
+  const items = scanAccess?.config.items ?? [];
+  const issuedTicketsSyncEnabled = scanAccess?.config.issuedTicketsSyncEnabled ?? false;
 
   const qrLock = useRef(false);
   const appState = useRef(AppState.currentState);
@@ -55,9 +35,9 @@ export function useCameraScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!db || !selectedEventConfig) return;
-      const validIds = getValidEventIds(selectedEventConfig);
-      const sections = getValidSections(selectedEventConfig);
+      if (!db || items.length === 0) return;
+      const validIds = getValidEventIds(items);
+      const sections = getValidSections(items);
       countScannedTicketsByEvent(db, validIds).then(async (scanCount) => {
         setMyScans(scanCount);
         if (isOnline) {
@@ -66,28 +46,16 @@ export function useCameraScreen() {
           setTotalPending(totalAssigned != null ? totalAssigned - scanCount : null);
         }
       });
-    }, [db, selectedEventConfig, isOnline, totalAssigned]),
+    }, [db, items, isOnline, totalAssigned]),
   );
 
-  const showDirectionSelector =
-    configEventQr?.some((config) => config.sections?.some((section) => section.checkOutEnabled)) ??
-    false;
+  const showDirectionSelector = items.some((event) =>
+    event.sections.some((section) => section.checkOutEnabled),
+  );
 
-  const handlePressCheckin = () => dispatch(setScanDirection('check_in'));
+  const handlePressCheckin = () => dispatch(setScanDirection('CHECK_IN'));
 
-  const handlePressCheckout = () => dispatch(setScanDirection('check_out'));
-
-  const handleDownload = async () => {
-    if (!selectedEvent || !db || !userData?.accountId) return;
-    await syncTicketsForEvent({
-      eventId: selectedEvent,
-      db,
-      isOnline,
-      accountId: userData.accountId,
-    });
-    const sync = await getEventSync(db, selectedEvent, userData.accountId);
-    dispatch(setLastSyncDate(sync?.lastSyncDate ?? null));
-  };
+  const handlePressCheckout = () => dispatch(setScanDirection('CHECK_OUT'));
 
   const handleScannedCode = ({ data }: { data: string }) => {
     try {
@@ -110,18 +78,16 @@ export function useCameraScreen() {
 
   const handleBack = () => router.back();
 
-  const getEventNameAndDate = (): { name: string; date: string } => {
-    const match = selectedEventConfig?.eventName?.match(/^\((.+?)\)\s*(.+)$/);
-    return {
-      date: match?.[1] ?? 'Fecha no disponible',
-      name: match?.[2] ?? selectedEventConfig?.eventName ?? '',
-    };
-  };
-  const { name: eventName, date: eventDateTime } = getEventNameAndDate();
+  const headerTitle = items.length === 1 ? items[0].eventName : scanAccess?.config.label || '';
+  const readingModeLabel = scanAccess
+    ? scanAccess.config.mode === 'CHECK'
+      ? 'Verificación de QR'
+      : 'Quema de QR'
+    : '';
 
   useEffect(() => {
     if (!showDirectionSelector) {
-      dispatch(setScanDirection('check_in'));
+      dispatch(setScanDirection('CHECK_IN'));
     }
   }, [showDirectionSelector]);
 
@@ -140,13 +106,13 @@ export function useCameraScreen() {
     myScans,
     totalPending,
     totalAssigned,
+    issuedTicketsSyncEnabled,
     infoSheetHeight,
     setInfoSheetHeight,
     isOnline,
     lastSyncDate,
-    eventName,
-    eventDateTime,
-    handleDownload,
+    headerTitle,
+    readingModeLabel,
     handleScannedCode,
     handleToggleTorch,
     handleBack,

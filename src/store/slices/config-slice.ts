@@ -1,10 +1,14 @@
-import { EventData, ResConfigEventQr } from '@/api/events-api';
+import { ConfigByCodePin, EventData, ResConfigEventQr } from '@/api/events-api';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { DIRECTION_SCAN } from '@/constants/scan-directions';
 
 interface ConfigSlice {
+  scanAccess: {
+    config: ConfigByCodePin;
+    operatorDocument: string;
+    observation: string;
+  } | null;
   direction: DIRECTION_SCAN;
-  selectedEvent: string | null;
   verifyOnly: boolean;
   configEventQr: ResConfigEventQr[] | null;
   serverOffset: number;
@@ -15,7 +19,7 @@ interface ConfigSlice {
 }
 
 const initialState: ConfigSlice = {
-  selectedEvent: null,
+  scanAccess: null,
   verifyOnly: true,
   configEventQr: null,
   serverOffset: 0,
@@ -23,15 +27,22 @@ const initialState: ConfigSlice = {
   totalAssigned: null,
   availableEvents: [],
   lastSyncDate: null,
-  direction: 'check_in',
+  direction: 'CHECK_IN',
 };
 
 export const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
-    setSelectedEvent: (state, action: PayloadAction<string | null>) => {
-      state.selectedEvent = action.payload;
+    setScanAccess: (
+      state,
+      action: PayloadAction<{
+        config: ConfigByCodePin;
+        operatorDocument: string;
+        observation: string;
+      }>,
+    ) => {
+      state.scanAccess = action.payload;
     },
     setVerifyOnly: (state, action: PayloadAction<boolean>) => {
       state.verifyOnly = action.payload;
@@ -65,7 +76,7 @@ export const configSlice = createSlice({
       state.direction = action.payload;
     },
     setResetConfig: (state) => {
-      state.selectedEvent = null;
+      state.scanAccess = null;
       state.verifyOnly = true;
       state.configEventQr = null;
       state.serverOffset = 0;
@@ -73,13 +84,13 @@ export const configSlice = createSlice({
       state.totalAssigned = null;
       state.availableEvents = [];
       state.lastSyncDate = null;
-      state.direction = 'check_in';
+      state.direction = 'CHECK_IN';
     },
   },
 });
 
 export const {
-  setSelectedEvent,
+  setScanAccess,
   setVerifyOnly,
   setResetConfig,
   setConfigEventQr,

@@ -2,10 +2,11 @@ import { inArray, sql } from 'drizzle-orm';
 import { tickets, noValidTickets, ticketScan } from '@/db/schema';
 import { decryptDynamicQR, calculateMyTimeSlot } from '../../../utils/qr-utils';
 import { logError } from '@/libs/crashlytics';
-import { ResConfigEventQr } from '@/api/events-api';
+import { ConfigByCodePin, ResConfigEventQr } from '@/api/events-api';
 import * as crypto from 'expo-crypto';
 import { formatDateWithOffset } from '@/utils/dates-utils';
 import { ReasonErrorResult } from '@/utils/get-error-result';
+import { DIRECTION_SCAN } from '@/constants/scan-directions';
 
 type OfflineValidationResult =
   | { type: 'success' }
@@ -17,31 +18,32 @@ type OfflineValidationResult =
 export async function validateQrOfflineFlow({
   db,
   qr,
-  validEventIds,
+  items,
   configEventQr,
   serverOffset,
-  allowedSections,
   verifyOnly,
+  direction,
 }: {
   db: any;
   qr: string;
-  validEventIds: string[];
+  items: ConfigByCodePin['items'];
   serverOffset: number;
   configEventQr: ResConfigEventQr[] | null;
-  allowedSections: string[] | null;
   verifyOnly?: boolean;
+  direction: DIRECTION_SCAN;
 }): Promise<OfflineValidationResult> {
   const now = formatDateWithOffset(new Date());
+  const mode = verifyOnly ? 'CHECK' : 'SCAN';
   let finalQr = qr;
 
   // ======================================
   // 🔐 QR DINÁMICO
   // ======================================
-  if (configEventQr?.[0]?.qrMode === 'DYNAMIC' && qr.startsWith('DQR:')) {
+  if (qr.startsWith('DQR:')) {
     const qrAlias = qr.substring(4).split(':')[0];
 
     // Find the config whose alias matches the QR alias
-    const matchingConfig = configEventQr.find((c) => c.alias === qrAlias);
+    const matchingConfig = configEventQr?.find((c) => c.alias === qrAlias);
 
     if (!matchingConfig) {
       if (!verifyOnly) {
@@ -51,6 +53,8 @@ export async function validateQrOfflineFlow({
           scannedAt: now,
           reason: 'QR_EVENT_MISMATCH',
           syncStatus: 'pending',
+          mode,
+          direction,
         });
       }
 
@@ -76,6 +80,8 @@ export async function validateQrOfflineFlow({
           scannedAt: now,
           reason: 'QR_EXPIRED',
           syncStatus: 'pending',
+          mode,
+          direction,
         });
 
         return { type: 'error', reason: 'QR_EXPIRED' };
@@ -90,6 +96,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_DYNAMIC_FORMAT_ERROR',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
 
       return { type: 'error', reason: 'QR_DYNAMIC_FORMAT_ERROR' };
@@ -114,10 +122,12 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_NOT_FOUND',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
-    return { type: 'error', reason: 'QR_NOT_FOUND' };
+    return { type: 'error', reason: 'QR_NOT_FOUND_OFFLINE' };
   }
 
   const ticket = ticketResult[0];
@@ -133,6 +143,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_INACTIVE',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
@@ -142,7 +154,9 @@ export async function validateQrOfflineFlow({
   // ======================================
   // 4️⃣ EVENT MATCH
   // ======================================
-  if (!validEventIds.includes(ticket.eventId)) {
+  const matchingItem = items.find((item) => item.eventCode === ticket.eventId);
+
+  if (!matchingItem) {
     if (!verifyOnly) {
       await db.insert(noValidTickets).values({
         id: crypto.randomUUID(),
@@ -150,6 +164,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_EVENT_MISMATCH',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
@@ -157,9 +173,13 @@ export async function validateQrOfflineFlow({
   }
 
   // ======================================
-  // 5️⃣ VALIDACIÓN POR SECTOR
+  // 5️⃣ VALIDACIÓN POR SECTOR (dentro del evento del ticket)
   // ======================================
-  if (allowedSections && allowedSections.length > 0 && !allowedSections.includes(ticket.section)) {
+  const hasSectionAssigned = matchingItem.sections.some(
+    (section) => section.code === ticket.section,
+  );
+
+  if (matchingItem.sections.length > 0 && !hasSectionAssigned) {
     if (!verifyOnly) {
       await db.insert(noValidTickets).values({
         id: crypto.randomUUID(),
@@ -167,6 +187,8 @@ export async function validateQrOfflineFlow({
         scannedAt: now,
         reason: 'QR_ZONE_MISMATCH',
         syncStatus: 'pending',
+        mode,
+        direction,
       });
     }
 
@@ -194,6 +216,8 @@ export async function validateQrOfflineFlow({
           scannedAt: now,
           reason: 'QR_HAS_USED',
           syncStatus: 'pending',
+          mode,
+          direction,
         });
       }
 
@@ -212,6 +236,8 @@ export async function validateQrOfflineFlow({
       eventId: ticket.eventId,
       scannedAt: now,
       syncStatus: 'pending',
+      mode,
+      direction,
     });
   }
 
