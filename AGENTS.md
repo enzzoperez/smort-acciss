@@ -15,6 +15,7 @@ Expo/React Native app (**tuti-smart-access**) for venue staff: PIN login loads s
 - Secrets: never commit `.env*`, Firebase plist/json, or credentials.
 - **WIP=1:** one active task at a time; no drive-by refactors; completion needs evidence (`docs/work-rules.md`).
 - Feature status lives in [`docs/features.md`](docs/features.md) (behavior + verification + state); at most one `active`.
+- **No early victory:** do not declare done without termination gates (`docs/termination.md`).
 
 ## Session Protocol
 
@@ -53,7 +54,8 @@ Env files, Firebase, prod scripts: [`docs/environment.md`](docs/environment.md).
 npm run check    # lint + typecheck
 ```
 
-DoD, smoke notes, known baseline: [`docs/verification.md`](docs/verification.md).
+DoD, smoke notes, known baseline: [`docs/verification.md`](docs/verification.md).  
+Before saying “done”: [`docs/termination.md`](docs/termination.md).
 
 ## Topic Docs (read on demand)
 
@@ -67,6 +69,7 @@ DoD, smoke notes, known baseline: [`docs/verification.md`](docs/verification.md)
 | [`docs/verification.md`](docs/verification.md)               | DoD, baseline, smoke                 |
 | [`docs/work-rules.md`](docs/work-rules.md)                   | WIP=1, completion evidence           |
 | [`docs/features.md`](docs/features.md)                       | Feature list (behavior/verify/state) |
+| [`docs/termination.md`](docs/termination.md)                 | Done gates / anti early victory      |
 | [`src/api/ARCHITECTURE.md`](src/api/ARCHITECTURE.md)         | HTTP / RTK Query endpoints           |
 | [`src/db/CONSTRAINTS.md`](src/db/CONSTRAINTS.md)             | Schema, single migration, offline DB |
 | [`src/screens/ARCHITECTURE.md`](src/screens/ARCHITECTURE.md) | Routes / screen hooks                |

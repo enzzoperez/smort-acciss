@@ -18,6 +18,13 @@ Do not claim completion until:
 2. No unrequested refactors or drive-by changes (**WIP=1** — see `docs/work-rules.md`)
 3. If the change touches login, config hub, camera/scan, offline DB, or API: note smoke status (done / not run + why)
 4. Completion evidence for the active task is stated explicitly (command output summary or smoke note) — not “looks good”
+5. Termination gates in `docs/termination.md` were followed in order (static → behavior → system/smoke when applicable)
+
+## Termination (anti early victory)
+
+- External checks decide done — not agent confidence.
+- No refactor/style pass until the active behavior is verified.
+- Full gate checklist: [`docs/termination.md`](termination.md).
 
 ## Known baseline (do not thrash-fix unless asked)
 

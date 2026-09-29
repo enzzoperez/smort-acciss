@@ -20,6 +20,8 @@ Agents tend to start many things and finish none. This harness forces **one acti
 
 If evidence is missing, the task stays **in progress** — do not declare victory.
 
+Before claiming done, also satisfy [`docs/termination.md`](termination.md) gates (static → behavior → smoke when product paths changed).
+
 ## Scope
 
 - Prefer the smallest change that satisfies the request.

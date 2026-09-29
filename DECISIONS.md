@@ -23,3 +23,8 @@ Short log of decisions that a future session must not reverse without reason. Fo
 
 - **Why:** Unstructured “mostly done” notes cause rework and early victory. Each behavior needs verification + state.
 - **See:** `docs/features.md`
+
+## 2026-03-29 — Termination is externalized (anti early victory)
+
+- **Why:** Agents systematically overclaim completion. Gates (static → behavior → smoke) replace “feels done.”
+- **See:** `docs/termination.md`
