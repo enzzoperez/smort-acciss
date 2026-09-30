@@ -28,3 +28,10 @@ Short log of decisions that a future session must not reverse without reason. Fo
 
 - **Why:** Agents systematically overclaim completion. Gates (static → behavior → smoke) replace “feels done.”
 - **See:** `docs/termination.md`
+
+## 2026-09-29 — Never clear session while offline scans are pending
+
+- **Why:** Clearing config/DB would drop unscanned-upload rows (`ticket_scan` / `no_valid_tickets` with `syncStatus: pending`) and lose door events.
+- **Behavior:** Voluntary logout offers sync-then-logout; disabled-PIN detection keeps the session until pending rows are gone.
+- **Rejected:** Force-logout / wipe DB on disabled PIN even when the offline queue is non-empty.
+- **See:** F07 in `docs/features.md`; `hasPendingOfflineTickets` in `src/db/utils.ts`

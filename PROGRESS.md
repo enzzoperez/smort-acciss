@@ -2,25 +2,18 @@
 
 Handoff file for cross-session agent work. Update before ending a long session; read at the start of the next.
 
+Keep this file **current for the default branch after merge**. Branch-local WIP (open PR, “commit when ready”) does not belong here once the work lands on `develop` — durable status lives in `docs/features.md`.
+
 ## Current State
 
-- Branch: `chore/harness-spike`
-- Focus: harness engineering lectures **1–9 complete**
-- Verification: `npm run check` — known baseline failures (see `docs/verification.md`)
-- Latest meaningful change: L9 termination gates (`docs/termination.md`)
-- Product features F01–F06 seeded as `passing`; none `active`
+- Branch: `develop` (post F07 merge)
+- Focus: none — pick next work from user request or `docs/features.md`
+- Verification: known baseline only (`expo-symbols`, `react-native-country-codes-picker`) — see `docs/verification.md`
+- Latest meaningful change: F07 logout / session clear gated by pending offline tickets (`passing` in `docs/features.md`)
 
 ## Completed
 
-- [x] L1 diagnosis (5 layers)
-- [x] L2 `AGENTS.md` + `typecheck`/`check` scripts
-- [x] L3 repo as system of record (architecture / environment / api / db / screens docs)
-- [x] L4 split instructions (slim entry + `docs/verification.md`)
-- [x] L5 session continuity (`PROGRESS.md` / `DECISIONS.md` / clock-in-out)
-- [x] L6 initialization / startup readiness (`docs/startup-readiness.md`)
-- [x] L7 WIP=1 work rules (`docs/work-rules.md`)
-- [x] L8 feature list primitive (`docs/features.md`)
-- [x] L9 termination validation (`docs/termination.md`)
+- (none — session-local; product status is in `docs/features.md`)
 
 ## In Progress
 
@@ -31,8 +24,10 @@ Handoff file for cross-session agent work. Update before ending a long session; 
 - `npm run check` fails on missing `expo-symbols` and `react-native-country-codes-picker` types (baseline debt — do not thrash-fix unless tasked)
 - `ios-prod` script has typo `NODE_ENV=prouction` (pre-existing)
 - `check` short-circuits on lint failure (`lint && typecheck`), so typecheck baseline may not show every run
+- F07 smoke on device/emulator still not run
 
 ## Next Steps
 
-1. Commit L9 (and any uncommitted harness polish) when ready
-2. Optional follow-ups: clear `check` baseline debt; add real E2E/smoke automation later; use feature list on the next product task
+1. Next product task: add/activate one `Fxx` in `docs/features.md` (WIP=1)
+2. Optional: clear `check` baseline debt
+3. Optional: smoke F07 on device/emulator and update F07 **evidence** in `docs/features.md`

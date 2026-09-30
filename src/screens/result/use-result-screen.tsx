@@ -77,8 +77,16 @@ export const useResultScreen = () => {
 
   const syncIfOnline = async () => {
     if (!isOnline || !db || !pin) return;
-    const synced = await sync();
-    if (!synced) {
+    try {
+      const synced = await sync();
+      if (!synced) {
+        Alert.alert(
+          'Error de sincronización',
+          'No se pudieron enviar los escaneos pendientes. Por favor revisá tu conexión e intentá nuevamente.',
+        );
+        return;
+      }
+    } catch {
       Alert.alert(
         'Error de sincronización',
         'No se pudieron enviar los escaneos pendientes. Por favor revisá tu conexión e intentá nuevamente.',

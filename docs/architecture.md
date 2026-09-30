@@ -35,7 +35,8 @@ Routes live in `src/app/` (expo-router) and re-export screens from `src/screens/
 
 - **Online scan**: `scannerApi.validateAndRegister` hits the backend with `X-Api-Key`.
 - **Offline scan**: only when `issuedTicketsSyncEnabled`; validate against local `tickets` (and dynamic QR rules); write `ticket_scan` or `no_valid_tickets` with `syncStatus: pending`.
-- **Sync**: pending rows uploaded via `scannerApi.syncOfflineData` / helpers in `src/db/utils.ts`.
+- **Sync**: pending rows uploaded via `scannerApi.syncOfflineData` / helpers in `src/db/utils.ts` (`useSyncOfflineData`).
+- **Session clear**: never wipe config/DB while pending offline scans exist (`hasPendingOfflineTickets`). Voluntary logout from config hub offers sync-then-logout; disabled-PIN detection keeps the session until pending rows are synced (see F07 in `docs/features.md`).
 
 ## Variants
 

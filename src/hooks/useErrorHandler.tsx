@@ -9,6 +9,11 @@ export const useApiErrorHandler = () => {
     if (error?.data?.errors) {
       const { code, message } = (error as ApiError).data.errors[0];
       Alert.alert('Error', API_ERROR_MESSAGES[code] ?? message);
+    } else if (error?.data?.status) {
+      Alert.alert(
+        'Código de error',
+        `Status: ${error?.data?.status}, Message: ${error?.data?.message}`,
+      );
     } else {
       console.error('error en apiErrorHandler', error);
       Alert.alert(

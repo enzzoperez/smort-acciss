@@ -39,7 +39,7 @@ export const NetworkProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (online) {
         trackEvent(TrackingEvents.NETWORK_CONNECTION_RESTORED);
-        sync();
+        void sync().catch(() => undefined);
       } else {
         trackEvent(TrackingEvents.NETWORK_CONNECTION_LOST);
       }

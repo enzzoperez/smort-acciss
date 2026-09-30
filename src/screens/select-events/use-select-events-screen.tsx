@@ -14,6 +14,7 @@ import {
 } from '@/store/slices';
 import { useApiErrorHandler } from '@/hooks/useErrorHandler';
 import { useDb } from '@/hooks/use-db';
+import { useSyncOfflineData } from '@/hooks/use-sync-offline-data';
 import { clearAllData, hasPendingOfflineTickets, syncIssuedTicketsForAccess } from '@/db/utils';
 import { countTickets } from '@/db/repositories/tickets.repository';
 import { getValidEventIds, getValidSections } from '@/utils/scan-access';
@@ -25,6 +26,7 @@ export function useSelectEventsScreen() {
   const router = useRouter();
   const { isOnline } = useNetwork();
   const { db } = useDb();
+  const { sync } = useSyncOfflineData();
   const { scanAccess, lastSyncDate } = useAppSelector((state) => state.config);
   const dispatch = useAppDispatch();
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
@@ -171,13 +173,46 @@ export function useSelectEventsScreen() {
     router.push('/camera');
   };
 
+  const performLogout = useCallback(async () => {
+    if (db) {
+      await clearAllData(db);
+    }
+    dispatch(setResetConfig());
+    router.replace('/');
+  }, [db, dispatch, router]);
+
   const handleLogout = async () => {
     if (db) {
       const pendingTickets = await hasPendingOfflineTickets(db);
       if (pendingTickets) {
         Alert.alert(
-          'No se puede cerrar sesión',
-          'Hay tickets escaneados pendientes de sincronizar. Conectate a internet y esperá a que se sincronicen antes de cerrar sesión.',
+          'Tickets pendientes',
+          'Hay tickets escaneados pendientes de sincronizar. Envíalos para poder cerrar sesión.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            {
+              text: 'Enviar tickets',
+              onPress: async () => {
+                try {
+                  const synced = await sync();
+                  if (!synced) {
+                    Alert.alert(
+                      'Error',
+                      'No se pudieron enviar los tickets pendientes. Revisá tu conexión e intentá nuevamente.',
+                    );
+                    return;
+                  }
+                  Alert.alert(
+                    'Tickets enviados',
+                    'Los tickets pendientes se sincronizaron correctamente. Se cerrará la sesión.',
+                    [{ text: 'OK', onPress: () => void performLogout() }],
+                  );
+                } catch (error) {
+                  apiErrorHandler(error);
+                }
+              },
+            },
+          ],
         );
         return;
       }
@@ -191,13 +226,7 @@ export function useSelectEventsScreen() {
         {
           text: 'Si, editar',
           style: 'destructive',
-          onPress: async () => {
-            if (db) {
-              await clearAllData(db);
-            }
-            dispatch(setResetConfig());
-            router.replace('/');
-          },
+          onPress: () => void performLogout(),
         },
       ],
     );

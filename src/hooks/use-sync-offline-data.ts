@@ -10,40 +10,38 @@ export const useSyncOfflineData = () => {
   const { scanAccess } = useAppSelector((state) => state.config);
   const { db, ready } = useDb();
 
-  const sync = useCallback(async (): Promise<boolean | undefined> => {
+  const sync = useCallback(async (): Promise<boolean> => {
     try {
       if (!ready || !db || !scanAccess) {
         return false;
       }
 
-      if (!isLoading) {
-        const pendingList = await getOfflineQrList(db);
+      const pendingList = await getOfflineQrList(db);
 
-        if (!pendingList || pendingList.length === 0) {
-          return true;
-        }
-
-        logMessage(
-          `[offline-sync] pending tickets: ${JSON.stringify({
-            pin: scanAccess.config.pin,
-            qrCodes: pendingList,
-            timestamp: new Date().toISOString(),
-          })}`,
-        );
-
-        await triggerSync({
-          pin: scanAccess.config.pin,
-          observation: scanAccess.observation,
-          operatorDocument: scanAccess.operatorDocument,
-          qrCodes: pendingList,
-        }).unwrap();
-
-        await clearOfflineQueue(db);
+      if (!pendingList || pendingList.length === 0) {
         return true;
       }
+
+      logMessage(
+        `[offline-sync] pending tickets: ${JSON.stringify({
+          pin: scanAccess.config.pin,
+          qrCodes: pendingList,
+          timestamp: new Date().toISOString(),
+        })}`,
+      );
+
+      await triggerSync({
+        pin: scanAccess.config.pin,
+        observation: scanAccess.observation,
+        operatorDocument: scanAccess.operatorDocument,
+        qrCodes: pendingList,
+      }).unwrap();
+
+      await clearOfflineQueue(db);
+      return true;
     } catch (err) {
       logMessage(`[offline-sync] error: ${JSON.stringify(err)}`);
-      return false;
+      throw err;
     }
   }, [triggerSync, scanAccess, db, ready]);
 

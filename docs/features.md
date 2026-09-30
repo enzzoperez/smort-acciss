@@ -70,6 +70,15 @@ States: `not_started` | `active` | `blocked` | `passing`
 - **state:** passing
 - **evidence:** Existing sync in `src/db/utils.ts` + scanner API
 
+### F07 — Logout / session clear gated by pending offline tickets
+
+- **behavior:** Session must not clear while `hasPendingOfflineTickets` is true.
+  - **Voluntary logout** (config hub header): if pending → alert Cancelar / Enviar tickets; sync success → success alert then `performLogout` (clear DB + reset config → `/`); sync failure / `sync()` false → error alert, stay logged in; if no pending → confirm “Editar pin…” then logout.
+  - **PIN disabled** (login session re-check or config refresh): if pending → alert “No se pudo cerrar la sesión…” and keep session; if no pending → reset config / surface error / return to login.
+- **verification:** Smoke: (1) logout with 0 pending → session clears; (2) logout with pending + successful sync → success then logout; (3) logout with pending + failed sync → error, still logged in; (4) disabled PIN with pending → session kept. Plus `npm run check` if code changed.
+- **state:** passing
+- **evidence:** `handleLogout` / `refreshConfig` in `use-select-events-screen`; login `useEffect` in `use-login-screen`; `hasPendingOfflineTickets` in `src/db/utils.ts`; `useSyncOfflineData` rethrows API errors. Commits: `5f03893`, `d94f200`. smoke: not run in this docs session.
+
 ---
 
 ## Active / backlog
