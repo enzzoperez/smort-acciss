@@ -5,57 +5,57 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="00: load_json" time="0.000473">
+      <testcase classname="fastlane.lanes" name="00: load_json" time="0.000419">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="01: Switch to inc_ver_ios lane" time="0.00012">
+      <testcase classname="fastlane.lanes" name="01: Switch to inc_ver_ios lane" time="0.0001">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="02: load_json" time="0.000243">
+      <testcase classname="fastlane.lanes" name="02: load_json" time="0.000235">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="03: increment_build_number" time="3.664261">
+      <testcase classname="fastlane.lanes" name="03: increment_build_number" time="5.818501">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="04: increment_version_number" time="0.460201">
+      <testcase classname="fastlane.lanes" name="04: increment_version_number" time="0.528358">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="05: Switch to inc_ver_and lane" time="0.00013">
+      <testcase classname="fastlane.lanes" name="05: Switch to inc_ver_and lane" time="0.000187">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="06: load_json" time="0.000427">
+      <testcase classname="fastlane.lanes" name="06: load_json" time="0.000622">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="07: increment_version_code" time="0.001956">
+      <testcase classname="fastlane.lanes" name="07: increment_version_code" time="0.00207">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="08: increment_version_name" time="0.001171">
+      <testcase classname="fastlane.lanes" name="08: increment_version_name" time="0.001674">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="09: plutil -replace EXUpdatesRuntimeVersion -string 1.1.4 ../ios/tutismartaccess/Supporting/Expo.plist" time="0.378791">
+      <testcase classname="fastlane.lanes" name="09: plutil -replace EXUpdatesRuntimeVersion -string 1.1.5 ../ios/tutismartaccess/Supporting/Expo.plist" time="0.018537">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="10: sed -i &apos;&apos; &apos;s|&lt;string name=\&quot;expo_runtime_version\&quot;&gt;.*&lt;/string&gt;|&lt;string name=\&quot;expo_runtime_version\&quot;&gt;1.1.4&lt;/string&gt;|&apos; ../android/app/src/main/res/values/strings.xml" time="0.063965">
+      <testcase classname="fastlane.lanes" name="10: sed -i &apos;&apos; &apos;s|&lt;string name=\&quot;expo_runtime_version\&quot;&gt;.*&lt;/string&gt;|&lt;string name=\&quot;expo_runtime_version\&quot;&gt;1.1.5&lt;/string&gt;|&apos; ../android/app/src/main/res/values/strings.xml" time="0.029866">
         
       </testcase>
     
