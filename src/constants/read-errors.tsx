@@ -3,6 +3,7 @@ import NotValidTicket from '@/assets/svg/not-valid-ticket-error.svg';
 import UsedTicketError from '@/assets/svg/used-ticket-error.svg';
 import ZoneMismatchError from '@/assets/svg/zone-mismatch-error.svg';
 import TicketNetwork from '@/assets/svg/ticket-network.svg';
+import UnexpectedErrorTools from '@/assets/svg/unexpected-error-tools.svg';
 
 export const readErrors = [
   {
@@ -80,6 +81,15 @@ export const readErrors = [
       'No pudimos validar el código QR por problemas de conexión. Guardamos el código para validarlo más tarde. Revisar la red y comunicarlo a tu supervisor.',
     action: 'Permitir ingreso',
     icon: <TicketNetwork />,
+  },
+  {
+    code: 'ACCTRL-011',
+    key: 'Error in client',
+    title: 'Error inesperado',
+    message:
+      'Ocurrió un error inesperado al validar el código QR. Intenta escanear nuevamente o contacta a tu supervisor.',
+    action: 'No permitir ingreso',
+    icon: <UnexpectedErrorTools />,
   },
   {
     code: 'ACCTRL-014',
