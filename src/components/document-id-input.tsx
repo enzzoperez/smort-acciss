@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, TextInputProps, StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-// import { Dropdown } from 'react-native-element-dropdown';
 import { ThemedText } from './themed-text';
 import { ECredentialType } from '@/types/user';
 import { theme } from '@/themes/theme';
