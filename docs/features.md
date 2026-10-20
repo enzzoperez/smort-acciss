@@ -81,8 +81,17 @@ States: `not_started` | `active` | `blocked` | `passing`
 
 ---
 
+### F08 — Maestro e2e (Android local)
+
+- **behavior:** Automated Maestro flows against develop on Android `.dev`: smoke launch, login OK, invalid PIN alert, logout without pending, online scan OK and QR not found (deep link to `/scan-result`, no camera).
+- **verification:** With physical device + `npm run android`, `npm run e2e:maestro` green. Plus `npm run check` if app code changed.
+- **state:** active
+- **evidence:** Fase 0–1 green on physical Android device (2026-10-16): `npm run e2e:maestro` → 4/4 flows passed in 3m 6s (smoke-launch, login-success, login-invalid-pin, logout). `npm run check` clean. Emulator blocked by corporate TLS inspection (see `docs/e2e-maestro.md`). Fase 2 (2026-10-20): 6/6 flows passed in 5m 17s on the same device, adding scan-success and scan-not-found. Offline/sync (Fase 3) and CI (Fase 4) not started.
+
+---
+
 ## Active / backlog
 
-_No product item `active` right now._
+_Exactly one item `active`: F08._
 
 When starting work: move exactly one item to `active` (or add a new `Fxx` as `not_started` then `active`). When done: set `passing` only with verification evidence filled in.

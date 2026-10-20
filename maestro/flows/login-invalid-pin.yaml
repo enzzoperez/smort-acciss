@@ -1,0 +1,16 @@
+appId: com.itti.tuti.smartaccess.dev
+tags:
+  - fase1
+  - auth
+---
+- runFlow: shared/launch.yaml
+- runFlow:
+    file: shared/login.yaml
+    env:
+      E2E_PIN: E2E-INVALID-PIN
+- extendedWaitUntil:
+    visible: 'El pin ingresado no existe.'
+    timeout: 15000
+- assertVisible: 'Error'
+- tapOn: 'OK'
+- assertVisible: 'Iniciar sesión'

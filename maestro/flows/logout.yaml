@@ -1,0 +1,17 @@
+appId: com.itti.tuti.smartaccess.dev
+tags:
+  - fase1
+  - auth
+---
+- runFlow: shared/launch.yaml
+- runFlow: shared/login.yaml
+- extendedWaitUntil:
+    visible: 'Control de accesos'
+    timeout: 30000
+- tapOn:
+    id: header-logout
+- assertVisible: 'Editar pin de configuración'
+- tapOn: 'Si, editar'
+- extendedWaitUntil:
+    visible: 'Iniciar sesión'
+    timeout: 15000

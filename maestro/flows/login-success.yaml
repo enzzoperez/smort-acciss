@@ -1,0 +1,11 @@
+appId: com.itti.tuti.smartaccess.dev
+tags:
+  - fase1
+  - auth
+---
+- runFlow: shared/launch.yaml
+- runFlow: shared/login.yaml
+- extendedWaitUntil:
+    visible: 'Control de accesos'
+    timeout: 30000
+- assertVisible: 'Escanear'

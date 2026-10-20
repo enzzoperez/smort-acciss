@@ -1,0 +1,30 @@
+# Subflow: fresh launch of the dev client connected to Metro.
+# clearState also wipes the dev client's last server, so pick it from the launcher.
+# It also resets the dev menu onboarding, which covers the login screen until dismissed.
+appId: com.itti.tuti.smartaccess.dev
+---
+- launchApp:
+    clearState: true
+    permissions:
+      camera: allow
+- extendedWaitUntil:
+    visible: 'Development Build'
+    timeout: 20000
+- tapOn: 'http://.*:8081'
+- extendedWaitUntil:
+    visible: 'Continue'
+    timeout: 60000
+    optional: true
+- runFlow:
+    when:
+      visible: 'Continue'
+    commands:
+      - tapOn: 'Continue'
+- runFlow:
+    when:
+      visible: 'Connected to:'
+    commands:
+      - back
+- extendedWaitUntil:
+    visible: 'Iniciar sesión'
+    timeout: 15000

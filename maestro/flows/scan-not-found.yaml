@@ -1,0 +1,18 @@
+appId: com.itti.tuti.smartaccess.dev
+tags:
+  - fase2
+  - scan
+env:
+  E2E_QR_NOT_FOUND: ${E2E_QR_NOT_FOUND || '3084-1860-9384-eef3'}
+---
+- runFlow: shared/launch.yaml
+- runFlow: shared/login.yaml
+- extendedWaitUntil:
+    visible: 'Control de accesos'
+    timeout: 30000
+- runFlow:
+    file: shared/scan.yaml
+    env:
+      QR_CODE: ${E2E_QR_NOT_FOUND}
+- assertVisible: 'Ticket no encontrado'
+- assertVisible: 'No permitir ingreso'

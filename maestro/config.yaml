@@ -1,0 +1,8 @@
+appId: com.itti.tuti.smartaccess.dev
+flows:
+  - flows/smoke-launch.yaml
+  - flows/login-success.yaml
+  - flows/login-invalid-pin.yaml
+  - flows/logout.yaml
+  - flows/scan-success.yaml
+  - flows/scan-not-found.yaml

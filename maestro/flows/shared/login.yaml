@@ -1,0 +1,18 @@
+# Subflow: fill login form and submit.
+# Callers can override E2E_PIN / E2E_DNI via runFlow env.
+appId: com.itti.tuti.smartaccess.dev
+env:
+  E2E_PIN: ${E2E_PIN || 'ZFS2N4'}
+  E2E_DNI: ${E2E_DNI || '33444555'}
+---
+- assertVisible: 'Iniciar sesión'
+- tapOn:
+    id: login-document
+- eraseText
+- inputText: ${E2E_DNI}
+- tapOn:
+    id: login-pin
+- eraseText
+- inputText: ${E2E_PIN}
+- tapOn:
+    id: login-submit

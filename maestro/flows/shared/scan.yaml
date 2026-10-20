@@ -1,0 +1,10 @@
+# Subflow: simulate a camera read by deep linking to the result screen.
+# Requires QR_CODE (full payload the camera would return). Needs an active session.
+appId: com.itti.tuti.smartaccess.dev
+env:
+  DIRECTION: ${DIRECTION || 'CHECK_IN'}
+---
+- openLink: tutiqrreader://scan-result?scannedCode=${QR_CODE}&direction=${DIRECTION}
+- extendedWaitUntil:
+    visible: 'Escanear otro código QR'
+    timeout: 30000

@@ -48,13 +48,18 @@ export const Header: React.FC<HeaderProps> = ({
         {isOnline ? <Cloud /> : <CloudOff />}
 
         {isOnline && (
-          <PressableOpacity styleAnimated={styles.rightIcon} onPress={handleDownload}>
+          <PressableOpacity
+            testID="header-download"
+            styleAnimated={styles.rightIcon}
+            onPress={handleDownload}
+          >
             <Download width={24} height={24} />
           </PressableOpacity>
         )}
 
         {onRightPress && (
           <PressableOpacity
+            testID="header-logout"
             styleAnimated={styles.rightIcon}
             onPress={isLoggingOut ? undefined : onRightPress}
           >

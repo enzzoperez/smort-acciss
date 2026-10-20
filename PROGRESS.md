@@ -6,10 +6,10 @@ Keep this file **current for the default branch after merge**. Branch-local WIP 
 
 ## Current State
 
-- Branch: `develop` (post F07 merge)
-- Focus: none — pick next work from user request or `docs/features.md`
-- Verification: known baseline only (`expo-symbols`, `react-native-country-codes-picker`) — see `docs/verification.md`
-- Latest meaningful change: F07 logout / session clear gated by pending offline tickets (`passing` in `docs/features.md`)
+- Branch: local WIP on Maestro e2e (F08)
+- Focus: F08 — Maestro e2e Android (Fases 0–2 done)
+- Verification: `npm run check` clean; `npm run e2e:maestro` 6/6 on physical device
+- Latest meaningful change: scan-success / scan-not-found flows via deep link to `/scan-result`
 
 ## Completed
 
@@ -17,7 +17,7 @@ Keep this file **current for the default branch after merge**. Branch-local WIP 
 
 ## In Progress
 
-- (none)
+- F08 Fases 0–2 green on physical device (6/6). Remaining: Fase 3 offline/sync, Fase 4 CI
 
 ## Known Issues
 
@@ -28,6 +28,6 @@ Keep this file **current for the default branch after merge**. Branch-local WIP 
 
 ## Next Steps
 
-1. Next product task: add/activate one `Fxx` in `docs/features.md` (WIP=1)
-2. Optional: clear `check` baseline debt
-3. Optional: smoke F07 on device/emulator and update F07 **evidence** in `docs/features.md`
+1. F08 Fase 3: offline scan + logout with pending sync (or close F08 as `passing` if offline is deferred)
+2. F08 Fase 4: CI (release APK, no Metro / dev launcher steps)
+3. Optional: clear `check` baseline debt

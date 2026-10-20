@@ -51,6 +51,7 @@ const LoginScreen = () => {
   const Buttons = () => (
     <View style={{ marginTop: 16 }}>
       <UiButton
+        testID="login-submit"
         disabled={isSubmitDisabled}
         loading={isLoading}
         variant="primary"
@@ -91,6 +92,7 @@ const LoginScreen = () => {
                 onChangeText={(text) => setDocumentValue(text)}
                 placeholder="Número de documento"
                 label="Documento"
+                testID="login-document"
               />
 
               <View style={[styles.field, { position: 'relative' }]}>
@@ -98,6 +100,7 @@ const LoginScreen = () => {
                   Pin
                 </ThemedText>
                 <TextInput
+                  testID="login-pin"
                   placeholder="Pin"
                   style={[styles.input, { paddingRight: 40 }]}
                   placeholderTextColor="#7A7A7A"
@@ -119,6 +122,7 @@ const LoginScreen = () => {
                   Observación (opcional)
                 </ThemedText>
                 <TextInput
+                  testID="login-observation"
                   placeholder="Observación (opcional)"
                   style={styles.input}
                   placeholderTextColor="#7A7A7A"

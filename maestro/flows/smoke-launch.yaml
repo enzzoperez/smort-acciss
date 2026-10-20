@@ -1,0 +1,7 @@
+appId: com.itti.tuti.smartaccess.dev
+tags:
+  - smoke
+  - fase0
+---
+- runFlow: shared/launch.yaml
+- assertVisible: 'Iniciar sesión'

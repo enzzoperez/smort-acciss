@@ -17,6 +17,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck",
+    "e2e:maestro": "maestro test maestro/",
     "format": "prettier --write .",
     "bump-patch": "npm version patch --no-git-tag-version && fastlane bump",
     "bump-minor": "npm version minor --no-git-tag-version && fastlane bump",

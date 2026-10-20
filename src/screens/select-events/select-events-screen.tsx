@@ -191,6 +191,7 @@ const SelectEventsScreen = () => {
       </ScrollView>
       <View style={styles.buttons}>
         <UiButton
+          testID="hub-scan"
           variant="primary"
           text="Escanear"
           onPress={handleScanQr}
