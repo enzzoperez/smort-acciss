@@ -141,6 +141,7 @@ export const useResultScreen = () => {
         mainIcon: offlineError?.icon,
         title: offlineError?.title,
         message: offlineError?.message,
+        key: offlineError?.key,
         actionLabel: <ActionLabel action={offlineError?.action ?? 'No permitir ingreso'} />,
       };
     }
@@ -161,6 +162,7 @@ export const useResultScreen = () => {
         mainIcon: errorItem?.icon,
         title: errorItem?.title,
         message: errorItem?.message,
+        key: errorItem.key,
         actionLabel: <ActionLabel action={errorItem.action} />,
       };
     }
@@ -169,9 +171,10 @@ export const useResultScreen = () => {
       mainIcon: <NotValidTicket />,
       title: 'Error desconocido',
       message: 'Ha ocurrido un error inesperado.',
+      key: errorParsed?.code,
       actionLabel: <ActionLabel action="No permitir ingreso" />,
     };
-  }, [localResult, isSuccessRequest, errorItem, verifyOnly]);
+  }, [localResult, isSuccessRequest, errorItem, errorParsed, verifyOnly]);
 
   useEffect(() => {
     if (isSuccessRequest) {
